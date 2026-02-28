@@ -1,0 +1,200 @@
+{
+    "skills_map": {
+        "automation/form_answerer": {
+            "used_by": "Agent 13 (Form Q&A)",
+            "trigger": "Called inline by Agent 12 when a custom question field is detected during Tier 1 apply",
+            "llm": "Sarvam-M No-Think",
+            "server": "server_3"
+        },
+        "automation/selenium_apply": {
+            "used_by": "Agent 12 (Auto-Apply), backend_engineer (implementation), qa_debugger (test)",
+            "trigger": "Dynamic Continuous Queue, 8 PM to 6 AM IST. Per-user slot via hash(user_id + date)",
+            "llm": "None — pure Selenium execution",
+            "server": "server_3"
+        },
+        "automation/session_validator": {
+            "used_by": "Agent 12 (Auto-Apply), Agent 9 (Scraper health check)",
+            "trigger": "7:30 PM IST daily before apply window. Also checked before every apply slot.",
+            "llm": "None — DB read only",
+            "server": "server_3"
+        },
+        "communication/email_followup": {
+            "used_by": "Agent 14 (Follow-Up) — Email Track",
+            "trigger": "Hourly Gmail scan. Day 7, 14, 21 follow-up schedule per application.",
+            "llm": "Sarvam-M Precise",
+            "server": "server_3"
+        },
+        "communication/linkedin_outreach": {
+            "used_by": "Agent 14 (Follow-Up) — LinkedIn Track",
+            "trigger": "9 AM to 6 PM IST only. 2 days after application submission.",
+            "llm": "Sarvam-M Precise",
+            "server": "server_3",
+            "caps": "15 connections/day/user, 30 messages/day/user, 40 views/day/user. 1500 total LinkedIn actions/day server-wide."
+        },
+        "communication/whatsapp_push": {
+            "used_by": "Multiple agents — notifications, coach, session alerts",
+            "trigger": "Event-driven via Server 1 Baileys socket. Rate limited: 1 message per 1500ms.",
+            "llm": "Sarvam-M Think (daily coach only). Plain text for alerts.",
+            "server": "server_1"
+        },
+        "core/eligibility_checker": {
+            "used_by": "Agent 12 (Auto-Apply), qa_debugger (eligibility gate tests)",
+            "trigger": "Pre-apply gate: checks daily_apply_limit (10/day), monthly_apply_count (250/month), session validity, blacklist",
+            "llm": "None — pure logic",
+            "server": "server_3"
+        },
+        "core/logging": {
+            "used_by": "All agents including backend_architect, backend_engineer, qa_debugger",
+            "trigger": "Every agent run start/complete/fail writes to agent_logs table",
+            "llm": "None",
+            "server": "all"
+        },
+        "document/cover_letter_generator": {
+            "used_by": "Agent 11 (Cover Letter)",
+            "trigger": "Alongside Agent 10 for Tier 1 jobs. On-demand for Tier 2 via dashboard.",
+            "llm": "Gemini Flash",
+            "server": "server_2"
+        },
+        "document/tailor_engine": {
+            "used_by": "Agent 10 (Resume Tailoring)",
+            "trigger": "fit_score >= 75 for paid user Tier 1 jobs",
+            "llm": "Sarvam-M Think",
+            "server": "server_2",
+            "constraint": "NEVER fabricate experience. Only reframe and reorder existing content."
+        },
+        "intelligence/career_scorer": {
+            "used_by": "Agent 5 (Career Intelligence)",
+            "trigger": "On resume upload (onboarding). Every 7 days refresh.",
+            "llm": "Sarvam-M Think",
+            "server": "server_2"
+        },
+        "intelligence/salary_analyzer": {
+            "used_by": "Agent 5 (Career Intelligence)",
+            "trigger": "Part of career scoring — maps user to p25/p50/p75/p90 from salary_benchmarks table",
+            "llm": "None — SQL lookup against salary_benchmarks",
+            "server": "server_2"
+        },
+        "intelligence/skill_gap_analyzer": {
+            "used_by": "Agent 4 (Skill Gap)",
+            "trigger": "On resume upload (onboarding). Every 7 days refresh.",
+            "llm": "Sarvam-M Think",
+            "server": "server_2"
+        },
+        "job/deduplicator": {
+            "used_by": "Agent 9 (Job Scraper)",
+            "trigger": "Before every DB write during scrape. SHA-256 fingerprint check.",
+            "llm": "None — pure hashing",
+            "server": "server_3"
+        },
+        "job/jd_cleaner": {
+            "used_by": "Agent 7 (JD Cleaning)",
+            "trigger": "Immediately after Agent 9 completes. Processes only jd_cleaned = FALSE jobs.",
+            "llm": "Gemini Flash Lite",
+            "server": "server_2"
+        },
+        "job/scraper_engine": {
+            "used_by": "Agent 9 (Job Scraper)",
+            "trigger": "8 PM IST daily via pg_cron HTTP POST to Server 3",
+            "llm": "None — scraping only",
+            "server": "server_3",
+            "proxy": "Webshare residential proxies. ONLY for scraping. Never for auto-apply."
+        },
+        "learning/feedback_loop": {
+            "used_by": "Agent 15 (Feedback Calibration)",
+            "trigger": "Layer 1: always-on signal capture. Layer 2: 5 AM IST daily. Layer 3: Sunday midnight.",
+            "llm": "Gemini Flash (Layer 3 weekly deep calibration only)",
+            "server": "server_3"
+        },
+        "resume/parser": {
+            "used_by": "Agent 3 (Resume Intelligence)",
+            "trigger": "On resume upload. Accepts .pdf (PyPDF2) and .docx (python-docx)",
+            "llm": "Sarvam-M Think",
+            "server": "server_2"
+        },
+        "resume/persona_generator": {
+            "used_by": "Agent 3 (Resume Intelligence)",
+            "trigger": "After parse — generates 3 ai_generated_persona options for user to select",
+            "llm": "Sarvam-M Think",
+            "server": "server_2"
+        },
+        "scoring/fit_calculator": {
+            "used_by": "Agent 6 (Fit Scoring)",
+            "trigger": "After every nightly scrape (delta mode) and on fit_scores_stale = TRUE (full scan mode)",
+            "llm": "Sarvam-M No-Think (batch 100 jobs per call)",
+            "server": "server_2",
+            "threshold": "Only scores >= 40 written to DB. Free: top 3/week. Paid: top 25/week."
+        },
+        "scoring/prefilter_engine": {
+            "used_by": "Agent 6 (Fit Scoring) — runs BEFORE LLM call",
+            "trigger": "Before every fit scoring run. Reduces 200K jobs to ~100-300 per user.",
+            "llm": "None — SQL + TF-IDF only. Zero LLM tokens here.",
+            "server": "server_2",
+            "sql_filter": "WHERE role_family IN (user_target_roles) AND seniority_level matches AND city_canonical IN (user_cities)"
+        },
+        "security/anti_ban_guard": {
+            "used_by": "Agent 12 (Auto-Apply), Agent 14 (LinkedIn Outreach), Agent 9 (Scraping), backend_engineer (implementation), qa_debugger (test)",
+            "trigger": "Wraps every LinkedIn and Indeed action",
+            "llm": "None — pure rate limiting and risk scoring logic",
+            "server": "server_3"
+        },
+        "frontend/permission-matrix": {
+            "used_by": "frontend_architect (design), frontend_engineer (implementation), ui_qa (gate tests)",
+            "description": "4-state permission matrix: (1) free+no-wa, (2) free+wa, (3) paid+no-wa, (4) paid+wa. Locked features always blurred+pointer-events-none, never hidden or conditionally null.",
+            "server": "frontend"
+        },
+        "frontend/realtime-patterns": {
+            "used_by": "frontend_architect (subscription design), frontend_engineer (implementation), ui_qa (leak tests)",
+            "description": "Pattern A: Supabase postgres_changes → React Query invalidation. Pattern B: useInterval polling with MAX_POLLS timeout. Cleanup in every useEffect return — non-negotiable.",
+            "server": "frontend"
+        },
+        "frontend/component-patterns": {
+            "used_by": "frontend_engineer (implementation), ui_qa (UX contract tests)",
+            "description": "Mobile-first layouts (375px min). React Hook Form + Zod. Skeleton loaders. Empty states. Cursor pagination. Bottom tab bar < 768px, left sidebar >= 768px.",
+            "server": "frontend"
+        }
+    },
+    "dev_team_agents": {
+        "backend_architect": {
+            "role": "Designs all Supabase schemas, RLS policies (auth.uid() bound), and inter-server API contracts. Produces structured design artefacts before any code is written.",
+            "metagpt_origin": "architect.py — actions: [WriteDesign], watches: [WritePRD]",
+            "llm": "Sarvam-M Think",
+            "server": "server_2",
+            "handoff": "Emits design artefact → backend_engineer implements → qa_debugger audits"
+        },
+        "backend_engineer": {
+            "role": "Implements design artefacts across Node.js/Express (Server 1), Python/FastAPI (Servers 2/3), and Selenium (Server 3). Self-reviews before handing to qa_debugger.",
+            "metagpt_origin": "engineer.py — actions: [WriteCode, WriteCodeReview, SummarizeCode]",
+            "llm": "Sarvam-M Think (complex) / No-Think (boilerplate)",
+            "server": "server_1 + server_2 + server_3",
+            "handoff": "Emits Implementation Summary → qa_debugger clears → merge"
+        },
+        "qa_debugger": {
+            "role": "Final gate before production. Catches memory leaks, broken Selenium locators, and security holes (RLS breach, secret leakage, LinkedIn kill switch bypass). Issues APPROVED or BLOCKED.",
+            "metagpt_origin": "qa_engineer.py — actions: [WriteTest, RunCode, DebugError, SummarizeCode]",
+            "llm": "Sarvam-M Think (root cause) / No-Think (test boilerplate)",
+            "server": "server_2 or server_3",
+            "verdict_rules": "CRITICAL finding → BLOCKED. HIGH → BLOCKED without architect justification."
+        },
+        "frontend_architect": {
+            "role": "Designs all React component hierarchies, route logic, permission gates, Supabase query contracts, and Realtime subscription patterns. Produces design artefacts before any code is written.",
+            "metagpt_origin": "architect.py — actions: [WriteDesign], watches: [WritePRD]",
+            "llm": "Sarvam-M Think",
+            "domain": "frontend",
+            "handoff": "Emits design artefact → frontend_engineer implements → ui_qa audits"
+        },
+        "frontend_engineer": {
+            "role": "Implements design artefacts as complete .tsx/.ts files. Owns: Zustand stores, React Query hooks, Realtime subscriptions, permission gate components, Razorpay integration.",
+            "metagpt_origin": "engineer.py — actions: [WriteCode, WriteCodeReview, SummarizeCode]",
+            "llm": "Sarvam-M Think (complex) / No-Think (boilerplate)",
+            "domain": "frontend",
+            "handoff": "Emits Implementation Summary → ui_qa clears → merge"
+        },
+        "ui_qa": {
+            "role": "Final gate before frontend ships. Security scan (secrets in frontend), permission gate audit (all 4 states), realtime leak detection (channel cleanup), TypeScript strict, mobile layout at 375px.",
+            "metagpt_origin": "qa_engineer.py — actions: [WriteTest, RunCode, DebugError, SummarizeCode]",
+            "llm": "Sarvam-M Think (root cause) / No-Think (test boilerplate)",
+            "domain": "frontend",
+            "verdict_rules": "CRITICAL (secret in frontend, server1/3 direct call, Razorpay secret, locked=hidden) → BLOCKED, no exceptions. HIGH (any TypeScript, missing cleanup, polling no timeout) → BLOCKED without architect justification."
+        }
+    }
+}

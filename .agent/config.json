@@ -1,0 +1,96 @@
+{
+    "name": "Talvix",
+    "version": "3.1",
+    "description": "AI-first career automation platform for India. Finds jobs, scores them, tailors resumes, applies automatically, follows up with recruiters.",
+    "model": "claude-sonnet-4-6",
+    "thinking": true,
+    "primary_llm": "Sarvam-M (self-hosted, Apache 2.0, cost: ₹0 forever)",
+    "fallback_llm": "Gemini Flash / Flash Lite (free tier)",
+    "critical_rule": "NEVER replace Sarvam-M with paid LLM APIs for fit scoring, resume tailoring, or form Q&A. Sarvam-M is the cost moat.",
+    "servers": {
+        "server_1": "Gateway — Node.js 24 + Express + Baileys + Nginx. 2vCPU / 8GB RAM.",
+        "server_2": "Intelligence — Python 3.12 + FastAPI + CrewAI. 8vCPU / 32GB RAM. Agents 3-8.",
+        "server_3": "Execution — Python 3.12 + FastAPI + Selenium. 8vCPU / 32GB RAM. Agents 9-13.",
+        "frontend": "Vite + React 18 + TypeScript + Tailwind + ShadCN. Hosted on Vercel free tier."
+    },
+    "database": "Supabase PostgreSQL — Singapore region. 23 tables. RLS enforced. pg_cron scheduled.",
+    "storage": "FluxShare shared disk at /storage/ — accessible by all 3 servers. NOT Supabase Storage.",
+    "secrets": "Doppler only. Project: careeros. Configs: dev + prod. Never use .env files. Always: doppler run -- <command>",
+    "inter_server": "Direct HTTP POST with X-Agent-Secret header. No BullMQ. No Redis. No queues.",
+    "current_phase": 5,
+    "phase_1_status": "COMPLETE — all 23 tables, RLS, pg_cron, seed data live in Supabase",
+    "phase_2_status": "COMPLETE — Server 1 live: Node.js 24 + Express + Baileys, Google OAuth, JWT, AES Vault, Razorpay stub",
+    "phase_3_status": "COMPLETE — Server 2 live: Python 3.12 + FastAPI + CrewAI, Agents 3–8, CareerPlannerFlow operational",
+    "phase_4_status": "COMPLETE — Server 3 live: Python 3.12 + FastAPI + Selenium, Agents 9–13, Auto-Apply implemented",
+    "phase_5_status": "IN PROGRESS — Frontend: Vite + React 18 + TypeScript + Tailwind + ShadCN. Phase 5 master prompt ready.",
+    "dev_team": {
+        "description": "MetaGPT-derived development agents that design, build, and QA all Talvix backend code. All three obey execution-model.md and anti-ban-architecture.md.",
+        "workflow": "backend_architect → backend_engineer → qa_debugger → merge",
+        "agents": {
+            "backend_architect": {
+                "file": "agents/backend_architect.md",
+                "metagpt_origin": "architect.py",
+                "owns": [
+                    "Supabase schema design",
+                    "RLS policies (auth.uid() bound)",
+                    "inter-server API contracts"
+                ]
+            },
+            "backend_engineer": {
+                "file": "agents/backend_engineer.md",
+                "metagpt_origin": "engineer.py",
+                "stacks": [
+                    "Node.js/Express (Server 1)",
+                    "Python/FastAPI (Servers 2/3)",
+                    "Selenium (Server 3)"
+                ]
+            },
+            "qa_debugger": {
+                "file": "agents/qa_debugger.md",
+                "metagpt_origin": "qa_engineer.py",
+                "specialisms": [
+                    "Selenium memory leak detection",
+                    "broken locator auditing (weekly)",
+                    "security audit (RLS + secrets + LinkedIn kill switch)"
+                ]
+            }
+        },
+        "shared_constraints_for_all_three": [
+            "Obey .agent/execution-model.md and .agent/anti-ban-architecture.md at all times",
+            "Doppler for ALL secrets — no .env files anywhere in the codebase",
+            "LinkedIn 1500/day global kill switch (system_daily_limits) must never be removed or bypassed",
+            "Supabase service_role key used only by agent layer (Servers 2/3) — NEVER on Server 1",
+            "RLS auth.uid() on all user-facing tables — no exceptions"
+        ]
+    },
+    "frontend_team": {
+        "description": "Three MetaGPT-derived agents for the React frontend. Mirror structure of backend dev_team.",
+        "workflow": "frontend_architect → frontend_engineer → ui_qa → merge",
+        "agents": {
+            "frontend_architect": {
+                "file": ".agent/frontend_architect.md",
+                "metagpt_origin": "architect.py",
+                "owns": ["component hierarchy", "permission gate logic", "Supabase query contracts", "Realtime subscription design"]
+            },
+            "frontend_engineer": {
+                "file": ".agent/frontend_engineer.md",
+                "metagpt_origin": "engineer.py",
+                "stacks": ["React 18 + TypeScript", "Vite + Tailwind + ShadCN", "Zustand + React Query", "Supabase JS anon key + Axios JWT interceptor"]
+            },
+            "ui_qa": {
+                "file": ".agent/ui_qa.md",
+                "metagpt_origin": "qa_engineer.py",
+                "specialisms": ["secret leak detection (grep)", "permission gate simulation (all 4 states)", "realtime channel leak detection", "mobile layout audit (375px)"]
+            }
+        },
+        "shared_constraints_for_all_three": [
+            "VITE_SUPABASE_ANON_KEY only — never service key, agent secret, session key, or Sarvam key in any frontend file",
+            "No direct Server 1 (port 3001) or Server 3 (port 8003) calls — Server 2 only via VITE_SERVER2_URL",
+            "Locked features: blur-sm + pointer-events-none — never hidden or conditionally null",
+            "Realtime channels unsubscribed in every useEffect cleanup — non-negotiable",
+            "TypeScript strict: zero any, zero ts-ignore, zero eslint-disable",
+            "Cursor pagination (not offset) on all list queries",
+            "VITE_RAZORPAY_KEY_ID only — secret never in frontend"
+        ]
+    }
+}
