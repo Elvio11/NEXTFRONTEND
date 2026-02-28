@@ -1,0 +1,39 @@
+{
+  "name": "talvix-server1",
+  "version": "1.0.0",
+  "description": "Talvix Gateway — Node.js 20 + Express. Public-facing only. No agent logic.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "jest --runInBand --forceExit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@supabase/supabase-js": "^2.43.4",
+    "@whiskeysockets/baileys": "^6.7.8",
+    "axios": "^1.7.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-fileupload": "^1.5.1",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pino": "^9.2.0",
+    "pino-http": "^10.2.0",
+    "razorpay": "^2.9.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/src/__tests__/**/*.test.js"
+    ]
+  }
+}
