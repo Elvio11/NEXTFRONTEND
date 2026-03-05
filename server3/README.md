@@ -1,14 +1,12 @@
 # Talvix Server 3 (Automation Layer)
 
-Deployed on [Fly.io](https://fly.io) as `talvix-server3`.
+Deployed on [FluxCloud](https://runonflux.com) via **Deploy with Git**.
 
 Runs the Server 3 FastAPI application with Google Chrome and Selenium via a custom Dockerfile.
 
-## Deployment
+## Port
 
-```bash
-fly deploy --config server3/fly.toml
-```
+Container exposes port **8080**. Set this as the container port when registering on FluxCloud.
 
 ## Health Check
 
