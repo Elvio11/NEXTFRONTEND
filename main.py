@@ -1,20 +1,68 @@
 """
 main.py — Talvix Server 2 (Intelligence Layer)
-FastAPI application. Port 8002.
+FastAPI application. Port 8080 (Flux-Orbit).
 
 Hosts: Agents 3, 4, 5, 6, 7, 8 (and stubs for 10, 11).
 Auth: X-Agent-Secret header on all /api/agents/* routes.
 No JWT on this server — JWT lives on Server 1 only.
 No LLM calls here — all LLM logic in agents/ and skills/.
 
-Run: doppler run -- uvicorn main:app --host 0.0.0.0 --port 8002
+Run: doppler run -- uvicorn main:app --host 0.0.0.0 --port 8080
 """
 
-import os
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+import sys
+print(f"[BOOT] Python {sys.version}", flush=True)
+print(f"[BOOT] Starting Talvix Server 2...", flush=True)
 
-from routers import resume, skill_gap, career_intel, fit_score, jd_clean, coach
+import os
+import traceback
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+try:
+    from routers import resume
+    print("[BOOT] resume router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: resume — {e}", flush=True)
+    raise
+
+try:
+    from routers import skill_gap
+    print("[BOOT] skill_gap router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: skill_gap — {e}", flush=True)
+    raise
+
+try:
+    from routers import career_intel
+    print("[BOOT] career_intel router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: career_intel — {e}", flush=True)
+    raise
+
+try:
+    from routers import fit_score
+    print("[BOOT] fit_score router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: fit_score — {e}", flush=True)
+    raise
+
+try:
+    from routers import jd_clean
+    print("[BOOT] jd_clean router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: jd_clean — {e}", flush=True)
+    raise
+
+try:
+    from routers import coach
+    print("[BOOT] coach router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: coach — {e}", flush=True)
+    raise
+
+print("[BOOT] All routers loaded. Starting uvicorn...", flush=True)
 
 app = FastAPI(
     title="Talvix Server 2 — Intelligence Layer",
@@ -32,7 +80,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ─── Routers ─────────────────────────────────────────────────────────────────
+
+# ─── Global Exception Handler ─────────────────────────────────────────────────
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    """Catch-all: log and return 500. Never leak stack traces to caller."""
+    tb = traceback.format_exc()[:1000]
+    print(f"[server2] Unhandled exception: {type(exc).__name__}: {str(exc)[:200]}\n{tb}")
+    return JSONResponse(
+        status_code=500,
+        content={"status": "failed", "error": f"{type(exc).__name__}: {str(exc)[:200]}"},
+    )
+
+
+# ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(resume.router,       prefix="/api/agents")
 app.include_router(skill_gap.router,    prefix="/api/agents")
 app.include_router(career_intel.router, prefix="/api/agents")
@@ -40,10 +101,18 @@ app.include_router(fit_score.router,    prefix="/api/agents")
 app.include_router(jd_clean.router,     prefix="/api/agents")
 app.include_router(coach.router,        prefix="/api/agents")
 
+
 # ─── Health (no auth) ────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    return {"status": "ok", "server": "server2", "port": 8002}
+    required = ["SUPABASE_URL", "SUPABASE_SERVICE_KEY", "OPENAI_API_KEY", "AGENT_SECRET"]
+    env_status = {k: "SET" if os.environ.get(k) else "MISSING" for k in required}
+    return {
+        "status": "ok",
+        "server": "server2",
+        "port": 8080,
+        "env": env_status,
+    }
 
 
 # ─── Entry (for local dev without doppler wrapper) ───────────────────────────
@@ -52,6 +121,6 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8002,
+        port=8080,
         reload=False,
     )

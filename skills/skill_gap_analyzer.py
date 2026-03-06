@@ -14,7 +14,7 @@ import json
 import os
 from datetime import datetime, timezone, timedelta
 
-from db.client import supabase
+from db.client import get_supabase
 from llm.sarvam import sarvam, SarvamUnavailableError
 
 
@@ -51,7 +51,7 @@ async def analyze_skill_gaps(
     user_skill_set = {s.lower() for s in parsed_resume.get("skills", [])}
 
     # Fetch user's target role families
-    role_result = supabase.table("user_target_roles").select("role_family").eq(
+    role_result = get_supabase().table("user_target_roles").select("role_family").eq(
         "user_id", user_id
     ).execute()
     role_families = [r["role_family"] for r in (role_result.data or [])]
@@ -61,7 +61,7 @@ async def analyze_skill_gaps(
 
     # SQL skill frequency query
     freq_result = (
-        supabase.table("job_skills")
+        get_supabase().table("job_skills")
         .select("skill_name, skill_type")
         .in_("jobs.role_family", role_families)   # joined via FK
         .execute()

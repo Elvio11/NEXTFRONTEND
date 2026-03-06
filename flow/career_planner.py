@@ -17,7 +17,7 @@ from typing import Optional
 
 from crewai.flow.flow import Flow, start, listen
 
-from db.client import supabase
+from db.client import get_supabase
 import agents.agent3_resume as agent3
 import agents.agent4_skill_gap as agent4
 import agents.agent5_career as agent5
@@ -80,7 +80,7 @@ class CareerPlannerFlow(Flow):
         Fires regardless of individual parallel agent success/failure.
         Supabase realtime notifies the frontend client.
         """
-        supabase.table("users").update({
+        get_supabase().table("users").update({
             "dashboard_ready": True,
             "updated_at":      _now(),
         }).eq("id", self.user_id).execute()

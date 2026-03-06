@@ -14,7 +14,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 import uuid
 
-from db.client import supabase
+from db.client import get_supabase
 
 
 def _now() -> datetime:
@@ -27,7 +27,7 @@ async def log_start(
     run_id: str,
 ) -> None:
     """Insert an agent_logs row with status='started'."""
-    supabase.table("agent_logs").insert({
+    get_supabase().table("agent_logs").insert({
         "id":           run_id,
         "agent_name":   agent_name,
         "user_id":      user_id,
@@ -43,7 +43,7 @@ async def log_end(
     duration_ms: int,
 ) -> None:
     """Update agent_logs row to status='completed'."""
-    supabase.table("agent_logs").update({
+    get_supabase().table("agent_logs").update({
         "status":             "completed",
         "records_processed":  records_processed,
         "duration_ms":        duration_ms,
@@ -58,7 +58,7 @@ async def log_fail(
     duration_ms: int,
 ) -> None:
     """Update agent_logs row to status='failed' with 30-day TTL."""
-    supabase.table("agent_logs").update({
+    get_supabase().table("agent_logs").update({
         "status":        "failed",
         "error_message": error[:500],   # cap length — never log full stack with secrets
         "duration_ms":   duration_ms,
@@ -72,7 +72,7 @@ async def log_skip(
     reason: str,
 ) -> None:
     """Update agent_logs row to status='skipped'."""
-    supabase.table("agent_logs").update({
+    get_supabase().table("agent_logs").update({
         "status":        "skipped",
         "error_message": reason[:500],
         "completed_at":  _now().isoformat(),

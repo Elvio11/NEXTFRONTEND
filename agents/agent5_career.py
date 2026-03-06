@@ -10,10 +10,11 @@ Runs in parallel with Agents 4 and 6 via CareerPlannerFlow asyncio.gather().
 
 import gzip
 import json
+import os
 import time
 from datetime import datetime, timezone, timedelta
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
 from skills.career_scorer import compute_career_score
 
@@ -40,7 +41,7 @@ async def run(user_id: str) -> dict:
 
         # Load user profile for salary and city
         user_result = (
-            supabase.table("users")
+            get_supabase().table("users")
             .select("city_canonical, current_salary_lpa, experience_years")
             .eq("id", user_id)
             .single()
@@ -53,7 +54,7 @@ async def run(user_id: str) -> dict:
         next_refresh = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
         # Upsert career_intelligence (one row per user)
-        supabase.table("career_intelligence").upsert({
+        get_supabase().table("career_intelligence").upsert({
             "user_id":             user_id,
             "career_score":        result["career_score"],
             "score_components":    result["score_components"],
@@ -68,13 +69,12 @@ async def run(user_id: str) -> dict:
         }, on_conflict="user_id").execute()
 
         # Write full analysis to FluxShare
-        import os
         os.makedirs("/storage/career-intel", exist_ok=True)
         with gzip.open(f"/storage/career-intel/{user_id}.json.gz", "wt", encoding="utf-8") as f:
             json.dump({"user_id": user_id, **result}, f)
 
         # Clear stale flag
-        supabase.table("users").update({
+        get_supabase().table("users").update({
             "career_intel_stale": False,
             "updated_at":         datetime.now(timezone.utc).isoformat(),
         }).eq("id", user_id).execute()

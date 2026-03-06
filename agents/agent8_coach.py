@@ -1,8 +1,8 @@
 """
 agents/agent8_coach.py
-Agent 8 — Daily Coach
+Agent 8 — WhatsApp Career Coach
 
-Sends a personalised WhatsApp coaching message to every eligible paid user.
+Generates personalised WhatsApp coaching messages for eligible paid users.
 Triggered: 7 AM IST daily via pg_cron HTTP POST to /api/agents/coach
 
 Eligibility gate per user:
@@ -22,7 +22,7 @@ import json
 import time
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.whatsapp_push import send_whatsapp
 from llm.sarvam import sarvam, SarvamUnavailableError
@@ -63,7 +63,6 @@ Output ONLY the message. No labels. No headers."""
 
 def _is_in_quiet_hours(notif_prefs: dict) -> bool:
     """Check if current IST time falls in user's quiet hours."""
-    # Convert UTC to IST (+5:30)
     from datetime import timedelta
     ist_now = datetime.now(timezone.utc) + timedelta(hours=5, minutes=30)
     current_hour = ist_now.hour
@@ -91,14 +90,14 @@ async def run() -> dict:
 
     try:
         # ── Eligibility query ─────────────────────────────────────────────
-        result = supabase.rpc(
+        result = get_supabase().rpc(
             "get_coach_eligible_users", {}
         ).execute()
 
         # Fallback SQL if RPC not defined:
         if not result.data:
             result = (
-                supabase.table("users")
+                get_supabase().table("users")
                 .select(
                     "id, persona, experience_years, notif_prefs, wa_phone"
                 )
@@ -120,7 +119,7 @@ async def run() -> dict:
 
             # Load app stats
             apps_result = (
-                supabase.table("job_applications")
+                get_supabase().table("job_applications")
                 .select("status")
                 .eq("user_id", user_id)
                 .execute()
@@ -132,7 +131,7 @@ async def run() -> dict:
 
             # Load skill gap
             gap_result = (
-                supabase.table("skill_gap_results")
+                get_supabase().table("skill_gap_results")
                 .select("top_gaps")
                 .eq("user_id", user_id)
                 .single()
@@ -143,7 +142,7 @@ async def run() -> dict:
 
             # Load career score
             career_result = (
-                supabase.table("career_intelligence")
+                get_supabase().table("career_intelligence")
                 .select("career_score")
                 .eq("user_id", user_id)
                 .single()
@@ -153,7 +152,7 @@ async def run() -> dict:
 
             # Load last message structure from notifications
             last_notif = (
-                supabase.table("notifications")
+                get_supabase().table("notifications")
                 .select("metadata")
                 .eq("user_id", user_id)
                 .eq("event_type", "coach_message")
@@ -175,7 +174,7 @@ async def run() -> dict:
 
             # Load target roles
             roles_result = (
-                supabase.table("user_target_roles")
+                get_supabase().table("user_target_roles")
                 .select("role_family")
                 .eq("user_id", user_id)
                 .execute()
@@ -212,7 +211,7 @@ async def run() -> dict:
 
             if sent:
                 # Write to notifications table
-                supabase.table("notifications").insert({
+                get_supabase().table("notifications").insert({
                     "user_id":    user_id,
                     "event_type": "coach_message",
                     "channel":    "whatsapp",

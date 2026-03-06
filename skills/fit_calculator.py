@@ -17,7 +17,7 @@ import math
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
-from db.client import supabase
+from db.client import get_supabase
 from llm.sarvam import sarvam, SarvamUnavailableError
 
 
@@ -51,7 +51,7 @@ Return ONLY the JSON array. No explanation. No markdown.
 
 def _load_model_weights() -> dict:
     """Load current model_weights from DB."""
-    result = supabase.table("model_weights").select("weight_name, weight_value").execute()
+    result = get_supabase().table("model_weights").select("weight_name, weight_value").execute()
     return {row["weight_name"]: row["weight_value"] for row in (result.data or [])}
 
 
@@ -74,7 +74,7 @@ async def score_jobs(
     weights = _load_model_weights()
 
     # Load dream company list for threshold adjustment
-    dream_result = supabase.table("user_company_prefs").select("company_canonical").eq(
+    dream_result = get_supabase().table("user_company_prefs").select("company_canonical").eq(
         "user_id", user_id
     ).eq("pref_type", "dream").execute()
     dream_companies = {r["company_canonical"] for r in (dream_result.data or [])}
@@ -143,7 +143,7 @@ async def score_jobs(
             })
 
         if rows_to_insert:
-            supabase.table("job_fit_scores").upsert(
+            get_supabase().table("job_fit_scores").upsert(
                 rows_to_insert, on_conflict="user_id,job_id"
             ).execute()
             scores_written += len(rows_to_insert)

@@ -14,7 +14,7 @@ import json
 import time
 from datetime import datetime, timezone, timedelta
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.skill_gap_analyzer import analyze_skill_gaps
 from llm.sarvam import SarvamUnavailableError
@@ -51,7 +51,7 @@ async def run(user_id: str) -> dict:
         next_refresh = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
         # Upsert skill_gap_results (one row per user)
-        supabase.table("skill_gap_results").upsert({
+        get_supabase().table("skill_gap_results").upsert({
             "user_id":        user_id,
             "top_gaps":       top_gaps,
             "next_refresh_at": next_refresh,
@@ -59,7 +59,7 @@ async def run(user_id: str) -> dict:
         }, on_conflict="user_id").execute()
 
         # Clear stale flag
-        supabase.table("users").update({
+        get_supabase().table("users").update({
             "skill_gap_stale": False,
             "updated_at":      datetime.now(timezone.utc).isoformat(),
         }).eq("id", user_id).execute()

@@ -5,7 +5,7 @@ Pure SQL lookup against salary_benchmarks table. No LLM.
 Returns p25/p50/p75/p90 salary percentiles for the user's role and city.
 """
 
-from db.client import supabase
+from db.client import get_supabase
 
 
 async def get_salary_percentiles(
@@ -19,7 +19,7 @@ async def get_salary_percentiles(
     """
     # Find closest experience band
     result = (
-        supabase.table("salary_benchmarks")
+        get_supabase().table("salary_benchmarks")
         .select("p25_lpa, p50_lpa, p75_lpa, p90_lpa, role_category, city_canonical")
         .eq("role_category", role_category)
         .eq("city_canonical", city)
@@ -40,7 +40,7 @@ async def get_salary_percentiles(
 
     # Fallback: any city
     fallback = (
-        supabase.table("salary_benchmarks")
+        get_supabase().table("salary_benchmarks")
         .select("p25_lpa, p50_lpa, p75_lpa, p90_lpa")
         .eq("role_category", role_category)
         .lte("exp_years_min", exp_years)

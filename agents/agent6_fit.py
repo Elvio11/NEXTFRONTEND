@@ -20,7 +20,7 @@ import json
 import time
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.prefilter_engine import prefilter
 from skills.fit_calculator import score_jobs
@@ -51,7 +51,7 @@ async def _score_single_user(
 
     # Step 2: Check tier
     user_result = (
-        supabase.table("users")
+        get_supabase().table("users")
         .select("tier")
         .eq("id", user_id)
         .single()
@@ -70,7 +70,7 @@ async def _score_single_user(
 
     # Step 4: Update cursor
     if scrape_run_id:
-        supabase.table("user_fit_score_cursors").upsert({
+        get_supabase().table("user_fit_score_cursors").upsert({
             "user_id":          user_id,
             "last_scrape_run":  scrape_run_id,
             "updated_at":       datetime.now(timezone.utc).isoformat(),
@@ -113,7 +113,7 @@ async def run(
                         "records_processed": 0, "error": "Sarvam-M unavailable"}
 
             # Clear stale flag
-            supabase.table("users").update({
+            get_supabase().table("users").update({
                 "fit_scores_stale": False,
                 "updated_at":       datetime.now(timezone.utc).isoformat(),
             }).eq("id", user_id).execute()
@@ -125,7 +125,7 @@ async def run(
         else:
             # Delta mode: loop all active paid users
             users_result = (
-                supabase.table("users")
+                get_supabase().table("users")
                 .select("id, tier")
                 .eq("tier", "paid")
                 .eq("auto_apply_paused", False)
@@ -150,14 +150,14 @@ async def run(
                     continue  # don't stop the whole loop for one user
 
             # Mark is_new = FALSE for all scored jobs
-            supabase.table("jobs").update({
+            get_supabase().table("jobs").update({
                 "is_new":     False,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }).eq("is_new", True).execute()
 
             # Mark scrape run complete
             if scrape_run_id:
-                supabase.table("scrape_runs").update({
+                get_supabase().table("scrape_runs").update({
                     "scoring_complete": True,
                     "updated_at":       datetime.now(timezone.utc).isoformat(),
                 }).eq("id", scrape_run_id).execute()

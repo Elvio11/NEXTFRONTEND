@@ -19,7 +19,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.resume_parser import parse_resume, ParseError
 from skills.persona_generator import generate_personas
@@ -45,7 +45,7 @@ async def run(user_id: str, file_path: str) -> dict:
         except ParseError as pe:
             reason = str(pe)
             # Write failure to resumes table so frontend can surface error
-            supabase.table("resumes").upsert({
+            get_supabase().table("resumes").upsert({
                 "user_id":      user_id,
                 "parse_status": "failed",
                 "parse_error":  reason,
@@ -79,7 +79,7 @@ async def run(user_id: str, file_path: str) -> dict:
             "persona":     None,  # set after user selects in Step 4
         }
 
-        supabase.table("resumes").upsert({
+        get_supabase().table("resumes").upsert({
             "user_id":      user_id,
             "parse_status": "done",
             "summary":      summary_jsonb,
@@ -87,7 +87,7 @@ async def run(user_id: str, file_path: str) -> dict:
         }, on_conflict="user_id").execute()
 
         # ── Step 4: Set flags on users table ──────────────────────────────
-        supabase.table("users").update({
+        get_supabase().table("users").update({
             "fit_scores_stale":      True,
             "onboarding_completed":  True,
             "updated_at":            datetime.now(timezone.utc).isoformat(),

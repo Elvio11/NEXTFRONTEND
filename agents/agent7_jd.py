@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
 from skills.jd_cleaner import clean_jd
 
@@ -38,7 +38,7 @@ async def run(scrape_run_id: str) -> dict:
     try:
         # Fetch all uncleaned active jobs with their fingerprints
         result = (
-            supabase.table("jobs")
+            get_supabase().table("jobs")
             .select("id, fingerprint, title, company")
             .eq("jd_cleaned", False)
             .eq("is_active", True)
@@ -58,7 +58,7 @@ async def run(scrape_run_id: str) -> dict:
                     raw_jd = f.read()
             except FileNotFoundError:
                 # JD file missing — mark as cleaned with empty data to avoid repeat
-                supabase.table("jobs").update({
+                get_supabase().table("jobs").update({
                     "jd_cleaned": True,
                     "jd_summary": "",
                     "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -83,12 +83,12 @@ async def run(scrape_run_id: str) -> dict:
             ]
 
             if skills_rows:
-                supabase.table("job_skills").upsert(
+                get_supabase().table("job_skills").upsert(
                     skills_rows, on_conflict="job_id,skill_name"
                 ).execute()
 
             # Update jobs table
-            supabase.table("jobs").update({
+            get_supabase().table("jobs").update({
                 "jd_cleaned":  True,
                 "role_family": cleaned.get("role_family"),
                 "jd_summary":  cleaned.get("jd_summary", "")[:500],
@@ -99,7 +99,7 @@ async def run(scrape_run_id: str) -> dict:
 
         # Trigger Agent 6 delta mode on this server
         agent_secret = os.environ["AGENT_SECRET"]
-        server2_url  = os.environ.get("SERVER2_URL", "http://localhost:8002")
+        server2_url  = os.environ.get("SERVER2_URL", "http://localhost:8080")
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:

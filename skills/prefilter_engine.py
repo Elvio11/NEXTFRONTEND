@@ -12,7 +12,7 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from db.client import supabase
+from db.client import get_supabase
 
 
 def _build_skill_query_sql(user_id: str, mode: str) -> str:
@@ -93,7 +93,7 @@ async def prefilter(
     top_n = 300 if mode == "full_scan" else 100
     sql   = _build_skill_query_sql(user_id, mode)
 
-    result = supabase.rpc("sql_query", {"query": sql}).execute()
+    result = get_supabase().rpc("sql_query", {"query": sql}).execute()
     jobs = result.data or []
 
     return _tfidf_filter(jobs, top_skills, top_n)

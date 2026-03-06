@@ -11,7 +11,7 @@ Weights:
 All SQL — no LLM calls.
 """
 
-from db.client import supabase
+from db.client import get_supabase
 from skills.salary_analyzer import get_salary_percentiles, get_salary_percentile_rank
 
 
@@ -24,7 +24,7 @@ async def compute_career_score(
     Compute 4-dimension career score.
     Returns dict with career_score and score_components.
     """
-    role_result = supabase.table("user_target_roles").select("role_family").eq(
+    role_result = get_supabase().table("user_target_roles").select("role_family").eq(
         "user_id", user_id
     ).execute()
     role_families = [r["role_family"] for r in (role_result.data or [])]
@@ -34,7 +34,7 @@ async def compute_career_score(
 
     if role_families:
         market_result = (
-            supabase.table("job_skills")
+            get_supabase().table("job_skills")
             .select("skill_name")
             .execute()
         )
@@ -55,7 +55,7 @@ async def compute_career_score(
     # Avg required exp: query active jobs for user's role family
     if role_families:
         avg_result = (
-            supabase.table("jobs")
+            get_supabase().table("jobs")
             .select("exp_min_years")
             .in_("role_family", role_families)
             .eq("is_active", True)
@@ -72,7 +72,7 @@ async def compute_career_score(
     city = user_profile.get("city_canonical", "")
     if role_families and city:
         demand_result = (
-            supabase.table("jobs")
+            get_supabase().table("jobs")
             .select("id", count="exact")
             .in_("role_family", role_families)
             .eq("city_canonical", city)
