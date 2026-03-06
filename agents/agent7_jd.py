@@ -99,7 +99,7 @@ async def run(scrape_run_id: str) -> dict:
 
         # Trigger Agent 6 delta mode on this server
         agent_secret = os.environ["AGENT_SECRET"]
-        server2_url  = os.environ.get("SERVER2_URL", "http://localhost:8080")
+        server2_url  = os.environ["SERVER2_URL"]
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
