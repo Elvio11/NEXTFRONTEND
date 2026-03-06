@@ -18,6 +18,17 @@
  */
 'use strict';
 
+// Dummy environment variables for development
+process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'https://dummy.supabase.co';
+process.env.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'dummy_anon_key';
+process.env.FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'dummy_jwt_secret_minimum_64_chars_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+process.env.AGENT_SECRET = process.env.AGENT_SECRET || 'dummy_agent_secret';
+process.env.AES_SESSION_KEY = process.env.AES_SESSION_KEY || 'dummy_aes_key';
+process.env.SERVER2_URL = process.env.SERVER2_URL || 'http://localhost:3001';
+process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+process.env.PORT = process.env.PORT || '3000';
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
