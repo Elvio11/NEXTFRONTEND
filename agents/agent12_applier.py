@@ -156,7 +156,7 @@ def _is_in_review_mode(auto_apply_activated_at) -> bool:
 
 async def _call_anti_ban(user_id: str, action_type: str, platform: str) -> dict:
     """Call Agent 13 anti-ban endpoint. Returns risk assessment."""
-    server3_url  = os.environ.get("SERVER3_URL", "http://localhost:8003")
+    server3_url  = os.environ["SERVER3_URL"]
     agent_secret = os.environ["AGENT_SECRET"]
     try:
         async with httpx.AsyncClient(timeout=15.0) as client:
