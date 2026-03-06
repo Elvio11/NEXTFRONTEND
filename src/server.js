@@ -38,6 +38,7 @@ const userRouter = require('./routes/user');
 const applicationsRouter = require('./routes/applications');
 const notificationsRouter = require('./routes/notifications');
 const webhooksRouter = require('./routes/webhooks');
+const internalRouter = require('./routes/internal');
 
 // Baileys stub
 const { connectWhatsApp } = require('./baileys/waClient');
@@ -95,6 +96,10 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/user', userRouter);
 app.use('/api/applications', applicationsRouter);
 app.use('/api/notifications', notificationsRouter);
+
+// Internal callbacks — Server 2/3 → Server 1 (X-Agent-Secret, NOT JWT)
+// Never expose these to the browser. verifyAgentSecret is applied inside the router.
+app.use('/internal', internalRouter);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 handler
