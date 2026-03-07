@@ -134,9 +134,10 @@ async def health():
 # ─── Entry (for local dev without doppler wrapper) ───────────────────────────
 if __name__ == "__main__":
     import uvicorn
+    port = int(os.environ.get("PORT", "8080"))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8080,
+        port=port,
         reload=False,
     )
