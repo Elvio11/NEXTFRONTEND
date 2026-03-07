@@ -15,6 +15,22 @@ print(f"[BOOT] Python {sys.version}", flush=True)
 print(f"[BOOT] Starting Talvix Server 2...", flush=True)
 
 import os
+
+# ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
+# In production Flux-Orbit/Doppler values override these before any agent runs.
+# setdefault() only sets if the key is NOT already in the environment.
+os.environ.setdefault("SUPABASE_URL",         "https://placeholder.supabase.co")
+os.environ.setdefault("SUPABASE_SERVICE_KEY",  "placeholder-service-key")
+os.environ.setdefault("AGENT_SECRET",          "placeholder-agent-secret-change-me")
+os.environ.setdefault("SARVAM_API_KEY",        "placeholder-sarvam-key")
+os.environ.setdefault("GEMINI_API_KEY",        "placeholder-gemini-key")
+os.environ.setdefault("SERVER1_URL",           "https://placeholder-server1.example.com")
+os.environ.setdefault("SERVER2_URL",           "https://placeholder-server2.example.com")
+os.environ.setdefault("SERVER3_URL",           "https://placeholder-server3.example.com")
+os.environ.setdefault("OPENAI_API_KEY",        "placeholder-openai-key")
+
+print("[BOOT] Env defaults set.", flush=True)
+
 import traceback
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
