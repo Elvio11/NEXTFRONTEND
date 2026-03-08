@@ -1,6 +1,8 @@
 FROM python:3.11.9-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV DISPLAY=:99
 
 # Install system dependencies for Selenium & Chrome
 RUN apt-get update && apt-get install -y \
@@ -37,4 +39,4 @@ COPY . .
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD Xvfb :99 -screen 0 1280x720x24 & uvicorn main:app --host 0.0.0.0 --port 8080
