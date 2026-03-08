@@ -20,7 +20,7 @@ import os
 # In production Flux-Orbit/Doppler values override these before any agent runs.
 # setdefault() only sets if the key is NOT already in the environment.
 os.environ.setdefault("SUPABASE_URL",         "https://placeholder.supabase.co")
-os.environ.setdefault("SUPABASE_SERVICE_KEY",  "placeholder-service-key")
+os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY",  "placeholder-service-key")
 os.environ.setdefault("AGENT_SECRET",          "placeholder-agent-secret-change-me")
 os.environ.setdefault("SARVAM_API_KEY",        "placeholder-sarvam-key")
 os.environ.setdefault("GEMINI_API_KEY",        "placeholder-gemini-key")
@@ -121,7 +121,7 @@ app.include_router(coach.router,        prefix="/api/agents")
 # ─── Health (no auth) ────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    required = ["SUPABASE_URL", "SUPABASE_SERVICE_KEY", "OPENAI_API_KEY", "AGENT_SECRET"]
+    required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "OPENAI_API_KEY", "AGENT_SECRET"]
     env_status = {k: "SET" if os.environ.get(k) else "MISSING" for k in required}
     return {
         "status": "ok",
@@ -134,7 +134,7 @@ async def health():
 # ─── Entry (for local dev without doppler wrapper) ───────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", "8080"))
+    port = int(os.environ.get("APP_PORT", "8080"))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",

@@ -26,6 +26,6 @@ def get_supabase() -> Client:
     if _supabase_client is None:
         _supabase_client = create_client(
             os.environ["SUPABASE_URL"],
-            os.environ["SUPABASE_SERVICE_KEY"],  # Doppler key: SUPABASE_SERVICE_KEY
+            os.environ["SUPABASE_SERVICE_ROLE_KEY"],  # Doppler key: SUPABASE_SERVICE_ROLE_KEY
         )
     return _supabase_client
