@@ -7,5 +7,5 @@ sdk: docker
 pinned: false
 ---
 
-# Talvix Server 3 (Automation Layer)
+# Talvix Server 3 (Automation Layer
 This Space runs the Server 3 FastAPI application with Google Chrome and Selenium via a custom Dockerfile.
