@@ -36,7 +36,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN chmod +x /app/start.sh
+
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["sh", "-c", "Xvfb :99 -screen 0 1280x720x24 & uvicorn main:app --host 0.0.0.0 --port 8080"]
+ENTRYPOINT ["/app/start.sh"]
