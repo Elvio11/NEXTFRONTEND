@@ -11,7 +11,7 @@ Run: doppler run -- uvicorn main:app --host 0.0.0.0 --port 8080
 """
 
 import sys
-print(f"[BOOT] Python {sys.version}", flush=True)
+print(f"[BOOT] Python version: {sys.version}", flush=True)
 print(f"[BOOT] Starting Talvix Server 2...", flush=True)
 
 import os
@@ -40,43 +40,37 @@ try:
     from routers import resume
     print("[BOOT] resume router OK", flush=True)
 except Exception as e:
-    print(f"[BOOT] FAILED: resume — {e}", flush=True)
-    raise
+    print(f"[BOOT] FATAL: resume — {e}", flush=True)
 
 try:
     from routers import skill_gap
     print("[BOOT] skill_gap router OK", flush=True)
 except Exception as e:
-    print(f"[BOOT] FAILED: skill_gap — {e}", flush=True)
-    raise
+    print(f"[BOOT] FATAL: skill_gap — {e}", flush=True)
 
 try:
     from routers import career_intel
     print("[BOOT] career_intel router OK", flush=True)
 except Exception as e:
-    print(f"[BOOT] FAILED: career_intel — {e}", flush=True)
-    raise
+    print(f"[BOOT] FATAL: career_intel — {e}", flush=True)
 
 try:
     from routers import fit_score
     print("[BOOT] fit_score router OK", flush=True)
 except Exception as e:
-    print(f"[BOOT] FAILED: fit_score — {e}", flush=True)
-    raise
+    print(f"[BOOT] FATAL: fit_score — {e}", flush=True)
 
 try:
     from routers import jd_clean
     print("[BOOT] jd_clean router OK", flush=True)
 except Exception as e:
-    print(f"[BOOT] FAILED: jd_clean — {e}", flush=True)
-    raise
+    print(f"[BOOT] FATAL: jd_clean — {e}", flush=True)
 
 try:
     from routers import coach
     print("[BOOT] coach router OK", flush=True)
 except Exception as e:
-    print(f"[BOOT] FAILED: coach — {e}", flush=True)
-    raise
+    print(f"[BOOT] FATAL: coach — {e}", flush=True)
 
 print("[BOOT] All routers loaded. Starting uvicorn...", flush=True)
 
@@ -121,7 +115,7 @@ app.include_router(coach.router,        prefix="/api/agents")
 # ─── Health (no auth) ────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "OPENAI_API_KEY", "AGENT_SECRET"]
+    required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "AGENT_SECRET", "GEMINI_API_KEY", "SARVAM_API_KEY"]
     env_status = {k: "SET" if os.environ.get(k) else "MISSING" for k in required}
     return {
         "status": "ok",
