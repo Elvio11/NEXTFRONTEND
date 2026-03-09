@@ -27,4 +27,4 @@ ENV PORT=8080
 
 EXPOSE 8080
 
-ENTRYPOINT ["/app/start.sh"]
+ENTRYPOINT ["sh", "/app/start.sh"]
