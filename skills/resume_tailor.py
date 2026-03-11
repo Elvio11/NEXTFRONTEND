@@ -21,6 +21,7 @@ from docx.shared import Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from llm.sarvam import sarvam, SarvamUnavailableError
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 # ─── Storage Paths ─────────────────────────────────────────────────────────────
@@ -62,6 +63,8 @@ JD summary: {job.get('jd_summary', job.get('raw_jd', ''))[:1000]}
 
 ORIGINAL RESUME:
 {json.dumps(resume, indent=2)[:3000]}
+
+{HUMANIZER_GUIDELINES}
 
 OUTPUT FORMAT — Return ONLY a JSON object with this exact structure:
 {{

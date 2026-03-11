@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 
 from llm.gemini import gemini
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 # ─── Storage Path ──────────────────────────────────────────────────────────────
@@ -87,7 +88,9 @@ Paragraph 1 (Hook): Unique opening (never start with "I"). Reference the specifi
 Paragraph 2 (Evidence): 2-3 specific achievements from the resume. Use numbers where available.
 Paragraph 3 (Close): Confident but not arrogant. Clear next-step ask. No "I look forward to hearing from you" clichés.
 
-Output ONLY the cover letter text. No subject line. No "Dear Hiring Manager" — start directly with the hook paragraph."""
+Output ONLY the cover letter text. No subject line. No "Dear Hiring Manager" — start directly with the hook paragraph.
+
+{HUMANIZER_GUIDELINES}"""
 
 
 # ─── Main Entry ────────────────────────────────────────────────────────────────
