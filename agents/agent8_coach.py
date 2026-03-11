@@ -26,6 +26,7 @@ from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.whatsapp_push import send_whatsapp
 from llm.sarvam import sarvam, SarvamUnavailableError
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 _STRUCTURES = [
@@ -58,7 +59,9 @@ Rules:
 - Never start with "I hope you're doing well"
 - Match tone to their persona exactly
 
-Output ONLY the message. No labels. No headers."""
+Output ONLY the message. No labels. No headers.
+
+{humanizer_guidelines}"""
 
 
 def _is_in_quiet_hours(notif_prefs: dict) -> bool:
@@ -193,6 +196,7 @@ async def run() -> dict:
                 career_score=career_score,
                 structure=structure,
                 prev_structure=prev_structure,
+                humanizer_guidelines=HUMANIZER_GUIDELINES,
             )
 
             try:

@@ -15,6 +15,7 @@ import json
 from typing import Optional
 
 from llm.sarvam import sarvam, SarvamUnavailableError
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 _PERSONA_PROMPT_TEMPLATE = """You are a professional career writer.
@@ -35,7 +36,9 @@ Generate exactly 3 variants:
 Each variant must be exactly around 200 words. No headers. Separate variants with the delimiter: |||
 
 Output format (no extra text):
-<confident variant>|||<narrative variant>|||<technical variant>"""
+<confident variant>|||<narrative variant>|||<technical variant>
+
+{HUMANIZER_GUIDELINES}"""
 
 
 async def generate_personas(parsed_resume: dict) -> list[str]:
@@ -48,6 +51,7 @@ async def generate_personas(parsed_resume: dict) -> list[str]:
         exp_years=parsed_resume.get("experience_years", 0),
         seniority=parsed_resume.get("seniority_level", "mid"),
         skills=", ".join(parsed_resume.get("top_5_skills", [])),
+        HUMANIZER_GUIDELINES=HUMANIZER_GUIDELINES,
     )
 
     raw = await sarvam.complete(prompt, mode="think")

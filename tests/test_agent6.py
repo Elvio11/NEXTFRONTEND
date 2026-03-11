@@ -60,7 +60,7 @@ def test_fit_calculator_only_writes_scores_gte_40():
     async def mock_sarvam(prompt, mode):
         return low_score_response
 
-    with patch("skills.fit_calculator.supabase", mock_db), \
+    with patch("skills.fit_calculator.get_supabase", return_value=mock_db), \
          patch("skills.fit_calculator.sarvam.complete", side_effect=mock_sarvam):
         from skills.fit_calculator import score_jobs
         asyncio.get_event_loop().run_until_complete(
@@ -100,7 +100,7 @@ def test_free_user_fit_reasons_is_null():
     async def mock_sarvam(prompt, mode):
         return score_response
 
-    with patch("skills.fit_calculator.supabase", mock_db), \
+    with patch("skills.fit_calculator.get_supabase", return_value=mock_db), \
          patch("skills.fit_calculator.sarvam.complete", side_effect=mock_sarvam):
         from skills.fit_calculator import score_jobs
         asyncio.get_event_loop().run_until_complete(
@@ -126,7 +126,7 @@ def test_model_weights_applied_from_db_not_hardcoded():
     source = inspect.getsource(fit_calculator)
     # Should call _load_model_weights(), not define weights inline
     assert "_load_model_weights" in source
-    assert "supabase.table" in source
+    assert "get_supabase().table" in source
 
 
 def test_delta_mode_only_scores_is_new_true_jobs():

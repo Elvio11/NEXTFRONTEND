@@ -16,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 
 from db.client import get_supabase
 from llm.sarvam import sarvam, SarvamUnavailableError
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 STORAGE_PATH = "/storage/skill-gaps"
@@ -37,6 +38,8 @@ For each, provide:
 Return ONLY a JSON array:
 [{{"skill": "...", "importance_pct": 67, "roi_rank": 1, "est_hours": 30, "salary_uplift": "1-2 LPA",
    "courses": ["Free: ...", "Paid: ..."]}}]
+
+{HUMANIZER_GUIDELINES}
 """
 
 
@@ -99,6 +102,7 @@ async def analyze_skill_gaps(
         exp_years=parsed_resume.get("experience_years", 0),
         seniority=parsed_resume.get("seniority_level", "mid"),
         gaps_list=gaps_list,
+        HUMANIZER_GUIDELINES=HUMANIZER_GUIDELINES,
     )
 
     raw = await sarvam.complete(prompt, mode="think")

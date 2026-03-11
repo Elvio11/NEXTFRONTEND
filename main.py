@@ -72,6 +72,13 @@ try:
 except Exception as e:
     print(f"[BOOT] FATAL: coach — {e}", flush=True)
 
+try:
+    from orchestrator import router as orchestrator_router
+    print("[BOOT] orchestrator router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FATAL: orchestrator — {e}", flush=True)
+    orchestrator_router = None  # type: ignore[assignment]
+
 print("[BOOT] All routers loaded. Starting uvicorn...", flush=True)
 
 app = FastAPI(
@@ -110,6 +117,8 @@ app.include_router(career_intel.router, prefix="/api/agents")
 app.include_router(fit_score.router,    prefix="/api/agents")
 app.include_router(jd_clean.router,     prefix="/api/agents")
 app.include_router(coach.router,        prefix="/api/agents")
+if orchestrator_router is not None:
+    app.include_router(orchestrator_router.router)
 
 
 # ─── Health (no auth) ────────────────────────────────────────────────────────

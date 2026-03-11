@@ -100,8 +100,8 @@ def test_sarvam_unavailable_returns_skipped_not_gemini_fallback():
 
     with patch("skills.persona_generator.sarvam.complete", side_effect=unavailable_sarvam), \
          patch("llm.gemini.GeminiClient.complete", side_effect=track_gemini), \
-         patch("agents.agent3_resume.supabase", mock_db), \
-         patch("log_utils.agent_logger.supabase", mock_db), \
+         patch("agents.agent3_resume.get_supabase", return_value=mock_db), \
+         patch("log_utils.agent_logger.get_supabase", return_value=mock_db), \
          patch("agents.agent3_resume.parse_resume", return_value={
              "seniority_level": "mid", "top_5_skills": ["Python"],
              "experience_years": 3, "current_title": "Engineer",

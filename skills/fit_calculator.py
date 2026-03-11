@@ -19,6 +19,7 @@ from typing import Optional
 
 from db.client import get_supabase
 from llm.sarvam import sarvam, SarvamUnavailableError
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 _SCORE_PROMPT = """You are a job-fit evaluator for Indian tech roles.
@@ -46,6 +47,8 @@ For each job, return:
 }}
 
 Return ONLY the JSON array. No explanation. No markdown.
+
+{HUMANIZER_GUIDELINES}
 """
 
 
@@ -100,6 +103,7 @@ async def score_jobs(
             seniority=parsed_resume.get("seniority_level", "mid"),
             current_title=parsed_resume.get("current_title", ""),
             jobs_json=json.dumps(jobs_for_prompt, indent=2),
+            HUMANIZER_GUIDELINES=HUMANIZER_GUIDELINES,
         )
 
         raw = await sarvam.complete(prompt, mode=mode)

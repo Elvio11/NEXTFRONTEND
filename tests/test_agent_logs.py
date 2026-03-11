@@ -51,7 +51,7 @@ def test_agent_log_written_at_start_with_status_started():
     mock_db = MagicMock()
     inserts = _capture_inserts(mock_db)
 
-    with patch("log_utils.agent_logger.supabase", mock_db):
+    with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         from log_utils.agent_logger import log_start, new_run_id
         asyncio.get_event_loop().run_until_complete(
             log_start("test_agent", "user-id", new_run_id())
@@ -66,7 +66,7 @@ def test_success_log_expires_at_is_3_days():
     mock_db = MagicMock()
     updates = _capture_updates(mock_db)
 
-    with patch("log_utils.agent_logger.supabase", mock_db):
+    with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         from log_utils.agent_logger import log_end
         asyncio.get_event_loop().run_until_complete(
             log_end("run-id", 5, 1234)
@@ -85,7 +85,7 @@ def test_failure_log_expires_at_is_30_days():
     mock_db = MagicMock()
     updates = _capture_updates(mock_db)
 
-    with patch("log_utils.agent_logger.supabase", mock_db):
+    with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         from log_utils.agent_logger import log_fail
         asyncio.get_event_loop().run_until_complete(
             log_fail("run-id", "something went wrong", 500)
@@ -114,7 +114,7 @@ def test_no_secrets_in_agent_log_error_message():
     mock_db = MagicMock()
     updates = _capture_updates(mock_db)
 
-    with patch("log_utils.agent_logger.supabase", mock_db):
+    with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         from log_utils.agent_logger import log_fail
         asyncio.get_event_loop().run_until_complete(
             log_fail("run-id", dangerous_error, 100)

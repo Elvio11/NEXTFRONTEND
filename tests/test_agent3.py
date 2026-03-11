@@ -170,7 +170,7 @@ def test_fit_scores_stale_set_true_after_parse():
     mock_db.table.return_value.update.side_effect = track_update
 
     import asyncio
-    with patch("agents.agent3_resume.supabase", mock_db), \
+    with patch("agents.agent3_resume.get_supabase", return_value=mock_db), \
          patch("agents.agent3_resume.parse_resume", return_value={
              "seniority_level": "mid", "top_5_skills": ["Python"],
              "experience_years": 3, "current_title": "Engineer",
@@ -178,7 +178,7 @@ def test_fit_scores_stale_set_true_after_parse():
          }), \
          patch("agents.agent3_resume.generate_personas", new_callable=AsyncMock,
                return_value=["p1", "p2", "p3"]), \
-         patch("log_utils.agent_logger.supabase", mock_db):
+         patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         import agents.agent3_resume as a3
         asyncio.get_event_loop().run_until_complete(
             a3.run("user-id", "/storage/fake.pdf")

@@ -12,6 +12,7 @@ Do NOT use this pattern for fit scoring or resume tailoring — those require Sa
 import json
 
 from llm.gemini import gemini
+from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
 
 _CLEAN_PROMPT = """You are a JD cleaning and classification specialist.
@@ -36,7 +37,9 @@ Rules:
 - nice_to_have_skills: stated as preferred/nice-to-have/bonus
 - role_family: pick the SINGLE best fit from the list above
 - jd_summary: no HTML, no brand language, factual and concise
-- Return ONLY JSON, no markdown, no explanation"""
+- Return ONLY JSON, no markdown, no explanation
+
+{HUMANIZER_GUIDELINES}"""
 
 
 async def clean_jd(raw_jd: str) -> dict:
@@ -49,7 +52,7 @@ async def clean_jd(raw_jd: str) -> dict:
         return {}
 
     # Truncate to avoid token overflow (Gemini Flash Lite has lower context)
-    prompt = _CLEAN_PROMPT.format(raw_jd=raw_jd[:4000])
+    prompt = _CLEAN_PROMPT.format(raw_jd=raw_jd[:4000], HUMANIZER_GUIDELINES=HUMANIZER_GUIDELINES)
 
     try:
         raw = await gemini.complete(prompt, mode="flash_lite")
