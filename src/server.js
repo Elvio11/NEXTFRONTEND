@@ -27,7 +27,7 @@ process.env.AGENT_SECRET = process.env.AGENT_SECRET || 'dummy_agent_secret';
 process.env.AES_SESSION_KEY = process.env.AES_SESSION_KEY || 'dummy_aes_key';
 process.env.SERVER2_URL = process.env.SERVER2_URL || 'http://localhost:3001';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
-process.env.PORT = process.env.PORT || '3000';
+process.env.PORT = process.env.PORT || '8080';
 
 const express = require('express');
 const cors = require('cors');
