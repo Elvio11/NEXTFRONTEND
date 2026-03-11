@@ -50,6 +50,7 @@ const applicationsRouter = require('./routes/applications');
 const notificationsRouter = require('./routes/notifications');
 const webhooksRouter = require('./routes/webhooks');
 const internalRouter = require('./routes/internal');
+const whatsappRouter = require('./routes/whatsapp');
 
 // Baileys stub
 const { connectWhatsApp } = require('./baileys/waClient');
@@ -107,6 +108,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/user', userRouter);
 app.use('/api/applications', applicationsRouter);
 app.use('/api/notifications', notificationsRouter);
+app.use('/api/whatsapp', verifyJWT, whatsappRouter);
 
 // Internal callbacks — Server 2/3 → Server 1 (X-Agent-Secret, NOT JWT)
 // Never expose these to the browser. verifyAgentSecret is applied inside the router.
@@ -132,7 +134,7 @@ app.use((err, _req, res, _next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Start
 // ─────────────────────────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT ?? '3000', 10);
+const PORT = parseInt(process.env.PORT ?? '8080', 10);
 
 app.listen(PORT, () => {
     console.log(`[server] Talvix Server 1 listening on port ${PORT}`);

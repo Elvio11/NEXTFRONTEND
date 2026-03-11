@@ -36,13 +36,14 @@ router.post('/wa-send', async (req, res) => {
         return res.status(400).json({ error: 'user_id and message are required' });
     }
 
-    // TODO Phase 3: route to Baileys sendMessage when outbound WA is implemented
-    // const { sendMessage } = require('../baileys/waClient');
-    // await sendMessage(user_id, message, event_type);
+    const { sendMessage } = require('../baileys/waClient');
+    const sent = await sendMessage(user_id, message, event_type);
 
-    console.log(`[internal/wa-send] user=${user_id} event=${event_type} msg="${message.slice(0, 80)}..."`);
-
-    return res.status(200).json({ status: 'deferred', note: 'Phase 3 — WA outbound not yet active' });
+    if (sent) {
+        return res.status(200).json({ status: 'sent' });
+    } else {
+        return res.status(500).json({ error: 'failed to send WhatsApp message' });
+    }
 });
 
 module.exports = router;

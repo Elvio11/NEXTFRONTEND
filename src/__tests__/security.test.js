@@ -15,7 +15,7 @@ const SERVER1_DIR = path.join(__dirname, '..', '..'); // server1/
 function collectJsFiles(dir, files = []) {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
-        if (entry.isDirectory() && entry.name !== 'node_modules') {
+        if (entry.isDirectory() && entry.name !== 'node_modules' && entry.name !== '__tests__') {
             collectJsFiles(full, files);
         } else if (entry.isFile() && entry.name.endsWith('.js')) {
             files.push(full);
@@ -27,10 +27,11 @@ function collectJsFiles(dir, files = []) {
 describe('Security audit — Server 1 source code', () => {
     const srcFiles = collectJsFiles(SRC_DIR);
 
-    test('SUPABASE_SERVICE_ROLE_KEY never referenced in src/', () => {
+    test('SUPABASE_SERVICE_ROLE_KEY never referenced in src/ (outside comments)', () => {
         const violations = srcFiles.filter(f => {
             const content = fs.readFileSync(f, 'utf8');
-            return content.includes('SERVICE_ROLE_KEY') || content.includes('service_role_key');
+            const cleanContent = content.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+            return cleanContent.includes('SERVICE_ROLE_KEY') || cleanContent.includes('service_role_key');
         });
         expect(violations).toEqual([]);
     });

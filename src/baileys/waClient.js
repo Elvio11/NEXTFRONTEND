@@ -75,14 +75,52 @@ async function connectWhatsApp() {
         }
     });
 
-    // Phase 2: log inbound messages only — no command routing yet
-    sock.ev.on('messages.upsert', ({ messages }) => {
+    // Phase 2/3: log inbound messages and apply 3-layer security gate
+    sock.ev.on('messages.upsert', async ({ messages }) => {
         for (const msg of messages) {
             if (!msg.key.fromMe && msg.message) {
                 const from = msg.key.remoteJid;
                 const text = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text ?? '[media]';
                 console.log(`[waClient] inbound from ${from}: ${text.slice(0, 80)}`);
-                // Phase 3: parse command, 3-gate security, route to agent
+
+                // --- 3-Layer Security Gate for Inbound Commands ---
+                try {
+                    // Extract phone number from JID (e.g., '919876543210@s.whatsapp.net' -> '919876543210')
+                    const phone = from.split('@')[0];
+
+                    const { data: user, error } = await supabase
+                        .from('users')
+                        .select('id, wa_opted_in, tier')
+                        .eq('wa_phone', phone)
+                        .single();
+
+                    // Gate 1: Phone exists?
+                    if (error || !user) {
+                        console.log(`[waClient] Gate 1 failed: unrecognised phone ${phone}`);
+                        continue; // Silently ignore
+                    }
+
+                    // Gate 2: Opted in?
+                    if (!user.wa_opted_in) {
+                        console.log(`[waClient] Gate 2 failed: user ${user.id} not opted in`);
+                        await sock.sendMessage(from, { text: "Please connect WhatsApp via the Talvix dashboard to enable commands." });
+                        continue;
+                    }
+
+                    // Gate 3: Core commands are premium. (If command requires paid tier)
+                    const isPremiumCommand = text.toLowerCase().startsWith('/apply') || text.toLowerCase().startsWith('/coach');
+                    if (isPremiumCommand && user.tier !== 'paid') {
+                        console.log(`[waClient] Gate 3 failed: user ${user.id} is free tier attempting premium command`);
+                        await sock.sendMessage(from, { text: "This command requires a premium subscription. Upgrade at talvix.in." });
+                        continue;
+                    }
+
+                    // Handled: Valid command passed all gates.
+                    console.log(`[waClient] User ${user.id} authenticated for command: ${text}`);
+                    // Future: Route to agent executor
+                } catch (err) {
+                    console.error('[waClient] Inbound gate error:', err.message);
+                }
             }
         }
     });
@@ -90,4 +128,43 @@ async function connectWhatsApp() {
     return sock;
 }
 
-module.exports = { connectWhatsApp, getSocket: () => sock };
+/**
+ * Send a WhatsApp message to a specific user_id.
+ * Queries Supabase using anon key implicitly, handled via API routes.
+ */
+async function sendMessage(userId, message, eventType = 'notification') {
+    if (!sock) {
+        console.error('[waClient] Cannot send message, socket not connected.');
+        return false;
+    }
+
+    try {
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('wa_phone, wa_opted_in')
+            .eq('id', userId)
+            .single();
+
+        if (error || !user) {
+            console.error(`[waClient] sendMessage failed: user ${userId} not found`);
+            return false;
+        }
+
+        if (!user.wa_opted_in || !user.wa_phone) {
+            console.error(`[waClient] sendMessage aborted: user ${userId} missing phone or opt-in`);
+            return false;
+        }
+
+        // WhatsApp JID format
+        const jid = `${user.wa_phone}@s.whatsapp.net`;
+        await sock.sendMessage(jid, { text: message });
+
+        console.log(`[waClient] Sent ${eventType} to user ${userId}`);
+        return true;
+    } catch (err) {
+        console.error(`[waClient] sendMessage error for user ${userId}:`, err.message);
+        return false;
+    }
+}
+
+module.exports = { connectWhatsApp, getSocket: () => sock, sendMessage };
