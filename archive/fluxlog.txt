@@ -1,0 +1,344 @@
+cloudgitSetup Stopping Flux App Component cloudgit...
+cloudgitFinalizing Flux App Component cloudgit stopped
+cloudgitSetup Removing Flux App component cloudgit container...
+cloudgitFinalizing Flux App component cloudgit container removed
+cloudgitSetup Removing Flux App component cloudgit image...
+cloudgitFinalizing Flux App component cloudgit image operations done
+cloudgitSetup Denying component cloudgit ports...
+cloudgitSetup Ports of component cloudgit denied
+cloudgitFinalizing Flux App component cloudgit of talvixserver3 was successfully removed
+cloudgitSetup Cleaning up database...
+cloudgitFinalizing Database cleaned
+cloudgitFinalizing Removal step done. Result: Flux App talvixserver3 was partially removed
+cloudgitPulling Application softly removed. Awaiting installation...
+cloudgitSetup Running initial checks for Flux App...
+cloudgitSetup Connecting to database...
+cloudgitSetup Checking database...
+cloudgitSetup Checking Flux App network of talvixserver3...
+cloudgitFinalizing Private network access removed for talvixserver3
+cloudgitFinalizing Docker network of talvixserver3 initiated.
+cloudgitSetup Initiating Flux App talvixserver3 installation...
+cloudgitSetup Allowing component cloudgit of Flux App talvixserver3 ports...
+cloudgitFinalizing Port 61910 OK
+cloudgitFinalizing Port 23391 OK
+cloudgitFinalizing Port 61910 mapped OK
+cloudgitFinalizing Port 23391 mapped OK
+cloudgitPulling Pulling from talvix/talvixserver3
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Pulling fs layer
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Waiting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Pull complete
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Download complete
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Downloading
+cloudgitPulling Download complete
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Extracting
+cloudgitPulling Downloading
+cloudgitPulling Verifying Checksum
+cloudgitPulling Download complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Extracting
+cloudgitPulling Pull complete
+cloudgitPulling Digest: sha256:04e072266b134db068e95b9d6abc86c81c8123e133c3152f8bfc76e7ebdc4c9a
+cloudgitPulling Status: Downloaded newer image for talvix/talvixserver3:latest
+cloudgitPulling Pulling component cloudgit of Flux App talvixserver3
+cloudgitSetup Creating component cloudgit of local Flux App talvixserver3
+cloudgitSetup Starting component cloudgit of Flux App talvixserver3...
+cloudgitError (HTTP code 400) unexpected - failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: exec: "": executable file not found in $PATH: unknown 
+cloudgitError Error occured. Initiating Flux App talvixserver3 removal
+cloudgitSetup Stopping Flux App Component cloudgit...
+cloudgitError (HTTP code 409) unexpected - cannot kill container: ee96c9269951c9a85b890e61d7b4c81b3a6615955660201dba9237cf7614cf9b: container ee96c9269951c9a85b890e61d7b4c81b3a6615955660201dba9237cf7614cf9b is not running 
+cloudgitFinalizing Flux App Component cloudgit stopped
+cloudgitSetup Removing Flux App component cloudgit container...
+cloudgitFinalizing Flux App component cloudgit container removed
+cloudgitSetup Denying component cloudgit ports...
+cloudgitSetup Ports of component cloudgit denied
+cloudgitSetup Unmounting volume of component cloudgit...
+cloudgitSetup Cleaning up component cloudgit data...
+cloudgitFinalizing Data of component cloudgit cleaned
+cloudgitSetup Adjusting crontab...
+cloudgitFinalizing Crontab Adjusted.
+cloudgitSetup Cleaning up data volume of component cloudgit...
+cloudgitFinalizing Volume of component cloudgit cleaned
+cloudgitSetup Removing Flux App component cloudgit image...
+cloudgitFinalizing Flux App component cloudgit image operations done
+cloudgitFinalizing Flux App component cloudgit of talvixserver3 was successfully removed
+cloudgitSetup Cleaning up docker network...
+cloudgitFinalizing Docker network cleaned
+cloudgitSetup Cleaning up database...
+cloudgitFinalizing Database cleaned
+cloudgitFinalizing Removal step done. Result: Flux App talvixserver3 was successfuly removed
