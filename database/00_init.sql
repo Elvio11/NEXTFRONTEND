@@ -1144,6 +1144,39 @@ SELECT cron.schedule(
     $$ UPDATE users SET monthly_apply_count = 0, updated_at = NOW() WHERE monthly_apply_count > 0; $$
 );
 
+-- Job 12: MinIO Cleanup — tailored resumes (3:15 AM IST = 21:45 UTC)
+SELECT cron.schedule(
+    'talvix-cleanup-tailored-resumes', '45 21 * * *',
+    $$ SELECT net.http_post(
+        url     := current_setting('app.server2_url') || '/api/cleanup/tailored-resumes',
+        headers := jsonb_build_object('Content-Type','application/json',
+                                      'X-Agent-Secret', current_setting('app.agent_secret')),
+        body    := '{"agent":"cleanup","user_id":null,"payload":{}}'::jsonb
+    ); $$
+);
+
+-- Job 13: MinIO Cleanup — cover letters (3:20 AM IST = 21:50 UTC)
+SELECT cron.schedule(
+    'talvix-cleanup-cover-letters', '50 21 * * *',
+    $$ SELECT net.http_post(
+        url     := current_setting('app.server2_url') || '/api/cleanup/cover-letters',
+        headers := jsonb_build_object('Content-Type','application/json',
+                                      'X-Agent-Secret', current_setting('app.agent_secret')),
+        body    := '{"agent":"cleanup","user_id":null,"payload":{}}'::jsonb
+    ); $$
+);
+
+-- Job 14: MinIO Cleanup — job descriptions (3:30 AM IST = 22:00 UTC)
+SELECT cron.schedule(
+    'talvix-cleanup-jds', '0 22 * * *',
+    $$ SELECT net.http_post(
+        url     := current_setting('app.server2_url') || '/api/cleanup/jds',
+        headers := jsonb_build_object('Content-Type','application/json',
+                                      'X-Agent-Secret', current_setting('app.agent_secret')),
+        body    := '{"agent":"cleanup","user_id":null,"payload":{}}'::jsonb
+    ); $$
+);
+
 
 -- =============================================================================
 -- SEED DATA

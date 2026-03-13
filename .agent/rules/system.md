@@ -19,8 +19,8 @@ trigger: always_on
 | 11 | document_tailor (Cover Letter) | 3 | Gemini Flash |
 | 12 | auto_apply | 3 | None (Selenium) |
 | 13 | auto_apply inline (Form Q&A) | 3 | Sarvam-M No-Think |
-| 14 | follow_up | 3 | Sarvam-M Precise (email) / None (LinkedIn) |
-| 15 | feedback_calibrator | 3 | Gemini Flash (Layer 3 only) |
+| 14 | follow_up **(CRITICAL: FILE MISSING)** | 3 | Sarvam-M Precise (email) / None (LinkedIn) |
+| 15 | feedback_calibrator **(CRITICAL: FILE MISSING)** | 3 | Gemini Flash (Layer 3 only) |
 
 ## Dev Team Agents (MetaGPT-derived)
 
