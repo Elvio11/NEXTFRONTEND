@@ -33,6 +33,7 @@ pytz>=2024.1
 
 # Cryptography for AES session management
 cryptography>=42.0,<44.0
+boto3>=1.34,<2.0
 
 # Compression (stdlib gzip used — no pip entry needed)
 # All secrets via Doppler — no python-dotenv

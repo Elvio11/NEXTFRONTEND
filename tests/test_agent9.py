@@ -50,7 +50,7 @@ async def test_new_job_inserted_with_is_new_true():
          patch("agents.agent9_scraper.log_start", new_callable=AsyncMock), \
          patch("agents.agent9_scraper.log_end", new_callable=AsyncMock), \
          patch("agents.agent9_scraper._trigger_jd_clean", new_callable=AsyncMock), \
-         patch("agents.agent9_scraper._write_jd_to_storage"):
+         patch("agents.agent9_scraper.put_text", new_callable=AsyncMock):
 
         # No existing fingerprint → new job
         mock_sb_fp.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = []
@@ -110,7 +110,7 @@ def test_new_job_has_jd_cleaned_false():
     from skills.fingerprint import compute_fingerprint
     with patch("skills.fingerprint.supabase") as mock_sb_fp, \
          patch("agents.agent9_scraper.supabase") as mock_sb_ag, \
-         patch("agents.agent9_scraper._write_jd_to_storage"):
+         patch("agents.agent9_scraper.put_text", new_callable=AsyncMock):
 
         mock_sb_fp.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = []
         insert_call_data = {}

@@ -101,9 +101,9 @@ def test_screenshot_saved_on_selenium_exception():
 
 
 def test_screenshot_path_starts_with_storage():
-    """All screenshot paths must use /storage/ — never local /tmp/ or relative paths."""
+    """All screenshot paths must use MinIO keys — never local /tmp/."""
     ae_src = (SERVER3_ROOT / "skills" / "apply_engine.py").read_text()
-    assert "/storage/screenshots/" in ae_src, \
-        "Screenshot paths must use /storage/screenshots/ (FluxShare)"
+    assert "screenshots/" in ae_src, \
+        "Screenshot paths must use screenshots/ MinIO keys"
     assert "/tmp/" not in ae_src, \
         "Screenshot paths must NOT use /tmp/"

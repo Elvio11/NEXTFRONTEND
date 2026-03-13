@@ -17,12 +17,10 @@ LinkedIn: kill switch checked BEFORE passing LinkedIn to jobspy_runner.
 """
 
 import asyncio
-import gzip
 import json
 import os
 import time
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -32,21 +30,19 @@ from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_r
 from skills.fingerprint import compute_fingerprint, check_duplicate
 from skills.jobspy_runner import run_jobspy
 from skills.custom_scraper import run_custom_scrapers
+from skills.storage_client import put_text
 
 
 # ─── JD Storage ───────────────────────────────────────────────────────────────
 
-def _write_jd_to_storage(fingerprint: str, jd_text: str) -> None:
-    """Write raw JD to /storage/jds/{fingerprint}.txt for new jobs only."""
-    path = f"/storage/jds/{fingerprint}.txt"
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(jd_text)
+async def _write_jd_to_storage(fingerprint: str, jd_text: str) -> None:
+    """Write raw JD to jds/{fingerprint}.txt for new jobs only."""
+    await put_text(f"jds/{fingerprint}.txt", jd_text)
 
 
 # ─── DB Upsert ────────────────────────────────────────────────────────────────
 
-def _upsert_job(job: dict) -> str:
+async def _upsert_job(job: dict) -> str:
     """
     Upsert a job into the DB.
     Returns "inserted" or "updated".
@@ -89,9 +85,9 @@ def _upsert_job(job: dict) -> str:
 
         supabase.table("jobs").insert(insert_data).execute()
 
-        # Write JD to FluxShare storage
+        # Write JD to MinIO storage
         if raw_jd:
-            _write_jd_to_storage(fingerprint, raw_jd)
+            await _write_jd_to_storage(fingerprint, raw_jd)
 
         # Also record in job_sources
         supabase.table("job_sources").insert({
@@ -186,7 +182,7 @@ async def run_scraper(
         # ── Upsert all jobs ─────────────────────────────────────────────────
         for job in all_jobs:
             try:
-                result = _upsert_job(job)
+                result = await _upsert_job(job)
                 if result == "inserted":
                     jobs_inserted += 1
                 else:

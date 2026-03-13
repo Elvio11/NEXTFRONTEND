@@ -19,7 +19,6 @@ import asyncio
 import os
 import random
 from datetime import date
-from pathlib import Path
 from typing import Optional
 
 from selenium.webdriver.common.by import By
@@ -33,6 +32,7 @@ from selenium.common.exceptions import (
 import undetected_chromedriver as uc
 
 from db.client import supabase
+from skills.storage_client import put_bytes
 
 
 # ─── Constants ─────────────────────────────────────────────────────────────────
@@ -44,12 +44,12 @@ ELEMENT_TIMEOUT  = 10           # seconds WebDriverWait timeout
 
 # ─── Screenshot ────────────────────────────────────────────────────────────────
 
-def _save_screenshot(driver: uc.Chrome, run_id: str, job_id: str) -> Optional[str]:
-    """Save a screenshot to /storage/screenshots/{run_id}/{job_id}.png."""
+async def _save_screenshot(driver: uc.Chrome, run_id: str, job_id: str) -> Optional[str]:
+    """Save a screenshot to screenshots/{run_id}/{job_id}.png."""
     try:
-        path = f"/storage/screenshots/{run_id}/{job_id}.png"
-        Path(path).parent.mkdir(parents=True, exist_ok=True)
-        driver.save_screenshot(path)
+        png_data = driver.get_screenshot_as_png()
+        path = f"screenshots/{run_id}/{job_id}.png"
+        await put_bytes(path, png_data)
         return path
     except Exception as exc:
         print(f"[apply_engine] screenshot failed: {exc}")
@@ -189,11 +189,11 @@ async def apply_indeed_easy(
             )
             return {"status": "applied", "screenshot_path": None, "failure_note": None}
         except TimeoutException:
-            screenshot = _save_screenshot(driver, run_id, job_id)
+            screenshot = await _save_screenshot(driver, run_id, job_id)
             return {"status": "failed", "screenshot_path": screenshot, "failure_note": "success_page_not_detected"}
 
     except Exception as exc:
-        screenshot = _save_screenshot(driver, run_id, job_id)
+        screenshot = await _save_screenshot(driver, run_id, job_id)
         return {"status": "failed", "screenshot_path": screenshot, "failure_note": str(exc)[:300]}
 
 
@@ -292,9 +292,9 @@ async def apply_linkedin_easy(
         except (TimeoutException, NoSuchElementException):
             pass
 
-        screenshot = _save_screenshot(driver, run_id, job_id)
+        screenshot = await _save_screenshot(driver, run_id, job_id)
         return {"status": "failed", "screenshot_path": screenshot, "failure_note": "success_modal_not_detected"}
 
     except Exception as exc:
-        screenshot = _save_screenshot(driver, run_id, job_id)
+        screenshot = await _save_screenshot(driver, run_id, job_id)
         return {"status": "failed", "screenshot_path": screenshot, "failure_note": str(exc)[:300]}

@@ -12,32 +12,12 @@ Structure: Hook → Evidence (2-3 achievements) → Confident close
 Opening sentence must be unique (seeded with user_id + job_id to vary output).
 """
 
-import gzip
 import json
-import os
-from pathlib import Path
+from datetime import datetime, timezone
 
 from llm.gemini import gemini
 from skills.humanizer_prompt import HUMANIZER_GUIDELINES
-
-
-# ─── Storage Path ──────────────────────────────────────────────────────────────
-
-def _cover_letter_path(user_id: str, job_id: str) -> str:
-    return f"/storage/cover-letters/{user_id}/{job_id}.txt"
-
-def _resume_path(user_id: str) -> str:
-    return f"/storage/parsed-resumes/{user_id}.json.gz"
-
-
-# ─── Resume Loader ─────────────────────────────────────────────────────────────
-
-def _load_parsed_resume(user_id: str) -> dict:
-    path = _resume_path(user_id)
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Parsed resume not found: {path}")
-    with gzip.open(path, "rt", encoding="utf-8") as f:
-        return json.load(f)
+from skills.storage_client import get_json_gz, put_text
 
 
 # ─── Prompt Builder ────────────────────────────────────────────────────────────
@@ -113,14 +93,15 @@ async def write_cover_letter(user_id: str, job: dict, persona: str = "profession
     """
     job_id = str(job.get("id", "unknown"))
 
-    resume  = _load_parsed_resume(user_id)
+    try:
+        resume = await get_json_gz(f"parsed-resumes/{user_id}.json.gz")
+    except Exception as exc:
+        raise FileNotFoundError(f"Parsed resume not found: {exc}")
+
     prompt  = _build_cover_letter_prompt(resume, job, persona)
     letter  = await gemini.complete(prompt, mode="flash")
 
-    output_path = _cover_letter_path(user_id, job_id)
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(letter.strip())
+    output_path = f"cover-letters/{user_id}/{job_id}.txt"
+    await put_text(output_path, letter.strip())
 
     return output_path

@@ -10,10 +10,8 @@ THE ABSOLUTE CONSTRAINT: NEVER fabricate skills, experience, certifications, or 
 Only reorder and reframe what already exists in the resume. Missing skills stay missing.
 """
 
-import gzip
 import json
-import os
-from pathlib import Path
+from io import BytesIO
 from datetime import datetime, timezone
 
 from docx import Document
@@ -22,26 +20,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 
 from llm.sarvam import sarvam, SarvamUnavailableError
 from skills.humanizer_prompt import HUMANIZER_GUIDELINES
-
-
-# ─── Storage Paths ─────────────────────────────────────────────────────────────
-
-def _resume_path(user_id: str) -> str:
-    return f"/storage/parsed-resumes/{user_id}.json.gz"
-
-def _tailored_path(user_id: str, job_id: str) -> str:
-    return f"/storage/tailored-resumes/{user_id}/{job_id}.docx"
-
-
-# ─── Resume Loader ─────────────────────────────────────────────────────────────
-
-def _load_parsed_resume(user_id: str) -> dict:
-    """Load and decompress the parsed resume JSON from FluxShare."""
-    path = _resume_path(user_id)
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Parsed resume not found: {path}")
-    with gzip.open(path, "rt", encoding="utf-8") as f:
-        return json.load(f)
+from skills.storage_client import get_json_gz, put_bytes
 
 
 # ─── Tailoring Prompt ──────────────────────────────────────────────────────────
@@ -189,7 +168,11 @@ async def tailor_resume(user_id: str, job: dict) -> str:
     """
     job_id = str(job.get("id", "unknown"))
 
-    resume  = _load_parsed_resume(user_id)
+    try:
+        resume = await get_json_gz(f"parsed-resumes/{user_id}.json.gz")
+    except Exception as exc:
+        raise FileNotFoundError(f"Parsed resume not found: {exc}")
+
     prompt  = _build_tailor_prompt(resume, job)
     raw     = await sarvam.complete(prompt, mode="think")
 
@@ -206,10 +189,11 @@ async def tailor_resume(user_id: str, job: dict) -> str:
         raise SarvamUnavailableError(f"Sarvam returned non-JSON tailor response: {exc}") from exc
 
     # Build and write DOCX
-    output_path = _tailored_path(user_id, job_id)
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    output_path = f"tailored-resumes/{user_id}/{job_id}.docx"
 
     doc = _build_docx(tailored)
-    doc.save(output_path)
+    stream = BytesIO()
+    doc.save(stream)
+    await put_bytes(output_path, stream.getvalue())
 
     return output_path
