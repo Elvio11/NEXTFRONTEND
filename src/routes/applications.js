@@ -109,4 +109,56 @@ router.get('/', verifyJWT, async (req, res) => {
     }
 });
 
+const { getPresignedUrl } = require("../lib/storageClient");
+
+// GET /api/applications/:appId/resume
+router.get("/:appId/resume", verifyJWT, async (req, res) => {
+    const { appId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const { data, error } = await supabase
+            .from("job_applications")
+            .select("tailored_resume_path")
+            .eq("id", appId)
+            .eq("user_id", userId)
+            .single();
+
+        if (error || !data?.tailored_resume_path) {
+            return res.status(404).json({ error: "Resume not found" });
+        }
+
+        const url = await getPresignedUrl(data.tailored_resume_path, 3600);
+        return res.json({ url });
+    } catch (err) {
+        console.error('[applications GET resume]', err.message);
+        return res.status(500).json({ error: 'Failed to get resume URL' });
+    }
+});
+
+// GET /api/applications/:appId/cover-letter
+router.get("/:appId/cover-letter", verifyJWT, async (req, res) => {
+    const { appId } = req.params;
+    const userId = req.user.id;
+
+    try {
+        const { data, error } = await supabase
+            .from("job_applications")
+            .select("cover_letter_path")
+            .eq("id", appId)
+            .eq("user_id", userId)
+            .single();
+
+        if (error || !data?.cover_letter_path) {
+            return res.status(404).json({ error: "Cover letter not found" });
+        }
+
+        const url = await getPresignedUrl(data.cover_letter_path, 3600);
+        return res.json({ url });
+    } catch (err) {
+        console.error('[applications GET cover-letter]', err.message);
+        return res.status(500).json({ error: 'Failed to get cover letter URL' });
+    }
+});
+
 module.exports = router;
