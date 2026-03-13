@@ -25,6 +25,8 @@ import requests
 
 from db.client import get_supabase
 from llm.sarvam import SarvamClient
+from skills.storage_client import get_s3_client
+from botocore.exceptions import ClientError, EndpointConnectionError
 
 logger = logging.getLogger(__name__)
 
@@ -287,15 +289,18 @@ def gate_account(user: dict, trigger: str) -> None:
 def gate_system_health(trigger: str) -> None:
     """
     Gate 4 — System Health.
-    Verifies FluxShare is mounted and, for apply triggers, that Server 3 is reachable.
+    Verifies MinIO is reachable and, for apply triggers, that Server 3 is reachable.
 
     Raises GateFailure on any violation.
     """
-    # ── FluxShare mounted ────────────────────────────────────────────────────
-    if not os.path.exists("/storage/"):
+    # ── MinIO reachable ──────────────────────────────────────────────────────
+    try:
+        bucket = os.environ.get("MINIO_BUCKET", "talvix")
+        get_s3_client().head_bucket(Bucket=bucket)
+    except (ClientError, EndpointConnectionError) as exc:
         raise GateFailure(
             gate="system_health",
-            message="FluxShare /storage/ not mounted",
+            message=f"MinIO storage unreachable: {exc}",
             action="alert_founder_critical",
         )
 

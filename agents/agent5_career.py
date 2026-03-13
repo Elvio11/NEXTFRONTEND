@@ -5,18 +5,14 @@ Agent 5 — Career Intelligence
 4-dimension career score + salary positioning.
 Writes to career_intelligence table + /storage/career-intel/{user_id}.json.gz
 
-Runs in parallel with Agents 4 and 6 via CareerPlannerFlow asyncio.gather().
 """
 
-import gzip
-import json
-import os
 import time
 from datetime import datetime, timezone, timedelta
-
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
 from skills.career_scorer import compute_career_score
+from skills.storage_client import get_json_gz, put_json_gz
 
 
 async def run(user_id: str) -> dict:
@@ -30,10 +26,8 @@ async def run(user_id: str) -> dict:
 
     try:
         # Load parsed resume from FluxShare
-        resume_path = f"/storage/parsed-resumes/{user_id}.json.gz"
         try:
-            with gzip.open(resume_path, "rt", encoding="utf-8") as f:
-                parsed = json.load(f)
+            parsed = await get_json_gz(f"parsed-resumes/{user_id}.json.gz")
         except Exception as exc:
             await log_fail(run_id, f"resume_not_found: {exc}", _ms())
             return {"status": "failed", "duration_ms": _ms(), "records_processed": 0,
@@ -69,9 +63,7 @@ async def run(user_id: str) -> dict:
         }, on_conflict="user_id").execute()
 
         # Write full analysis to FluxShare
-        os.makedirs("/storage/career-intel", exist_ok=True)
-        with gzip.open(f"/storage/career-intel/{user_id}.json.gz", "wt", encoding="utf-8") as f:
-            json.dump({"user_id": user_id, **result}, f)
+        await put_json_gz(f"career-intel/{user_id}.json.gz", {"user_id": user_id, **result})
 
         # Clear stale flag
         get_supabase().table("users").update({

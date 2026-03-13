@@ -19,8 +19,12 @@ from orchestrator.gates import (
 )
 
 # Mock env vars
-os.environ["AGENT_SECRET"] = "test-secret"
-os.environ["SERVER1_URL"]  = "http://test-server1"
+os.environ["AGENT_SECRET"]     = "test-secret"
+os.environ["SERVER1_URL"]      = "http://test-server1"
+os.environ["S4_URL"]           = "http://test-s3:9000"
+os.environ["MINIO_ACCESS_KEY"] = "test-access"
+os.environ["MINIO_SECRET_KEY"] = "test-secret"
+os.environ["MINIO_BUCKET"]     = "talvix"
 
 # ─── GATE 1: IDENTITY ─────────────────────────────────────────────────────────
 
@@ -174,9 +178,13 @@ def test_gate_account_three_consecutive_failures(mock_supabase):
 
 # ─── GATE 4: SYSTEM HEALTH ────────────────────────────────────────────────────
 
-@patch("os.path.exists")
-def test_gate_system_health_storage_missing(mock_exists):
-    mock_exists.return_value = False
+@patch("orchestrator.gates.get_s3_client")
+def test_gate_system_health_storage_missing(mock_get_s3):
+    mock_client = MagicMock()
+    # Mock EndpointConnectionError
+    from botocore.exceptions import EndpointConnectionError
+    mock_client.head_bucket.side_effect = EndpointConnectionError(endpoint_url="http://test-s3")
+    mock_get_s3.return_value = mock_client
     
     with pytest.raises(GateFailure) as exc:
         gate_system_health(trigger="scrape")

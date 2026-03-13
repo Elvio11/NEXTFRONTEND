@@ -36,7 +36,7 @@ def test_sarvam_think_mode_called_for_agent3():
     import asyncio
     from skills import persona_generator
     with patch.object(persona_generator.sarvam, "complete", side_effect=mock_complete):
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             persona_generator.generate_personas({
                 "current_title": "Engineer", "experience_years": 3,
                 "seniority_level": "mid", "top_5_skills": ["Python"]
@@ -74,7 +74,7 @@ def test_gemini_flash_lite_called_for_agent7():
 
     from skills import jd_cleaner
     with patch.object(jd_cleaner.gemini, "complete", side_effect=mock_complete):
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             jd_cleaner.clean_jd("We are looking for a Python developer with FastAPI experience.")
         )
 
@@ -102,14 +102,15 @@ def test_sarvam_unavailable_returns_skipped_not_gemini_fallback():
          patch("llm.gemini.GeminiClient.complete", side_effect=track_gemini), \
          patch("agents.agent3_resume.get_supabase", return_value=mock_db), \
          patch("log_utils.agent_logger.get_supabase", return_value=mock_db), \
+         patch("agents.agent3_resume.put_json_gz", new_callable=AsyncMock), \
          patch("agents.agent3_resume.parse_resume", return_value={
              "seniority_level": "mid", "top_5_skills": ["Python"],
              "experience_years": 3, "current_title": "Engineer",
              "skills": ["Python"]
          }):
         from agents import agent3_resume
-        result = asyncio.get_event_loop().run_until_complete(
-            agent3_resume.run("user-id", "/storage/fake.pdf")
+        result = asyncio.run(
+            agent3_resume.run("user-id", "fake.pdf")
         )
 
     assert result["status"] == "skipped", \

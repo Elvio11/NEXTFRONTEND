@@ -5,18 +5,14 @@ Agent 4 — Skill Gap Analysis
 Identifies top skill gaps, writes top 3 to DB + full report to FluxShare.
 Runs in parallel with Agents 5 and 6 via CareerPlannerFlow asyncio.gather().
 
-Input: user_id (parsed resume already on FluxShare from Agent 3)
-Output: top_gaps[] in skill_gap_results table
 """
 
-import gzip
-import json
 import time
 from datetime import datetime, timezone, timedelta
-
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.skill_gap_analyzer import analyze_skill_gaps
+from skills.storage_client import get_json_gz
 from llm.sarvam import SarvamUnavailableError
 
 
@@ -31,10 +27,8 @@ async def run(user_id: str) -> dict:
 
     try:
         # Load parsed resume from FluxShare
-        resume_path = f"/storage/parsed-resumes/{user_id}.json.gz"
         try:
-            with gzip.open(resume_path, "rt", encoding="utf-8") as f:
-                parsed = json.load(f)
+            parsed = await get_json_gz(f"parsed-resumes/{user_id}.json.gz")
         except Exception as exc:
             await log_fail(run_id, f"resume_not_found: {exc}", _ms())
             return {"status": "failed", "duration_ms": _ms(), "records_processed": 0,

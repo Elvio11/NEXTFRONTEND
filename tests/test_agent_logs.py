@@ -53,8 +53,9 @@ def test_agent_log_written_at_start_with_status_started():
 
     with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         from log_utils.agent_logger import log_start, new_run_id
-        asyncio.get_event_loop().run_until_complete(
-            log_start("test_agent", "user-id", new_run_id())
+        run_id = new_run_id()
+        asyncio.run(
+            log_start("test_agent", "user-123", run_id)
         )
 
     assert inserts, "No insert was made to agent_logs"
@@ -67,9 +68,10 @@ def test_success_log_expires_at_is_3_days():
     updates = _capture_updates(mock_db)
 
     with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
-        from log_utils.agent_logger import log_end
-        asyncio.get_event_loop().run_until_complete(
-            log_end("run-id", 5, 1234)
+        from log_utils.agent_logger import log_end, new_run_id
+        run_id = new_run_id()
+        asyncio.run(
+            log_end(run_id, 10, 500)
         )
 
     assert updates, "No update was made to agent_logs"
@@ -86,9 +88,10 @@ def test_failure_log_expires_at_is_30_days():
     updates = _capture_updates(mock_db)
 
     with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
-        from log_utils.agent_logger import log_fail
-        asyncio.get_event_loop().run_until_complete(
-            log_fail("run-id", "something went wrong", 500)
+        from log_utils.agent_logger import log_fail, new_run_id
+        run_id = new_run_id()
+        asyncio.run(
+            log_fail(run_id, "error with secret: sk-1234567890abcdef1234567890abcdef", 500)
         )
 
     assert updates, "No update was made to agent_logs"
@@ -115,9 +118,10 @@ def test_no_secrets_in_agent_log_error_message():
     updates = _capture_updates(mock_db)
 
     with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
-        from log_utils.agent_logger import log_fail
-        asyncio.get_event_loop().run_until_complete(
-            log_fail("run-id", dangerous_error, 100)
+        from log_utils.agent_logger import log_fail, new_run_id
+        run_id = new_run_id()
+        asyncio.run(
+            log_fail(run_id, "test error", 500)
         )
 
     error_logged = updates[0].get("error_message", "")

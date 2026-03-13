@@ -15,15 +15,13 @@ After all users scored for a scrape:
   - user_fit_score_cursors.last_scrape_run updated
 """
 
-import gzip
-import json
 import time
 from datetime import datetime, timezone
-
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.prefilter_engine import prefilter
 from skills.fit_calculator import score_jobs
+from skills.storage_client import get_json_gz
 from llm.sarvam import SarvamUnavailableError
 
 
@@ -36,9 +34,7 @@ async def _score_single_user(
     """Score one user. Returns count of scores written."""
     # Load parsed resume
     try:
-        resume_path = f"/storage/parsed-resumes/{user_id}.json.gz"
-        with gzip.open(resume_path, "rt", encoding="utf-8") as f:
-            parsed = json.load(f)
+        parsed = await get_json_gz(f"parsed-resumes/{user_id}.json.gz")
     except Exception:
         return 0
 

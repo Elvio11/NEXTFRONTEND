@@ -10,9 +10,6 @@ Output written as gzip'd JSON to /storage/parsed-resumes/{user_id}.json.gz
 Returns the parsed dict for downstream use by Agent 3.
 """
 
-import gzip
-import json
-import os
 import re
 from pathlib import Path
 from typing import Optional
@@ -20,8 +17,7 @@ from typing import Optional
 import PyPDF2
 from docx import Document
 
-
-STORAGE_PATH = "/storage/parsed-resumes"
+from skills.storage_client import put_json_gz
 
 
 class ParseError(Exception):
@@ -127,7 +123,7 @@ def _infer_seniority(exp_years: int) -> str:
 
 # ─── Public API ──────────────────────────────────────────────────────────────
 
-def parse_resume(file_path: str, user_id: str) -> dict:
+async def parse_resume(file_path: str, user_id: str) -> dict:
     """
     Parse a resume file (PDF or DOCX) and write gzip'd JSON to FluxShare.
     Returns the parsed dict.
@@ -160,10 +156,7 @@ def parse_resume(file_path: str, user_id: str) -> dict:
         "work_experience": [],
     }
 
-    # Write gzip'd JSON to FluxShare
-    os.makedirs(STORAGE_PATH, exist_ok=True)
-    out_path = f"{STORAGE_PATH}/{user_id}.json.gz"
-    with gzip.open(out_path, "wt", encoding="utf-8") as f:
-        json.dump(parsed, f)
+    key = f"parsed-resumes/{user_id}.json.gz"
+    await put_json_gz(key, parsed)
 
     return parsed

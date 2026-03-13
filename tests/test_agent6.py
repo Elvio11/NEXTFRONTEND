@@ -63,7 +63,7 @@ def test_fit_calculator_only_writes_scores_gte_40():
     with patch("skills.fit_calculator.get_supabase", return_value=mock_db), \
          patch("skills.fit_calculator.sarvam.complete", side_effect=mock_sarvam):
         from skills.fit_calculator import score_jobs
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             score_jobs(
                 "user1",
                 [{"id": "job1", "jd_summary": "test"}, {"id": "job2", "jd_summary": "test"}],
@@ -103,7 +103,7 @@ def test_free_user_fit_reasons_is_null():
     with patch("skills.fit_calculator.get_supabase", return_value=mock_db), \
          patch("skills.fit_calculator.sarvam.complete", side_effect=mock_sarvam):
         from skills.fit_calculator import score_jobs
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             score_jobs(
                 "free-user", [{"id": "job1", "jd_summary": "Python expert"}],
                 {"top_5_skills": ["python"], "experience_years": 2,

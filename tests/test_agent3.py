@@ -121,19 +121,19 @@ def test_password_protected_pdf_returns_failed_status(tmp_path):
         assert "password_protected" in str(exc_info.value)
 
 
-def test_parsed_resume_written_to_storage_gzipped(tmp_path):
-    """Parsed resume should be gzip'd JSON at /storage/parsed-resumes/{user_id}.json.gz"""
-    with patch("skills.resume_parser.STORAGE_PATH", str(tmp_path)), \
-         patch("skills.resume_parser._extract_pdf_text", return_value=SAMPLE_RESUME_TEXT):
+def test_parsed_resume_written_to_storage_gzipped():
+    """Parsed resume should be written via put_json_gz to parsed-resumes/{user_id}.json.gz"""
+    with patch("skills.resume_parser._extract_pdf_text", return_value=SAMPLE_RESUME_TEXT), \
+         patch("skills.resume_parser.put_json_gz", new_callable=AsyncMock) as mock_put:
         from skills.resume_parser import parse_resume
         user_id = "test-user-123"
-        result = parse_resume(f"{tmp_path}/fake.pdf", user_id)
-        out_path = tmp_path / f"{user_id}.json.gz"
-        assert out_path.exists()
-        with gzip.open(str(out_path), "rt", encoding="utf-8") as f:
-            data = json.load(f)
-        assert data["user_id"] == user_id
-        assert isinstance(data["skills"], list)
+        import asyncio
+        result = asyncio.run(parse_resume(f"fake.pdf", user_id))
+        
+        mock_put.assert_awaited_once_with(
+            f"parsed-resumes/{user_id}.json.gz",
+            pytest.approx(result)
+        )
 
 
 def test_persona_options_returns_exactly_3_variants():
@@ -146,7 +146,7 @@ def test_persona_options_returns_exactly_3_variants():
     import asyncio
     from skills import persona_generator
     with patch.object(persona_generator.sarvam, "complete", side_effect=mock_complete):
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             persona_generator.generate_personas({
                 "current_title": "Engineer", "experience_years": 3,
                 "seniority_level": "mid", "top_5_skills": ["Python"]
@@ -178,10 +178,11 @@ def test_fit_scores_stale_set_true_after_parse():
          }), \
          patch("agents.agent3_resume.generate_personas", new_callable=AsyncMock,
                return_value=["p1", "p2", "p3"]), \
+         patch("agents.agent3_resume.put_json_gz", new_callable=AsyncMock), \
          patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
         import agents.agent3_resume as a3
-        asyncio.get_event_loop().run_until_complete(
-            a3.run("user-id", "/storage/fake.pdf")
+        asyncio.run(
+            a3.run("user-id", "fake.pdf")
         )
 
     assert called_with_stale, "fit_scores_stale was never set to True"

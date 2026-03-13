@@ -61,7 +61,7 @@ def test_agent3_must_complete_before_parallel_agents_start():
          patch("agents.agent6_fit.run", side_effect=mock_agent6), \
          patch("flow.career_planner.get_supabase", return_value=mock_db):
         from flow.career_planner import run_onboarding_flow
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             run_onboarding_flow("user-id", "/storage/fake.pdf")
         )
 
@@ -101,7 +101,7 @@ def test_dashboard_ready_set_true_after_parallel_complete():
          patch("agents.agent6_fit.run", side_effect=mock_agent6), \
          patch("flow.career_planner.get_supabase", return_value=mock_db):
         from flow.career_planner import run_onboarding_flow
-        asyncio.get_event_loop().run_until_complete(
+        asyncio.run(
             run_onboarding_flow("user-id", "/storage/fake.pdf")
         )
 
@@ -141,8 +141,8 @@ def test_flow_continues_if_one_parallel_agent_fails():
         from flow.career_planner import run_onboarding_flow
         # Should NOT raise even though Agent 4 raised
         try:
-            asyncio.get_event_loop().run_until_complete(
-                run_onboarding_flow("user-id", "/storage/fake.pdf")
+            asyncio.run(
+                run_onboarding_flow("user-id", "fake.pdf")
             )
         except Exception:
             pass  # Partial failures are acceptable

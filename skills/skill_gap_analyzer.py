@@ -9,17 +9,15 @@ Step 3: Returns top 3 for DB + full list for FluxShare report
 Output written to /storage/skill-gaps/{user_id}.json.gz
 """
 
-import gzip
 import json
-import os
 from datetime import datetime, timezone, timedelta
 
 from db.client import get_supabase
 from llm.sarvam import sarvam, SarvamUnavailableError
 from skills.humanizer_prompt import HUMANIZER_GUIDELINES
+from skills.storage_client import put_json_gz
 
-
-STORAGE_PATH = "/storage/skill-gaps"
+STORAGE_PATH = "skill-gaps"
 
 _ROI_PROMPT = """You are a career coach specialising in the Indian tech job market.
 
@@ -121,9 +119,6 @@ async def analyze_skill_gaps(
     top_gaps = full_gaps[:3]
 
     # Write full report to FluxShare
-    os.makedirs(STORAGE_PATH, exist_ok=True)
-    out_path = f"{STORAGE_PATH}/{user_id}.json.gz"
-    with gzip.open(out_path, "wt", encoding="utf-8") as f:
-        json.dump({"user_id": user_id, "full_gaps": full_gaps}, f)
+    await put_json_gz(f"{STORAGE_PATH}/{user_id}.json.gz", {"user_id": user_id, "full_gaps": full_gaps})
 
     return {"top_gaps": top_gaps, "full_gaps": full_gaps}

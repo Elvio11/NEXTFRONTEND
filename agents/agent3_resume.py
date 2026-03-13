@@ -23,6 +23,7 @@ from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.resume_parser import parse_resume, ParseError
 from skills.persona_generator import generate_personas
+from skills.storage_client import put_json_gz
 from llm.sarvam import SarvamUnavailableError
 
 
@@ -41,7 +42,7 @@ async def run(user_id: str, file_path: str) -> dict:
     try:
         # ── Step 1: Parse resume ──────────────────────────────────────────
         try:
-            parsed = parse_resume(file_path, user_id)
+            parsed = await parse_resume(file_path, user_id)
         except ParseError as pe:
             reason = str(pe)
             # Write failure to resumes table so frontend can surface error
@@ -86,6 +87,8 @@ async def run(user_id: str, file_path: str) -> dict:
             "updated_at":   datetime.now(timezone.utc).isoformat(),
         }, on_conflict="user_id").execute()
 
+        await put_json_gz(f"parsed-resumes/{user_id}.json.gz", parsed)
+
         # ── Step 4: Set flags on users table ──────────────────────────────
         get_supabase().table("users").update({
             "fit_scores_stale":      True,
@@ -107,7 +110,7 @@ async def run(user_id: str, file_path: str) -> dict:
                 "exp_years":    parsed["experience_years"],
                 "current_title": parsed["current_title"],
             },
-            "storage_path": f"/storage/parsed-resumes/{user_id}.json.gz",
+            "storage_path": f"parsed-resumes/{user_id}.json.gz",
         }
 
     except Exception as exc:

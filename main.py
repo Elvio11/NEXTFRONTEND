@@ -73,6 +73,12 @@ except Exception as e:
     print(f"[BOOT] FATAL: coach — {e}", flush=True)
 
 try:
+    from routers import cleanup
+    print("[BOOT] cleanup router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FATAL: cleanup — {e}", flush=True)
+
+try:
     from orchestrator import router as orchestrator_router
     print("[BOOT] orchestrator router OK", flush=True)
 except Exception as e:
@@ -117,6 +123,7 @@ app.include_router(career_intel.router, prefix="/api/agents")
 app.include_router(fit_score.router,    prefix="/api/agents")
 app.include_router(jd_clean.router,     prefix="/api/agents")
 app.include_router(coach.router,        prefix="/api/agents")
+app.include_router(cleanup.router,      prefix="/api/agents/cleanup")
 if orchestrator_router is not None:
     app.include_router(orchestrator_router.router)
 

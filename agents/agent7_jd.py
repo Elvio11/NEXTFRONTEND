@@ -24,6 +24,7 @@ import httpx
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
 from skills.jd_cleaner import clean_jd
+from skills.storage_client import get_text
 
 
 async def run(scrape_run_id: str) -> dict:
@@ -50,13 +51,10 @@ async def run(scrape_run_id: str) -> dict:
         for job in jobs:
             job_id      = job["id"]
             fingerprint = job["fingerprint"]
-            jd_path     = f"/storage/jds/{fingerprint}.txt"
-
             # Load raw JD text
             try:
-                with open(jd_path, "r", encoding="utf-8", errors="ignore") as f:
-                    raw_jd = f.read()
-            except FileNotFoundError:
+                raw_jd = await get_text(f"jds/{fingerprint}.txt")
+            except Exception:
                 # JD file missing — mark as cleaned with empty data to avoid repeat
                 get_supabase().table("jobs").update({
                     "jd_cleaned": True,
