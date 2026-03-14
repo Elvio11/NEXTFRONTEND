@@ -52,15 +52,18 @@ def test_gate_identity_rejects_missing_user(mock_supabase):
 @patch("orchestrator.gates.get_supabase")
 def test_gate_safety_linkedin_kill_switch(mock_supabase):
     mock_db = MagicMock()
-    # Mock returning 1500 actions today
-    mock_db.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {"total_linkedin_actions": 1500}
+    # Mock returning limit hit
+    mock_db.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
+        "total_linkedin_actions": 1200,
+        "linkedin_daily_limit": 1200
+    }
     mock_supabase.return_value = mock_db
 
     with pytest.raises(GateFailure) as exc:
         gate_safety(trigger="linkedin_connect", user_id="user-123")
     assert exc.value.gate == "safety"
     assert exc.value.action == "defer_to_tomorrow"
-    assert "1500" in exc.value.message
+    assert "limit reached" in exc.value.message
 
 
 @patch("orchestrator.gates.SarvamClient")
