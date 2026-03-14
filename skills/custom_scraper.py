@@ -14,7 +14,7 @@ Stubs return empty lists — they won't break the pipeline, just yield 0 jobs.
 import asyncio
 import httpx
 from typing import Any
-from log_utils.agent_logger import log_error
+from log_utils.agent_logger import log_fail, log_start, log_end, log_skip
 
 try:
     from bs4 import BeautifulSoup
@@ -63,6 +63,7 @@ def _job_stub(title: str, company: str, location: str, jd: str, url: str, source
 # ─── Shine.com Scraper ─────────────────────────────────────────────────────────
 
 async def scrape_shine(
+    run_id: str,
     search_term: str = "software engineer",
     location: str = "india",
     max_jobs: int = 500,
@@ -72,7 +73,7 @@ async def scrape_shine(
     Returns list of dicts matching Talvix jobs table shape.
     """
     if not BS4_AVAILABLE:
-        log_error(f"[custom_scraper] Shine: beautifulsoup4 not installed — skipping")
+        await log_fail(run_id, "Shine: beautifulsoup4 not installed", 0)
         return []
 
     jobs    = []
@@ -126,7 +127,7 @@ async def scrape_shine(
                 await asyncio.sleep(1.5)
 
     except Exception as exc:
-        log_error(f"[custom_scraper] Shine.com error: {exc}")
+        await log_fail(run_id, f"Shine.com error: {exc}", 0)
 
     # log_pass pattern could be used here if needed, but removing print for now
     pass
@@ -135,37 +136,27 @@ async def scrape_shine(
 
 # ─── Stub Scrapers ─────────────────────────────────────────────────────────────
 
-async def scrape_monster(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
+async def scrape_monster(run_id: str, search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: Monster.com scraper — stub returns []."""
-    # print("[custom_scraper] Monster: stub — not yet implemented")
-    pass
     return []
 
-
-async def scrape_timesjobs(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
+async def scrape_timesjobs(run_id: str, search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: TimesJobs scraper — stub returns []."""
-    # print("[custom_scraper] TimesJobs: stub — not yet implemented")
-    pass
     return []
 
-
-async def scrape_freshersworld(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
+async def scrape_freshersworld(run_id: str, search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: Freshersworld scraper — stub returns []."""
-    # print("[custom_scraper] Freshersworld: stub — not yet implemented")
-    pass
     return []
 
-
-async def scrape_hirist(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
+async def scrape_hirist(run_id: str, search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: Hirist.tech scraper — stub returns []."""
-    # print("[custom_scraper] Hirist: stub — not yet implemented")
-    pass
     return []
 
 
 # ─── Combined Runner ───────────────────────────────────────────────────────────
 
 async def run_custom_scrapers(
+    run_id: str,
     sources: list[str],
     search_term: str = "software engineer",
     location: str = "india",
@@ -188,7 +179,7 @@ async def run_custom_scrapers(
     for src in sources:
         fn = scraper_map.get(src.lower())
         if fn:
-            tasks.append(fn(search_term=search_term, location=location, max_jobs=max_per_source))
+            tasks.append(fn(run_id=run_id, search_term=search_term, location=location, max_jobs=max_per_source))
             ordered.append(src)
 
     results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -201,7 +192,7 @@ async def run_custom_scrapers(
         if isinstance(result, Exception):
             failures.append(src)
             source_counts[src] = 0
-            log_error(f"[custom_scraper] {src} FAILED: {result}")
+            await log_fail(run_id, f"{src} FAILED: {result}", 0)
         else:
             all_jobs.extend(result)
             source_counts[src] = len(result)

@@ -34,7 +34,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
     try:
         # ── Eligibility: paid tier only ──────────────────────────────────────
         user_result = (
-            supabase.table("users")
+            get_supabase().table("users")
             .select("id, subscription_tier, ai_generated_persona")
             .eq("id", user_id)
             .single()
@@ -49,7 +49,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
 
         # ── Fetch job details ────────────────────────────────────────────────
         job_result = (
-            supabase.table("jobs")
+            get_supabase().table("jobs")
             .select("id, title, company, jd_summary, raw_jd")
             .eq("id", job_id)
             .single()
@@ -61,7 +61,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
 
         # Fetch required skills + missing skills from fit scores
         skills_result = (
-            supabase.table("job_skills")
+            get_supabase().table("job_skills")
             .select("skill_name, skill_type")
             .eq("job_id", job_id)
             .limit(20)
@@ -74,7 +74,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
 
         # Get missing skills from fit score if available
         fit_result = (
-            supabase.table("job_fit_scores")
+            get_supabase().table("job_fit_scores")
             .select("missing_skills")
             .eq("user_id", user_id)
             .eq("job_id", job_id)
@@ -96,7 +96,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
 
         # ── Update job_applications if row exists ────────────────────────────
         app_result = (
-            supabase.table("job_applications")
+            get_supabase().table("job_applications")
             .select("id")
             .eq("user_id", user_id)
             .eq("job_id", job_id)

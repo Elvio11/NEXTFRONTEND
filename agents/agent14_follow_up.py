@@ -259,11 +259,12 @@ async def run_follow_up() -> dict:
                     
                     records_processed += 1
             except Exception as e:
-                print(f"[agent14] Error processing app {app.get('id')}: {e}")
+                cur_duration = int((time.time() - start) * 1000)
+                await log_fail(run_id, f"App {app.get('id')} error: {e}", cur_duration)
 
         # ── 2. LinkedIn Follow-up ───────────────────────────────────────────
         if not await check_linkedin_limit():
-            print("[agent14] LinkedIn kill switch active — skipping LI tasks")
+            await log_skip(run_id, "LinkedIn kill switch active — skipping LI tasks")
         else:
             li_apps = get_supabase().rpc("get_eligible_linkedin_tasks", {}).execute()
             for app in (li_apps.data or []):

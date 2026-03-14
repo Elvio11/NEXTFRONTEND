@@ -46,7 +46,7 @@ async def log_end(
     duration_ms: int,
 ) -> None:
     """Update agent_logs row to status='completed'."""
-    supabase.table("agent_logs").update({
+    get_supabase().table("agent_logs").update({
         "status":            "completed",
         "records_processed": records_processed,
         "duration_ms":       duration_ms,
@@ -61,7 +61,7 @@ async def log_fail(
     duration_ms: int,
 ) -> None:
     """Update agent_logs row to status='failed' with 30-day TTL."""
-    supabase.table("agent_logs").update({
+    get_supabase().table("agent_logs").update({
         "status":        "failed",
         "error_message": error[:500],   # cap — never log full stack with secrets
         "duration_ms":   duration_ms,
@@ -75,7 +75,7 @@ async def log_skip(
     reason: str,
 ) -> None:
     """Update agent_logs row to status='skipped'."""
-    supabase.table("agent_logs").update({
+    get_supabase().table("agent_logs").update({
         "status":        "skipped",
         "error_message": reason[:500],
         "completed_at":  _now().isoformat(),

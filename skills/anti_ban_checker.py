@@ -20,7 +20,7 @@ import json
 from datetime import date, datetime, timezone
 from typing import Any
 
-from db.client import supabase
+from db.client import get_supabase
 from llm.sarvam import sarvam, SarvamUnavailableError
 
 
@@ -36,7 +36,7 @@ async def check_linkedin_limit() -> bool:
     today = date.today().isoformat()
 
     result = (
-        supabase.table("system_daily_limits")
+        get_supabase().table("system_daily_limits")
         .select("total_linkedin_actions, linkedin_daily_limit")
         .eq("date", today)
         .limit(1)
@@ -60,7 +60,7 @@ async def check_linkedin_limit() -> bool:
 def _get_linkedin_actions_today() -> int:
     """Query system_daily_limits for today's total LinkedIn action count."""
     result = (
-        supabase.table("system_daily_limits")
+        get_supabase().table("system_daily_limits")
         .select("total_linkedin_actions")
         .eq("date", date.today().isoformat())
         .limit(1)
@@ -75,7 +75,7 @@ async def _get_linkedin_context_and_limit() -> tuple[int, int]:
     """Fetch both count and limit for risk evaluation."""
     today = date.today().isoformat()
     result = (
-        supabase.table("system_daily_limits")
+        get_supabase().table("system_daily_limits")
         .select("total_linkedin_actions, linkedin_daily_limit")
         .eq("date", today)
         .limit(1)
@@ -92,7 +92,7 @@ def _get_user_applies_last_24h(user_id: str) -> int:
     from datetime import timedelta
     cutoff = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
     result = (
-        supabase.table("job_applications")
+        get_supabase().table("job_applications")
         .select("id", count="exact")
         .eq("user_id", user_id)
         .gte("applied_at", cutoff)
@@ -104,7 +104,7 @@ def _get_user_applies_last_24h(user_id: str) -> int:
 def _get_session_age_days(user_id: str, platform: str) -> int:
     """Return the age in days of the user's session for the given platform."""
     result = (
-        supabase.table("user_connections")
+        get_supabase().table("user_connections")
         .select("created_at")
         .eq("user_id", user_id)
         .eq("platform", platform)

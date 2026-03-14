@@ -151,8 +151,8 @@ async def run_scraper(
 
     try:
         # ── Run all sources concurrently ────────────────────────────────────
-        jobspy_task  = run_jobspy(sources, max_per_source, search_term, location)
-        custom_task  = run_custom_scrapers(custom_sources, search_term, location.lower(), max_per_source // 10)
+        jobspy_task  = run_jobspy(run_id, sources, max_per_source, search_term, location)
+        custom_task  = run_custom_scrapers(run_id, custom_sources, search_term, location.lower(), max_per_source // 10)
 
         jobspy_result, custom_result = await asyncio.gather(
             jobspy_task, custom_task, return_exceptions=True

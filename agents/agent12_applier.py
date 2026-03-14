@@ -224,7 +224,7 @@ def _record_application(
 
 def _increment_apply_counts(user_id: str) -> None:
     """Increment daily and monthly apply counters on the users row."""
-    supabase.rpc("increment_apply_counts", {"target_user_id": user_id}).execute()
+    get_supabase().rpc("increment_apply_counts", {"target_user_id": user_id}).execute()
 
 
 def _inject_session_cookies(driver, session_data: dict) -> None:
@@ -267,7 +267,7 @@ async def run_applier(
 
         # ── Gate 2: Load user and check eligibility ──────────────────────────
         user_result = (
-            supabase.table("users")
+            get_supabase().table("users")
             .select("id, subscription_tier, wa_opted_in, auto_apply_enabled, auto_apply_paused, daily_apply_limit, auto_apply_activated_at")
             .eq("id", user_id)
             .single()
@@ -321,7 +321,7 @@ async def run_applier(
 
         # ── Job selection: fit_score >= 60, order by score DESC ──────────────
         fit_scores_result = (
-            supabase.table("job_fit_scores")
+            get_supabase().table("job_fit_scores")
             .select("job_id, fit_score")
             .eq("user_id", user_id)
             .gte("fit_score", 60)
@@ -351,7 +351,7 @@ async def run_applier(
 
             # Fetch job details
             job_result = (
-                supabase.table("jobs")
+                get_supabase().table("jobs")
                 .select("id, title, company, company_canonical, apply_url, source")
                 .eq("id", job_id)
                 .single()
@@ -431,7 +431,7 @@ async def run_applier(
 
                 # LinkedIn global counter
                 if platform == "linkedin":
-                    supabase.rpc(
+                    get_supabase().rpc(
                         "increment_linkedin_daily_count",
                         {"action_date": date.today().isoformat()},
                     ).execute()
@@ -446,7 +446,7 @@ async def run_applier(
                 )
 
                 # Write learning signal
-                supabase.table("learning_signals").insert({
+                get_supabase().table("learning_signals").insert({
                     "user_id":     user_id,
                     "signal_type": "application_submitted",
                     "context": {

@@ -10,7 +10,7 @@ Fields excluded: salary, apply_url, posted_date (these vary cross-platform).
 import hashlib
 from typing import Optional
 
-from db.client import supabase
+from db.client import get_supabase
 
 
 def compute_fingerprint(
@@ -39,7 +39,7 @@ def check_duplicate(fingerprint: str) -> Optional[dict]:
     Returns the existing row dict if found, else None.
     """
     result = (
-        supabase.table("jobs")
+        get_supabase().table("jobs")
         .select("id, fingerprint, last_seen_at, is_active")
         .eq("fingerprint", fingerprint)
         .limit(1)
