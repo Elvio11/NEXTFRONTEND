@@ -3,7 +3,7 @@ skills/jobspy_runner.py
 Wraps the JobSpy library for the 5 natively supported platforms:
   LinkedIn, Indeed, Glassdoor, Google Jobs, Naukri (via ziprecruiter alias)
 
-CRITICAL: LinkedIn is checked against the global kill switch (1,500/day)
+CRITICAL: LinkedIn is checked against the global kill switch (DB-driven)
 BEFORE being passed to JobSpy. If the cap is hit, LinkedIn is skipped
 for this run — other platforms continue unaffected.
 
@@ -22,21 +22,7 @@ from db.client import supabase
 
 # ─── LinkedIn Kill Switch ──────────────────────────────────────────────────────
 
-def _check_linkedin_kill_switch() -> bool:
-    """
-    Returns True if LinkedIn is BLOCKED (total_linkedin_actions >= 1500 today).
-    Called synchronously since JobSpy itself is sync.
-    """
-    result = (
-        supabase.table("system_daily_limits")
-        .select("total_linkedin_actions")
-        .eq("date", date.today().isoformat())
-        .limit(1)
-        .execute()
-    )
-    if result.data:
-        return result.data[0].get("total_linkedin_actions", 0) >= 1500
-    return False  # no row yet today → actions = 0, not blocked
+# Logic removed here, local check replaced by check_linkedin_limit in run_jobspy
 
 
 # ─── Field Mapping ─────────────────────────────────────────────────────────────
@@ -117,10 +103,11 @@ async def run_jobspy(
     actual_sources   = list(sources)
 
     if "linkedin" in [s.lower() for s in actual_sources]:
-        if _check_linkedin_kill_switch():
+        from skills.anti_ban_checker import check_linkedin_limit
+        if await check_linkedin_limit():
             linkedin_skipped = True
             actual_sources   = [s for s in actual_sources if s.lower() != "linkedin"]
-            print("[jobspy_runner] LinkedIn SKIPPED — kill switch at 1500")
+            print("[jobspy_runner] LinkedIn SKIPPED — kill switch engaged")
 
     jobs      = []
     counts    = {}

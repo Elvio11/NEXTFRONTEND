@@ -71,6 +71,20 @@ except Exception as e:
     print(f"[BOOT] FAILED: anti_ban — {e}", flush=True)
     raise
 
+try:
+    from routers import followup
+    print("[BOOT] followup router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: followup — {e}", flush=True)
+    raise
+
+try:
+    from routers import calibrate
+    print("[BOOT] calibrate router OK", flush=True)
+except Exception as e:
+    print(f"[BOOT] FAILED: calibrate — {e}", flush=True)
+    raise
+
 print("[BOOT] All routers loaded. Starting uvicorn...", flush=True)
 
 app = FastAPI(
@@ -108,6 +122,8 @@ app.include_router(tailor.router,       prefix="/api/agents")
 app.include_router(cover_letter.router, prefix="/api/agents")
 app.include_router(apply.router,        prefix="/api/agents")
 app.include_router(anti_ban.router,     prefix="/api/agents")
+app.include_router(followup.router,     prefix="/api/agents")
+app.include_router(calibrate.router,    prefix="/api/agents")
 
 
 # ─── Health (no auth) ─────────────────────────────────────────────────────────

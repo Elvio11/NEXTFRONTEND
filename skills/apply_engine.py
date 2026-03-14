@@ -33,6 +33,7 @@ import undetected_chromedriver as uc
 
 from db.client import supabase
 from skills.storage_client import put_bytes
+from skills.anti_ban_checker import check_linkedin_limit
 
 
 # ─── Constants ─────────────────────────────────────────────────────────────────
@@ -58,17 +59,7 @@ async def _save_screenshot(driver: uc.Chrome, run_id: str, job_id: str) -> Optio
 
 # ─── LinkedIn Kill Switch ──────────────────────────────────────────────────────
 
-def _is_linkedin_kill_switch_hit() -> bool:
-    result = (
-        supabase.table("system_daily_limits")
-        .select("total_linkedin_actions")
-        .eq("date", date.today().isoformat())
-        .limit(1)
-        .execute()
-    )
-    if result.data:
-        return result.data[0].get("total_linkedin_actions", 0) >= 1500
-    return False
+# Kill switch moved to check_linkedin_limit() in skills/anti_ban_checker.py
 
 
 def _increment_linkedin_counter() -> None:
@@ -219,11 +210,14 @@ async def apply_linkedin_easy(
     apply_url = job.get("apply_url", "")
 
     # ── Kill switch check ────────────────────────────────────────────────────
-    if _is_linkedin_kill_switch_hit():
+    if not await check_linkedin_limit():
         return {
             "status":          "skipped",
+            "reason":          "linkedin_rate_limit",
+            "duration_ms":     0,
+            "records_processed": 0,
+            "error":           None,
             "screenshot_path": None,
-            "failure_note":    "linkedin_kill_switch_1500",
         }
 
     try:

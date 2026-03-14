@@ -5,14 +5,14 @@ Risk scoring engine for LinkedIn and Indeed actions.
 Evaluates current LinkedIn action volume, session age, and apply velocity
 to determine whether to proceed with an action.
 
-CRITICAL RULE: If total_linkedin_actions >= 1500, ALWAYS return critical/False
+CRITICAL RULE: If total_linkedin_actions >= limit, ALWAYS return critical/False
 WITHOUT calling Sarvam-M. The kill switch is deterministic — not LLM-evaluated.
 
 Risk thresholds:
-  low      → < 200 LinkedIn actions today
-  medium   → 200–800 actions
-  high     → 800–1200 actions
-  critical → >= 1200 (block), kill switch >= 1500 (hard block)
+  low      → < 20% of daily limit
+  medium   → 20%–50% of daily limit
+  high     → 50%–80% of daily limit
+  critical → >= 80% (block), kill switch >= limit (hard block)
 """
 
 import asyncio
@@ -26,6 +26,37 @@ from llm.sarvam import sarvam, SarvamUnavailableError
 
 # ─── Kill Switch ───────────────────────────────────────────────────────────────
 
+async def check_linkedin_limit() -> bool:
+    """
+    Returns True if LinkedIn actions are still allowed today.
+    Returns False if daily limit reached — caller must abort and log skip.
+    Reads both the running count AND the configured limit from DB.
+    Never hardcodes the threshold.
+    """
+    today = date.today().isoformat()
+
+    result = (
+        supabase.table("system_daily_limits")
+        .select("total_linkedin_actions, linkedin_daily_limit")
+        .eq("date", today)
+        .limit(1)
+        .execute()
+    )
+
+    if not result.data:
+        # No row for today yet — actions not started, limit not reached
+        return True
+
+    count = result.data[0].get("total_linkedin_actions", 0)
+    limit = result.data[0].get("linkedin_daily_limit")
+
+    if limit is None:
+        # Fallback if column not yet added or value null
+        return True
+
+    return count < limit
+
+
 def _get_linkedin_actions_today() -> int:
     """Query system_daily_limits for today's total LinkedIn action count."""
     result = (
@@ -38,6 +69,22 @@ def _get_linkedin_actions_today() -> int:
     if result.data:
         return result.data[0].get("total_linkedin_actions", 0)
     return 0
+
+
+async def _get_linkedin_context_and_limit() -> tuple[int, int]:
+    """Fetch both count and limit for risk evaluation."""
+    today = date.today().isoformat()
+    result = (
+        supabase.table("system_daily_limits")
+        .select("total_linkedin_actions, linkedin_daily_limit")
+        .eq("date", today)
+        .limit(1)
+        .execute()
+    )
+    if result.data:
+        count = result.data[0].get("total_linkedin_actions", 0)
+        limit = result.data[0].get("linkedin_daily_limit")
+        return count, limit if limit is not None else 2000 # High fallback safer than hardcoded low one
 
 
 def _get_user_applies_last_24h(user_id: str) -> int:
@@ -89,20 +136,21 @@ async def check_risk(
             "reason":        str,
         }
 
-    CRITICAL: If LinkedIn actions >= 1500, returns critical immediately
+    CRITICAL: If LinkedIn actions >= limit, returns critical immediately
               without calling Sarvam-M.
     """
     context = context or {}
     platform = context.get("platform", "linkedin")
 
     # ── Hard kill switch check — no LLM needed ──────────────────────────────
-    linkedin_actions_today = _get_linkedin_actions_today()
-    if linkedin_actions_today >= 1500:
+    linkedin_actions_today, linkedin_daily_limit = await _get_linkedin_context_and_limit()
+    
+    if linkedin_actions_today >= linkedin_daily_limit:
         return {
             "risk_level":    "critical",
             "proceed":       False,
             "delay_seconds": 0,
-            "reason":        f"LinkedIn global kill switch: {linkedin_actions_today}/1500 actions today",
+            "reason":        f"LinkedIn global kill switch: {linkedin_actions_today}/{linkedin_daily_limit} actions today",
         }
 
     # ── Gather context for Sarvam-M risk evaluation ─────────────────────────
@@ -110,11 +158,12 @@ async def check_risk(
     session_age    = _get_session_age_days(user_id, platform)
 
     # Determine threshold-based risk level first (deterministic)
-    if linkedin_actions_today >= 1200:
+    # Using percentages of limit: 80% critical, 50% high, 15% medium
+    if linkedin_actions_today >= (linkedin_daily_limit * 0.8):
         risk_level    = "critical"
         proceed       = False
         delay_seconds = 0
-        reason        = f"LinkedIn actions at {linkedin_actions_today}/1500 — critical threshold"
+        reason        = f"LinkedIn actions at {linkedin_actions_today}/{linkedin_daily_limit} — critical threshold"
         return {
             "risk_level":    risk_level,
             "proceed":       proceed,
@@ -122,9 +171,9 @@ async def check_risk(
             "reason":        reason,
         }
 
-    if linkedin_actions_today >= 800:
+    if linkedin_actions_today >= (linkedin_daily_limit * 0.5):
         base_risk = "high"
-    elif linkedin_actions_today >= 200:
+    elif linkedin_actions_today >= (linkedin_daily_limit * 0.15):
         base_risk = "medium"
     else:
         base_risk = "low"
@@ -136,7 +185,9 @@ Evaluate the current risk level and decide whether to proceed.
 Context:
 - Action type: {action_type}
 - Platform: {platform}
-- LinkedIn actions today (server-wide): {linkedin_actions_today}/1500
+- Action type: {action_type}
+- Platform: {platform}
+- LinkedIn actions today (server-wide): {linkedin_actions_today}/{linkedin_daily_limit}
 - User's applications in last 24h: {applies_24h}
 - Session age (days): {session_age}
 - Base risk from action count: {base_risk}
