@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getSupabaseClient } from './supabase/client'
 
 export const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_SERVER2_URL,
+    baseURL: process.env.NEXT_PUBLIC_SERVER1_URL,
     timeout: 30_000,
     headers: { 'Content-Type': 'application/json' },
 })

@@ -28,8 +28,8 @@
 | 11 | Cover Letter | `server3/agents/agent11_cover_letter.py` | Complete | Context-aware CL generation via Gemini Flash. |
 | 12 | Auto-Applier | `server3/agents/agent12_applier.py` | Complete | Selenium-based Tier 1 automation (Indeed/LinkedIn). |
 | 13 | Anti-Ban/Form Q&A| `server3/agents/agent13_anti_ban.py` | Complete | Risk assessment + Adaptive timing logic. |
-| 14 | Follow-Up Sender | `server3/agents/agent14_follow_up.py` | **CRITICAL: FILE MISSING** | ⚠️ **BLOCKER** - Physical implementation missing. Required stub for Phase 6. |
-| 15 | Feedback Calibrator| `server3/agents/agent15_calibrator.py` | **CRITICAL: FILE MISSING** | ⚠️ **BLOCKER** - Physical implementation missing. Required stub for Phase 6. |
+| 14 | Follow-Up Sender | `server3/agents/agent14_follow_up.py` | Complete | Context-aware email/LinkedIn follow-ups. |
+| 15 | Feedback Calibrator| `server3/agents/agent15_calibrator.py` | Complete | Weekly Layer 3 calibration & weight tuning. |
 
 ## API Endpoints
 
@@ -70,10 +70,9 @@
 - Frontend directory restoration to main branch for monorepo alignment.
 
 ## Open TODOs
-- **CRITICAL BLOCKER**: Agent 14 (Follow-Up) and Agent 15 (Feedback Calibrator) files are missing - must initialize stubs before Phase 6.
 - Server 1: Implement outbound Baileys send (deferred to Phase 3).
 - Server 3: Standardize Selenium retry logic into a global skill.
 - AGENTS.md path corrections for Server 2 agents (now using `routers/` path) - completed.
 
 ## Next Immediate Task
-- Initialize Agent 14 stub in `branch-server3/agents/agent14_follow_up.py`.
+- Phase 5: Complete Frontend integration and verify end-to-end flow.

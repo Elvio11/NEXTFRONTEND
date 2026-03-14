@@ -84,8 +84,8 @@ export function ResumeUpload({ onComplete }: ResumeUploadProps) {
         setUploadError(null)
         try {
             const formData = new FormData()
-            formData.append('file', data.file)
-            const res = await api.post('/api/agents/resume-intelligence', formData, {
+            formData.append('resume', data.file)
+            const res = await api.post('/api/resume/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             })
             const { data: { user } } = await supabase.auth.getUser()
