@@ -1,4 +1,4 @@
-const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand, PutObjectCommand } = require("@aws-sdk/client-s3");
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
 
 let _s3Client = null;
@@ -26,4 +26,14 @@ async function getPresignedUrl(key, expiresIn = 3600) {
   return await getSignedUrl(getS3(), command, { expiresIn });
 }
 
-module.exports = { getPresignedUrl };
+async function uploadFile(key, body, contentType) {
+  const command = new PutObjectCommand({
+    Bucket: process.env.MINIO_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  });
+  return await getS3().send(command);
+}
+
+module.exports = { getPresignedUrl, uploadFile };

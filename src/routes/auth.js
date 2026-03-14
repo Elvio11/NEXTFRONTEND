@@ -16,6 +16,7 @@
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
 const supabase = require('../lib/supabaseClient');
+const logger = require('../lib/logger');
 
 const JWT_EXPIRY = '15m';
 const REFRESH_EXPIRY = '7d';
@@ -87,8 +88,8 @@ router.post('/google', async (req, res) => {
             },
         });
     } catch (err) {
-        console.error('[auth/google]', err.message);
-        return res.status(500).json({ error: 'Authentication error' });
+        logger.error('auth', `POST /auth error: ${err.message}`);
+        return res.status(err.status || 500).json({ error: err.message });
     }
 });
 

@@ -42,7 +42,7 @@ async function forwardToAgent(serverUrl, agentName, userId, payload = {}) {
     } catch (err) {
         const message = err.response?.data?.error ?? err.message ?? 'Unknown agent error';
         // Log but don't throw — route handlers decide how to surface to client
-        console.error(`[forwardToAgent] ${agentName} at ${url} failed:`, message);
+        logger.error('forwardToAgent', `${agentName} at ${url} failed: ${message}`);
         return {
             status: 'failed',
             duration_ms: 0,

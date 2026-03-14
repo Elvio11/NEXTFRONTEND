@@ -15,14 +15,14 @@
 
 const router = require('express').Router();
 const path = require('path');
-const fs = require('fs');
 const verifyJWT = require('../middleware/verifyJWT');
 const forwardToAgent = require('../lib/forwardToAgent');
+const { uploadFile } = require('../lib/storageClient');
+const logger = require('../lib/logger');
 
 const ALLOWED_MIME = new Set(['application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document']);
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-const STORAGE_BASE = '/storage/parsed-resumes';
 
 /**
  * POST /api/resume/upload
@@ -43,23 +43,22 @@ router.post('/upload', verifyJWT, async (req, res) => {
     }
 
     const ext = path.extname(file.name).toLowerCase();
-    const tmpPath = path.join(STORAGE_BASE, `tmp_${req.user.id}${ext}`);
+    const storageKey = `raw-resumes/${req.user.id}${ext}`;
 
     try {
-        // Ensure storage directory exists (FluxShare mount)
-        fs.mkdirSync(STORAGE_BASE, { recursive: true });
-        await file.mv(tmpPath);
+        // Upload directly to MinIO
+        await uploadFile(storageKey, file.data, file.mimetype);
     } catch (err) {
-        console.error('[resume/upload] file write error:', err.message);
-        return res.status(500).json({ error: 'Failed to save file' });
+        logger.error('resume', `upload error: ${err.message}`);
+        return res.status(500).json({ error: 'Failed to process resume' });
     }
 
-    // Forward to Server 2 — Agent 3 parses, generates personas, compresses
+    // Forward to Server 2 — Agent 3 pulls from MinIO key, parses, generates personas
     const result = await forwardToAgent(
         process.env.SERVER2_URL,
         'resume-intelligence',
         req.user.id,
-        { file_path: tmpPath, file_ext: ext.replace('.', '') }
+        { storage_key: storageKey, file_ext: ext.replace('.', '') }
     );
 
     if (result.status === 'failed') {

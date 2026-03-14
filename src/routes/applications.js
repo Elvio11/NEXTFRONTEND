@@ -14,6 +14,7 @@
 const router = require('express').Router();
 const supabase = require('../lib/supabaseClient');
 const forwardToAgent = require('../lib/forwardToAgent');
+const logger = require('../lib/logger');
 const verifyJWT = require('../middleware/verifyJWT');
 
 /**
@@ -66,11 +67,11 @@ router.post('/', verifyJWT, async (req, res) => {
                 app_id: application.id,
                 method: 'manual',
             },
-        }).catch(err => console.error('[applications] signal fire failed:', err.message));
+        }).catch(err => logger.error('applications', `signal fire failed: ${err.message}`));
 
         return res.status(201).json({ status: 'applied', application });
     } catch (err) {
-        console.error('[applications POST]', err.message);
+        logger.error('applications', `POST error: ${err.message}`);
         return res.status(500).json({ error: 'Failed to record application' });
     }
 });
@@ -104,7 +105,7 @@ router.get('/', verifyJWT, async (req, res) => {
 
         return res.json({ applications: data ?? [], total: count });
     } catch (err) {
-        console.error('[applications GET]', err.message);
+        logger.error('applications', `GET error: ${err.message}`);
         return res.status(500).json({ error: 'Failed to fetch applications' });
     }
 });
@@ -131,7 +132,7 @@ router.get("/:appId/resume", verifyJWT, async (req, res) => {
         const url = await getPresignedUrl(data.tailored_resume_path, 3600);
         return res.json({ url });
     } catch (err) {
-        console.error('[applications GET resume]', err.message);
+        logger.error('applications', `GET resume error: ${err.message}`);
         return res.status(500).json({ error: 'Failed to get resume URL' });
     }
 });
@@ -156,7 +157,7 @@ router.get("/:appId/cover-letter", verifyJWT, async (req, res) => {
         const url = await getPresignedUrl(data.cover_letter_path, 3600);
         return res.json({ url });
     } catch (err) {
-        console.error('[applications GET cover-letter]', err.message);
+        logger.error('applications', `GET cover-letter error: ${err.message}`);
         return res.status(500).json({ error: 'Failed to get cover letter URL' });
     }
 });

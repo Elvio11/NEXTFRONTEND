@@ -51,6 +51,7 @@ const notificationsRouter = require('./routes/notifications');
 const webhooksRouter = require('./routes/webhooks');
 const internalRouter = require('./routes/internal');
 const whatsappRouter = require('./routes/whatsapp');
+const orchestrateRouter = require('./routes/orchestrate');
 
 // Baileys stub
 const { connectWhatsApp } = require('./baileys/waClient');
@@ -109,6 +110,7 @@ app.use('/api/user', userRouter);
 app.use('/api/applications', applicationsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/whatsapp', verifyJWT, whatsappRouter);
+app.use('/api/orchestrate', orchestrateRouter);
 
 // Internal callbacks — Server 2/3 → Server 1 (X-Agent-Secret, NOT JWT)
 // Never expose these to the browser. verifyAgentSecret is applied inside the router.
@@ -126,7 +128,7 @@ app.use((_req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // eslint-disable-next-line no-unused-vars
 app.use((err, _req, res, _next) => {
-    console.error('[server] unhandled error:', err.message);
+    logger.error('server', `unhandled error: ${err.message}`);
     // stripSensitive already patched res.json — safe to call here
     res.status(500).json({ error: 'Internal server error' });
 });
@@ -136,14 +138,18 @@ app.use((err, _req, res, _next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT, 10);
 
+const logger = require('./lib/logger');
+
+// ... (existing code)
+
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[server] Talvix Server 1 listening on port ${PORT} (0.0.0.0)`);
-    console.log(`[server] Environment: ${process.env.NODE_ENV ?? 'production'}`);
-    console.log(`[server] CORS origin: ${process.env.FRONTEND_URL}`);
+    logger.info('server', `Talvix Server 1 listening on port ${PORT} (0.0.0.0)`);
+    logger.info('server', `Environment: ${process.env.NODE_ENV ?? 'production'}`);
+    logger.info('server', `CORS origin: ${process.env.FRONTEND_URL}`);
 
     // Start Baileys socket (Phase 2 stub — connect, show QR, update wa_bot_health)
     connectWhatsApp().catch(err => {
-        console.error('[server] Baileys connection failed:', err.message);
+        logger.error('server', `Baileys connection failed: ${err.message}`);
         // Non-fatal — server continues. WhatsApp is optional functionality.
     });
 });

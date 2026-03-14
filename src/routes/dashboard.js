@@ -18,6 +18,7 @@
 
 const router = require('express').Router();
 const supabase = require('../lib/supabaseClient');
+const logger = require('../lib/logger');
 const verifyJWT = require('../middleware/verifyJWT');
 
 router.get('/', verifyJWT, async (req, res) => {
@@ -109,7 +110,7 @@ router.get('/', verifyJWT, async (req, res) => {
         const errors = [profileResult, scoresResult, skillGapResult,
             careerIntelResult, applicationsResult, notificationsResult, connectionsResult]
             .map(r => r.error).filter(Boolean);
-        if (errors.length) console.error('[dashboard] Supabase errors:', errors);
+        if (errors.length) logger.error('dashboard', 'Supabase errors:', errors);
 
         // stripSensitive will recursively clean this before it leaves the server
         return res.json({
@@ -122,8 +123,8 @@ router.get('/', verifyJWT, async (req, res) => {
             connections: connectionsResult.data ?? [],
         });
     } catch (err) {
-        console.error('[dashboard]', err.message);
-        return res.status(500).json({ error: 'Failed to load dashboard' });
+        logger.error('dashboard', `GET / error: ${err.message}`);
+        return res.status(500).json({ error: 'Failed to fetch dashboard' });
     }
 });
 
