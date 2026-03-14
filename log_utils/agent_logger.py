@@ -17,7 +17,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 import uuid
 
-from db.client import supabase
+from db.client import get_supabase
 
 
 def _now() -> datetime:
@@ -30,7 +30,7 @@ async def log_start(
     run_id: str,
 ) -> None:
     """Insert an agent_logs row with status='started'."""
-    supabase.table("agent_logs").insert({
+    get_supabase().table("agent_logs").insert({
         "id":         run_id,
         "agent_name":  agent_name,
         "user_id":     user_id,

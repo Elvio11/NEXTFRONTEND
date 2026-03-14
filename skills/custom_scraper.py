@@ -14,6 +14,7 @@ Stubs return empty lists — they won't break the pipeline, just yield 0 jobs.
 import asyncio
 import httpx
 from typing import Any
+from log_utils.agent_logger import log_error
 
 try:
     from bs4 import BeautifulSoup
@@ -71,7 +72,7 @@ async def scrape_shine(
     Returns list of dicts matching Talvix jobs table shape.
     """
     if not BS4_AVAILABLE:
-        print("[custom_scraper] Shine: beautifulsoup4 not installed — skipping")
+        log_error(f"[custom_scraper] Shine: beautifulsoup4 not installed — skipping")
         return []
 
     jobs    = []
@@ -125,9 +126,10 @@ async def scrape_shine(
                 await asyncio.sleep(1.5)
 
     except Exception as exc:
-        print(f"[custom_scraper] Shine.com error: {exc}")
+        log_error(f"[custom_scraper] Shine.com error: {exc}")
 
-    print(f"[custom_scraper] Shine: {len(jobs)} jobs scraped")
+    # log_pass pattern could be used here if needed, but removing print for now
+    pass
     return jobs[:max_jobs]
 
 
@@ -135,25 +137,29 @@ async def scrape_shine(
 
 async def scrape_monster(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: Monster.com scraper — stub returns []."""
-    print("[custom_scraper] Monster: stub — not yet implemented")
+    # print("[custom_scraper] Monster: stub — not yet implemented")
+    pass
     return []
 
 
 async def scrape_timesjobs(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: TimesJobs scraper — stub returns []."""
-    print("[custom_scraper] TimesJobs: stub — not yet implemented")
+    # print("[custom_scraper] TimesJobs: stub — not yet implemented")
+    pass
     return []
 
 
 async def scrape_freshersworld(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: Freshersworld scraper — stub returns []."""
-    print("[custom_scraper] Freshersworld: stub — not yet implemented")
+    # print("[custom_scraper] Freshersworld: stub — not yet implemented")
+    pass
     return []
 
 
 async def scrape_hirist(search_term: str = "", location: str = "india", max_jobs: int = 500) -> list[dict]:
     """TODO: Hirist.tech scraper — stub returns []."""
-    print("[custom_scraper] Hirist: stub — not yet implemented")
+    # print("[custom_scraper] Hirist: stub — not yet implemented")
+    pass
     return []
 
 
@@ -195,7 +201,7 @@ async def run_custom_scrapers(
         if isinstance(result, Exception):
             failures.append(src)
             source_counts[src] = 0
-            print(f"[custom_scraper] {src} FAILED: {result}")
+            log_error(f"[custom_scraper] {src} FAILED: {result}")
         else:
             all_jobs.extend(result)
             source_counts[src] = len(result)

@@ -36,8 +36,9 @@ from typing import Optional
 
 import httpx
 import pytz
+from supabase import Client
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.session_manager import decrypt_session
 from skills.browser_pool import browser_context
@@ -59,7 +60,7 @@ def _get_daily_apply_count(user_id: str) -> int:
     """Count applies for this user today (by applied_at date)."""
     today = date.today().isoformat()
     result = (
-        supabase.table("job_applications")
+        get_supabase().table("job_applications")
         .select("id", count="exact")
         .eq("user_id", user_id)
         .gte("applied_at", today)
@@ -72,7 +73,7 @@ def _get_monthly_apply_count(user_id: str) -> int:
     """Count applies for this user this calendar month."""
     first_of_month = date.today().replace(day=1).isoformat()
     result = (
-        supabase.table("job_applications")
+        get_supabase().table("job_applications")
         .select("id", count="exact")
         .eq("user_id", user_id)
         .gte("applied_at", first_of_month)
@@ -83,7 +84,7 @@ def _get_monthly_apply_count(user_id: str) -> int:
 
 def _is_already_applied(user_id: str, job_id: str) -> bool:
     result = (
-        supabase.table("job_applications")
+        get_supabase().table("job_applications")
         .select("id")
         .eq("user_id", user_id)
         .eq("job_id", job_id)
@@ -95,7 +96,7 @@ def _is_already_applied(user_id: str, job_id: str) -> bool:
 
 def _get_user_blacklist(user_id: str) -> set:
     result = (
-        supabase.table("user_company_prefs")
+        get_supabase().table("user_company_prefs")
         .select("company_canonical")
         .eq("user_id", user_id)
         .eq("pref_type", "blacklist")
@@ -107,7 +108,7 @@ def _get_user_blacklist(user_id: str) -> set:
 def _get_session(user_id: str, platform: str) -> Optional[dict]:
     """Fetch and decrypt the user's session for the given platform. Returns None if unavailable."""
     result = (
-        supabase.table("user_connections")
+        get_supabase().table("user_connections")
         .select("session_encrypted, is_valid, platform")
         .eq("user_id", user_id)
         .eq("platform", platform)
@@ -188,8 +189,8 @@ async def _send_wa_notification(user_id: str, message: str) -> None:
                 json={"user_id": user_id, "message": message},
                 headers={"x-agent-secret": agent_secret},
             )
-    except Exception as exc:
-        print(f"[agent12] WA notification failed (non-critical): {exc}")
+    except Exception:
+        pass
 
 
 def _record_application(
@@ -202,19 +203,20 @@ def _record_application(
     app_id   = str(uuid4())
     now_iso  = datetime.now(timezone.utc).isoformat()
 
-    supabase.table("job_applications").insert({
+    get_supabase().table("job_applications").insert({
         "id":                   app_id,
         "user_id":              user_id,
         "job_id":               job_id,
         "status":               "applied",
         "auto_status":          auto_status,
-        "apply_method":         method,
-        "apply_tier":           apply_tier,
-        "fit_score_at_apply":   fit_score,
         "tailored_resume_path": tailored_path,
         "cover_letter_path":    cover_path,
+        "method":               method,
+        "fit_score_at_apply":   fit_score,
         "applied_at":           now_iso,
-        "created_at":           now_iso,
+        "fu_email_1_sent_at":   None,
+        "fu_email_2_sent_at":   None,
+        "fu_close_loop_sent_at": None,
     }).execute()
 
     return app_id

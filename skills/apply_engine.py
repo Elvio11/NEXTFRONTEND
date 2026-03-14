@@ -31,7 +31,7 @@ from selenium.common.exceptions import (
 )
 import undetected_chromedriver as uc
 
-from db.client import supabase
+from db.client import get_supabase
 from skills.storage_client import put_bytes
 from skills.anti_ban_checker import check_linkedin_limit
 
@@ -52,8 +52,8 @@ async def _save_screenshot(driver: uc.Chrome, run_id: str, job_id: str) -> Optio
         path = f"screenshots/{run_id}/{job_id}.png"
         await put_bytes(path, png_data)
         return path
-    except Exception as exc:
-        print(f"[apply_engine] screenshot failed: {exc}")
+    except Exception:
+        pass
         return None
 
 
@@ -64,7 +64,7 @@ async def _save_screenshot(driver: uc.Chrome, run_id: str, job_id: str) -> Optio
 
 def _increment_linkedin_counter() -> None:
     """Increment total_linkedin_actions for today by 1."""
-    supabase.rpc(
+    get_supabase().rpc(
         "increment_linkedin_daily_count",
         {"action_date": date.today().isoformat()},
     ).execute()

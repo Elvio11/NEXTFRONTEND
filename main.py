@@ -1,6 +1,6 @@
 """
 main.py — Talvix Server 3 (Automation Layer)
-FastAPI application. Port $PORT (Flux-Orbit).
+FastAPI application. Port $PORT (FluxCloud).
 
 Hosts: Agents 9 (Scraper), 10 (Resume Tailor), 11 (Cover Letter),
        12 (Auto-Applier), 13 (Anti-Ban Guard).
@@ -8,7 +8,7 @@ Auth: X-Agent-Secret header on all /api/agents/* routes.
 No JWT on this server — JWT lives on Server 1 only.
 No CrewAI on Server 3 — agents are standalone FastAPI endpoints.
 
-Run: doppler run -- uvicorn main:app --host 0.0.0.0 --port 8003
+Run: doppler run -- uvicorn main:app --host 0.0.0.0 --port 8080
 """
 
 import sys
@@ -131,13 +131,13 @@ app.include_router(calibrate.router,    prefix="/api/agents")
 async def health():
     required = ["SUPABASE_URL", "SUPABASE_SERVICE_KEY", "AGENT_SECRET", "SESSION_KEY"]
     env_status = {k: "SET" if os.environ.get(k) and "placeholder" not in os.environ.get(k, "") else "MISSING" for k in required}
-    return {"status": "ok", "server": "server3", "port": os.environ.get("PORT", "8003"), "env": env_status}
+    return {"status": "ok", "server": "server3", "port": os.environ.get("PORT", "8080"), "env": env_status}
 
 
 # ─── Entry (for local dev without doppler wrapper) ────────────────────────────
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", "8003"))
+    port = int(os.environ.get("PORT", "8080"))
     uvicorn.run(
         "main:app",
         host="0.0.0.0",

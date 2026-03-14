@@ -13,7 +13,7 @@ Eligibility: paid tier only.
 import time
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.resume_tailor import tailor_resume
 from llm.sarvam import SarvamUnavailableError
@@ -85,9 +85,9 @@ async def run_tailor(user_id: str, job_id: str) -> dict:
             .execute()
         )
         if app_result.data:
-            supabase.table("job_applications").update({
+            get_supabase().table("job_applications").update({
                 "tailored_resume_path": storage_path,
-                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "status": "tailored", # Optionally move status forward
             }).eq("id", app_result.data[0]["id"]).execute()
 
         duration_ms = int((time.time() - start) * 1000)

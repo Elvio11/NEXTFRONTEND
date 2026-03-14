@@ -14,7 +14,7 @@ LLM: Gemini Flash (NOT Sarvam-M — saves Sarvam RPM for scoring and tailoring).
 import time
 from datetime import datetime, timezone
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.cover_letter_writer import write_cover_letter
 
@@ -104,7 +104,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
             .execute()
         )
         if app_result.data:
-            supabase.table("job_applications").update({
+            get_supabase().table("job_applications").update({
                 "cover_letter_path": storage_path,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }).eq("id", app_result.data[0]["id"]).execute()

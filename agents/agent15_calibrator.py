@@ -22,7 +22,7 @@ import httpx
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Any
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from llm.gemini import gemini
 
@@ -41,7 +41,7 @@ async def run_daily_calibration() -> dict:
         # 1. Pull signals (7 days)
         cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
         signals = (
-            supabase.table("learning_signals")
+            get_supabase().table("learning_signals")
             .select("*")
             .gte("created_at", cutoff)
             .execute()
@@ -54,7 +54,7 @@ async def run_daily_calibration() -> dict:
 
         # 2. Logic to compute deltas (simplified for stub)
         # In a real implementation, we'd iterate through weights and calculate success rates.
-        weights = supabase.table("model_weights").select("*").execute()
+        weights = get_supabase().table("model_weights").select("*").execute()
         adjusted_count = 0
         
         for w in (weights.data or []):
@@ -72,14 +72,14 @@ async def run_daily_calibration() -> dict:
             new_val = max(w.get("min_value", 0), min(w.get("max_value", 100), new_val))
             
             if new_val != current_val:
-                supabase.table("model_weights").update({
+                get_supabase().table("model_weights").update({
                     "weight_value": new_val,
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }).eq("id", w["id"]).execute()
                 adjusted_count += 1
 
         # 3. Record run
-        supabase.table("calibration_runs").insert({
+        get_supabase().table("calibration_runs").insert({
             "run_type":         "daily",
             "signals_used":     len(signals.data),
             "weights_adjusted": adjusted_count,
@@ -110,7 +110,7 @@ async def run_weekly_calibration() -> dict:
         # 1. Pull signals (30 days)
         cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
         signals = (
-            supabase.table("learning_signals")
+            get_supabase().table("learning_signals")
             .select("*")
             .gte("created_at", cutoff)
             .limit(1000)
@@ -123,8 +123,8 @@ async def run_weekly_calibration() -> dict:
             return {"status": "skipped", "duration_ms": int((time.time()-start)*1000), "records_processed": 0, "error": msg}
 
         # 2. Fetch current weights and prompts context
-        weights = supabase.table("model_weights").select("*").execute().data
-        prompts = supabase.table("prompt_versions").select("*").eq("is_active", True).execute().data
+        weights = get_supabase().table("model_weights").select("*").execute().data
+        prompts = get_supabase().table("prompt_versions").select("*").eq("is_active", True).execute().data
 
         # 3. Format for Gemini
         analysis_prompt = f"""
@@ -160,7 +160,7 @@ async def run_weekly_calibration() -> dict:
                     new_val = max(w_row.get("min_value", 0), min(w_row.get("max_value", 100), new_val))
                     
                     if new_val != current_val:
-                        supabase.table("model_weights").update({
+                        get_supabase().table("model_weights").update({
                             "weight_value": new_val,
                             "updated_at": datetime.now(timezone.utc).isoformat()
                         }).eq("id", w_row["id"]).execute()
@@ -176,7 +176,7 @@ async def run_weekly_calibration() -> dict:
             )
 
         # 5. Records
-        supabase.table("calibration_runs").insert({
+        get_supabase().table("calibration_runs").insert({
             "run_type":         "weekly",
             "signals_used":     len(signals.data),
             "weights_adjusted": adjusted_count,

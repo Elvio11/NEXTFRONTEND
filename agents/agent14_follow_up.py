@@ -25,7 +25,7 @@ from typing import Optional, Any
 
 import httpx
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from llm.sarvam import sarvam, SarvamUnavailableError
 from skills.session_manager import decrypt_session
@@ -58,7 +58,7 @@ async def _increment_linkedin_actions() -> None:
     """Call RPC to increment global LinkedIn action counter."""
     today = datetime.now(timezone.utc).date().isoformat()
     # Assuming the RPC 'increment_linkedin_daily_count' exists as per instructions
-    supabase.rpc("increment_linkedin_daily_count", {"action_date": today}).execute()
+    get_supabase().rpc("increment_linkedin_daily_count", {"action_date": today}).execute()
 
 # ─── Helper: Google API (Gmail/Calendar) ──────────────────────────────────────
 
@@ -66,7 +66,7 @@ async def _refresh_google_token(user_id: str, platform: str = "google") -> str:
     """Refresh Google OAuth token using stored refresh_token."""
     # Fetch user_connections for google/gmail
     conn = (
-        supabase.table("user_connections")
+        get_supabase().table("user_connections")
         .select("session_encrypted")
         .eq("user_id", user_id)
         .eq("platform", platform)
@@ -166,7 +166,7 @@ async def _detect_interview_and_notify(user_id: str, app_id: str, job_title: str
                 # Interview detected!
                 # 2. Update DB
                 now_iso = datetime.now(timezone.utc).isoformat()
-                supabase.table("job_applications").update({
+                get_supabase().table("job_applications").update({
                     "interview_detected":    True,
                     "interview_detected_at": now_iso,
                 }).eq("id", app_id).execute()
@@ -195,12 +195,12 @@ async def _detect_interview_and_notify(user_id: str, app_id: str, job_title: str
                 # 5. Draft thank-you email
                 thank_you_prompt = f"Draft a professional thank-you email to be sent after an interview for {job_title} at {company}. Tone: Gracious and enthusiastic."
                 thank_you_draft = await sarvam.complete(thank_you_prompt, mode="precise")
-                supabase.table("job_applications").update({
+                get_supabase().table("job_applications").update({
                     "thank_you_draft": thank_you_draft
                 }).eq("id", app_id).execute()
                 
                 # 6. Learning signal
-                supabase.table("learning_signals").insert({
+                get_supabase().table("learning_signals").insert({
                     "user_id": user_id,
                     "type":    "interview_detected",
                     "payload": {"app_id": app_id, "company": company}
@@ -220,7 +220,7 @@ async def run_follow_up() -> dict:
     try:
         # ── 1. Fetch eligible applications for Email Follow-up ──────────────
         # We need a join with users and jobs. Restricting to paid tier.
-        apps = supabase.rpc("get_eligible_followups", {}).execute()
+        apps = get_supabase().rpc("get_eligible_followups", {}).execute()
         # Note: 'get_eligible_followups' would be a SQL function in Supabase
         # filtering by applied_at logic and paid tier.
         
@@ -248,10 +248,10 @@ async def run_follow_up() -> dict:
                     if new_stage >= 2:
                         update_data["follow_up_stopped"] = True
                     
-                    supabase.table("job_applications").update(update_data).eq("id", app["id"]).execute()
+                    get_supabase().table("job_applications").update(update_data).eq("id", app["id"]).execute()
                     
                     # Learning signal
-                    supabase.table("learning_signals").insert({
+                    get_supabase().table("learning_signals").insert({
                         "user_id": user_id,
                         "type":    "follow_up_sent",
                         "payload": {"app_id": app["id"], "stage": stage}
@@ -265,7 +265,7 @@ async def run_follow_up() -> dict:
         if not await check_linkedin_limit():
             print("[agent14] LinkedIn kill switch active — skipping LI tasks")
         else:
-            li_apps = supabase.rpc("get_eligible_linkedin_tasks", {}).execute()
+            li_apps = get_supabase().rpc("get_eligible_linkedin_tasks", {}).execute()
             for app in (li_apps.data or []):
                 # Placeholder for Selenium LinkedIn logic
                 # 1. Search recruiter -> connection request

@@ -13,7 +13,8 @@ Called BEFORE every LinkedIn scrape attempt in Agent 9.
 
 import time
 
-from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
+from db.client import get_supabase
+from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.anti_ban_checker import check_risk
 
 

@@ -25,7 +25,7 @@ from typing import Any
 
 import httpx
 
-from db.client import supabase
+from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.fingerprint import compute_fingerprint, check_duplicate
 from skills.jobspy_runner import run_jobspy
@@ -61,7 +61,7 @@ async def _upsert_job(job: dict) -> str:
 
     if existing:
         # Duplicate: update last_seen_at and apply_url only
-        supabase.table("jobs").update({
+        get_supabase().table("jobs").update({
             "last_seen_at": now_iso,
             "apply_url":    job.get("apply_url", existing.get("apply_url", "")),
         }).eq("fingerprint", fingerprint).execute()
@@ -83,14 +83,14 @@ async def _upsert_job(job: dict) -> str:
         # Remove raw_jd from DB row — stored on FluxShare only
         insert_data.pop("raw_jd", None)
 
-        supabase.table("jobs").insert(insert_data).execute()
+        get_supabase().table("jobs").insert(insert_data).execute()
 
         # Write JD to MinIO storage
         if raw_jd:
             await _write_jd_to_storage(fingerprint, raw_jd)
 
         # Also record in job_sources
-        supabase.table("job_sources").insert({
+        get_supabase().table("job_sources").insert({
             "fingerprint": fingerprint,
             "source":      remote_source,
             "scraped_at":  now_iso,
@@ -107,7 +107,7 @@ async def _trigger_jd_clean(scrape_run_id: str) -> None:
     agent_secret = os.environ["AGENT_SECRET"]
 
     if not server2_url:
-        print("[agent9] SERVER2_URL not set — skipping JD clean trigger")
+        # Not using structured logger here as it's a utility function outside agent flow
         return
 
     try:
@@ -117,9 +117,9 @@ async def _trigger_jd_clean(scrape_run_id: str) -> None:
                 json={"agent": "jd_clean", "user_id": None, "payload": {"scrape_run_id": scrape_run_id}},
                 headers={"x-agent-secret": agent_secret},
             )
-            print(f"[agent9] JD clean triggered → {resp.status_code}")
-    except Exception as exc:
-        print(f"[agent9] JD clean trigger failed (non-critical): {exc}")
+            )
+    except Exception:
+        pass # Non-critical failure
 
 
 # ─── Main Agent ───────────────────────────────────────────────────────────────
@@ -187,8 +187,8 @@ async def run_scraper(
                     jobs_inserted += 1
                 else:
                     jobs_updated += 1
-            except Exception as exc:
-                print(f"[agent9] upsert failed for {job.get('title', '?')}: {exc}")
+            except Exception:
+                pass
 
         # ── Write scrape_runs record ─────────────────────────────────────────
         scrape_run_data = {
@@ -202,7 +202,7 @@ async def run_scraper(
             "has_new_jobs":     jobs_inserted > 0,
             "scoring_complete": False,
         }
-        supabase.table("scrape_runs").insert(scrape_run_data).execute()
+        get_supabase().table("scrape_runs").insert(scrape_run_data).execute()
 
         duration_ms = int((time.time() - start) * 1000)
         await log_end(run_id, jobs_inserted + jobs_updated, duration_ms)

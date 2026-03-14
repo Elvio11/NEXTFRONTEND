@@ -20,6 +20,7 @@ from contextlib import asynccontextmanager
 
 import undetected_chromedriver as uc
 from selenium.webdriver.chrome.options import Options
+from log_utils.agent_logger import log_error
 
 
 # ─── Viewport Pool ─────────────────────────────────────────────────────────────
@@ -74,7 +75,7 @@ def release_driver(driver: uc.Chrome) -> None:
     try:
         driver.quit()
     except Exception as exc:
-        print(f"[browser_pool] driver.quit() error (non-critical): {exc}")
+        log_error(f"[browser_pool] driver.quit() error (non-critical): {exc}")
 
 
 @asynccontextmanager

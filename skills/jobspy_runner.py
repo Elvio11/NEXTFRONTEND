@@ -17,7 +17,7 @@ import asyncio
 from datetime import date
 from typing import Any
 
-from db.client import supabase
+from db.client import get_supabase
 
 
 # ─── LinkedIn Kill Switch ──────────────────────────────────────────────────────
@@ -97,6 +97,7 @@ async def run_jobspy(
     try:
         from jobspy import scrape_jobs  # imported here — lazy, Selenium-heavy dep
     except ImportError:
+        log_fail("jobspy_runner", "JobSpy not installed. Please install with `pip install jobspy`.")
         return {"jobs": [], "linkedin_skipped": False, "source_counts": {}, "failures": ["jobspy_not_installed"]}
 
     linkedin_skipped = False
@@ -107,7 +108,7 @@ async def run_jobspy(
         if await check_linkedin_limit():
             linkedin_skipped = True
             actual_sources   = [s for s in actual_sources if s.lower() != "linkedin"]
-            print("[jobspy_runner] LinkedIn SKIPPED — kill switch engaged")
+            log_fail("jobspy_runner", "LinkedIn SKIPPED — kill switch engaged")
 
     jobs      = []
     counts    = {}
@@ -135,11 +136,11 @@ async def run_jobspy(
                     source_jobs.append(mapped)
             jobs.extend(source_jobs)
             counts[source] = len(source_jobs)
-            print(f"[jobspy_runner] {source}: {len(source_jobs)} jobs scraped")
+            log_pass("jobspy_runner", f"{source}: {len(source_jobs)} jobs scraped")
         except Exception as exc:
             failures.append(source)
             counts[source] = 0
-            print(f"[jobspy_runner] {source} FAILED: {exc}")
+            log_fail("jobspy_runner", f"{source} FAILED: {exc}")
 
     return {
         "jobs":             jobs,
