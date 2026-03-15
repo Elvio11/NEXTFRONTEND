@@ -7,7 +7,7 @@
 'use strict';
 
 const router = require('express').Router();
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const verifyJWT = require('../middleware/verifyJWT');
 
 const MAX_ROLES = 5;
@@ -31,7 +31,7 @@ router.patch('/roles', verifyJWT, async (req, res) => {
 
     try {
         // Delete existing roles for this user, then insert new set
-        const { error: delError } = await supabase
+        const { error: delError } = await getSupabase()
             .from('user_target_roles')
             .delete()
             .eq('user_id', userId);
@@ -43,13 +43,13 @@ router.patch('/roles', verifyJWT, async (req, res) => {
             priority: r.priority ?? idx + 1,
         }));
 
-        const { error: insError } = await supabase
+        const { error: insError } = await getSupabase()
             .from('user_target_roles')
             .insert(newRows);
         if (insError) throw insError;
 
         // Mark fit scores as stale — triggers Agent 6 full scan on next run
-        const { error: staleError } = await supabase
+        const { error: staleError } = await getSupabase()
             .from('users')
             .update({ fit_scores_stale: true, updated_at: new Date().toISOString() })
             .eq('id', userId);
@@ -57,7 +57,7 @@ router.patch('/roles', verifyJWT, async (req, res) => {
 
         return res.json({ status: 'updated', roles_count: newRows.length, fit_scores_stale: true });
     } catch (err) {
-        console.error('[user/roles]', err.message);
+        logger.error('user/roles', err.message);
         return res.status(500).json({ error: 'Failed to update target roles' });
     }
 });
@@ -68,7 +68,7 @@ router.patch('/roles', verifyJWT, async (req, res) => {
  */
 router.get('/profile', verifyJWT, async (req, res) => {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from('users')
             .select(`
         id, email, full_name, tier, onboarding_completed,
@@ -82,7 +82,7 @@ router.get('/profile', verifyJWT, async (req, res) => {
         if (error) throw error;
         return res.json({ user: data });
     } catch (err) {
-        console.error('[user/profile GET]', err.message);
+        logger.error('user/profile', `GET: ${err.message}`);
         return res.status(500).json({ error: 'Failed to fetch profile' });
     }
 });
@@ -110,14 +110,14 @@ router.patch('/profile', verifyJWT, async (req, res) => {
     updates.updated_at = new Date().toISOString();
 
     try {
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('users')
             .update(updates)
             .eq('id', req.user.id);
         if (error) throw error;
         return res.json({ status: 'updated', fields: Object.keys(updates) });
     } catch (err) {
-        console.error('[user/profile PATCH]', err.message);
+        logger.error('user/profile', `PATCH: ${err.message}`);
         return res.status(500).json({ error: 'Failed to update profile' });
     }
 });

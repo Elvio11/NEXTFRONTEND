@@ -6,8 +6,9 @@
 'use strict';
 
 const express = require('express');
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const { connectWhatsApp } = require('../baileys/waClient');
+const logger = require('../lib/logger');
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ const router = express.Router();
  */
 router.get('/status', async (req, res) => {
     try {
-        const { data: health, error } = await supabase
+        const { data: health, error } = await getSupabase()
             .from('wa_bot_health')
             .select('status, qr_code, last_ping_at')
             .eq('id', 1)
@@ -39,7 +40,7 @@ router.get('/status', async (req, res) => {
  */
 router.post('/connect', async (req, res) => {
     try {
-        const { data: health } = await supabase
+        const { data: health } = await getSupabase()
             .from('wa_bot_health')
             .select('status')
             .eq('id', 1)
@@ -49,11 +50,11 @@ router.post('/connect', async (req, res) => {
             return res.status(400).json({ status: 'ignored', note: 'bot is already connected or awaiting qr scan' });
         }
 
-        console.log(`[whatsapp.js] User ${req.user.id} requested Baileys reconnect...`);
+        logger.info('whatsapp', `User ${req.user.id} requested Baileys reconnect...`);
 
         // Spawn connection (do not await fully since it listens forever)
         connectWhatsApp().catch(err => {
-            console.error('[whatsapp.js] requested connection failed:', err.message);
+            logger.error('whatsapp', `requested connection failed: ${err.message}`);
         });
 
         return res.status(202).json({ status: 'connecting', note: 'check /status endpoint for qr code' });

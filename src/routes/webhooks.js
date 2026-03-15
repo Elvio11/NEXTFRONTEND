@@ -16,7 +16,7 @@
 
 const router = require('express').Router();
 const crypto = require('crypto');
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const forwardToAgent = require('../lib/forwardToAgent');
 
 // Plan durations for subscription_expires_at calculation
@@ -86,13 +86,13 @@ router.post('/', async (req, res) => {
                 const expiresAt = addMonths(now, months);
 
                 if (!userId) {
-                    console.error('[webhook/razorpay] payment.captured missing user_id in notes');
+                    logger.error('webhooks/razorpay', 'payment.captured missing user_id in notes');
                     return;
                 }
 
                 // Upgrade tier and set subscription window
                 // Note: anon key + RLS — the upsert targets the user's own row
-                const { error } = await supabase
+                const { error } = await getSupabase()
                     .from('users')
                     .update({
                         tier: 'paid',
@@ -103,19 +103,19 @@ router.post('/', async (req, res) => {
                     .eq('id', userId);
 
                 if (error) {
-                    console.error('[webhook/razorpay] tier upgrade failed:', error.message);
+                    logger.error('webhooks/razorpay', `tier upgrade failed: ${error.message}`);
                     return;
                 }
 
                 // Fire WA welcome → Server 2 handles Baileys push (non-blocking)
                 forwardToAgent(process.env.SERVER2_URL, 'wa-welcome', userId, {
                     plan: planKey, expires_at: expiresAt,
-                }).catch(err => console.error('[webhook/razorpay] wa-welcome failed:', err.message));
+                }).catch(err => logger.error('webhooks/razorpay', `wa-welcome failed: ${err.message}`));
 
-                console.log(`[webhook/razorpay] payment.captured: user ${userId} → paid (${planKey}, ${months}mo)`);
+                logger.info('webhooks/razorpay', `payment.captured: user ${userId} → paid (${planKey}, ${months}mo)`);
             }
         } catch (err) {
-            console.error('[webhook/razorpay] async processing error:', err.message);
+            logger.error('webhooks/razorpay', `async processing error: ${err.message}`);
         }
     });
 });

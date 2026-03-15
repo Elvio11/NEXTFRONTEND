@@ -7,7 +7,7 @@
 'use strict';
 
 const router = require('express').Router();
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const verifyJWT = require('../middleware/verifyJWT');
 
 /**
@@ -20,7 +20,7 @@ router.get('/', verifyJWT, async (req, res) => {
     const status = req.query.status ?? 'unread';
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from('notifications')
             .select('id, event_type, title, body, channel, priority, status, created_at')
             .eq('user_id', req.user.id)
@@ -31,7 +31,7 @@ router.get('/', verifyJWT, async (req, res) => {
         if (error) throw error;
         return res.json({ notifications: data ?? [] });
     } catch (err) {
-        console.error('[notifications GET]', err.message);
+        logger.error('notifications', `GET: ${err.message}`);
         return res.status(500).json({ error: 'Failed to fetch notifications' });
     }
 });
@@ -44,7 +44,7 @@ router.patch('/:id', verifyJWT, async (req, res) => {
     const { id } = req.params;
 
     try {
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('notifications')
             .update({ status: 'read', read_at: new Date().toISOString() })
             .eq('id', id)
@@ -53,7 +53,7 @@ router.patch('/:id', verifyJWT, async (req, res) => {
         if (error) throw error;
         return res.json({ status: 'read', id });
     } catch (err) {
-        console.error('[notifications PATCH]', err.message);
+        logger.error('notifications', `PATCH: ${err.message}`);
         return res.status(500).json({ error: 'Failed to mark notification as read' });
     }
 });
@@ -64,7 +64,7 @@ router.patch('/:id', verifyJWT, async (req, res) => {
  */
 router.patch('/read-all', verifyJWT, async (req, res) => {
     try {
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('notifications')
             .update({ status: 'read', read_at: new Date().toISOString() })
             .eq('user_id', req.user.id)
@@ -73,7 +73,7 @@ router.patch('/read-all', verifyJWT, async (req, res) => {
         if (error) throw error;
         return res.json({ status: 'ok' });
     } catch (err) {
-        console.error('[notifications read-all]', err.message);
+        logger.error('notifications', `read-all: ${err.message}`);
         return res.status(500).json({ error: 'Failed to mark all notifications as read' });
     }
 });

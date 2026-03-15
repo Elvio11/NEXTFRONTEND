@@ -17,7 +17,7 @@
 'use strict';
 
 const router = require('express').Router();
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const logger = require('../lib/logger');
 const verifyJWT = require('../middleware/verifyJWT');
 
@@ -37,7 +37,7 @@ router.get('/', verifyJWT, async (req, res) => {
         ] = await Promise.all([
 
             // User profile — safe fields only (oauth_* stripped by stripSensitive anyway)
-            supabase
+            getSupabase()
                 .from('users')
                 .select(`
           id, email, full_name, tier, onboarding_completed,
@@ -50,7 +50,7 @@ router.get('/', verifyJWT, async (req, res) => {
                 .single(),
 
             // Fit scores — paid gets 25, free gets 3
-            supabase
+            getSupabase()
                 .from('job_fit_scores')
                 .select(`
           id, fit_score, fit_label, recommendation,
@@ -63,14 +63,14 @@ router.get('/', verifyJWT, async (req, res) => {
                 .limit(req.user.tier === 'paid' ? 25 : 3),
 
             // Skill gap — top 3 from DB column (full report on FluxShare for paid)
-            supabase
+            getSupabase()
                 .from('skill_gap_results')
                 .select('top_gaps, next_refresh_at')
                 .eq('user_id', userId)
                 .single(),
 
             // Career intelligence summary
-            supabase
+            getSupabase()
                 .from('career_intelligence')
                 .select(`
           career_score, score_components, market_demand_score,
@@ -81,7 +81,7 @@ router.get('/', verifyJWT, async (req, res) => {
                 .single(),
 
             // Recent applications — last 30
-            supabase
+            getSupabase()
                 .from('job_applications')
                 .select(`
           id, status, auto_status, method, fit_score_at_apply,
@@ -93,14 +93,14 @@ router.get('/', verifyJWT, async (req, res) => {
                 .limit(30),
 
             // Unread notification count only (not full list — separate route)
-            supabase
+            getSupabase()
                 .from('notifications')
                 .select('id', { count: 'exact', head: true })
                 .eq('user_id', userId)
                 .eq('status', 'unread'),
 
             // Connection status — EXPLICIT column list, never select session_encrypted
-            supabase
+            getSupabase()
                 .from('user_connections')
                 .select('platform, is_valid, consecutive_failures, estimated_expires_at')
                 .eq('user_id', userId),

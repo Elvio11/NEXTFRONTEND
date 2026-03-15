@@ -12,7 +12,7 @@
 'use strict';
 
 const router = require('express').Router();
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const forwardToAgent = require('../lib/forwardToAgent');
 const logger = require('../lib/logger');
 const verifyJWT = require('../middleware/verifyJWT');
@@ -31,7 +31,7 @@ router.post('/', verifyJWT, async (req, res) => {
 
     try {
         // Dedup check — has user already applied to this job?
-        const { data: existing } = await supabase
+        const { data: existing } = await getSupabase()
             .from('job_applications')
             .select('id')
             .eq('user_id', userId)
@@ -43,7 +43,7 @@ router.post('/', verifyJWT, async (req, res) => {
         }
 
         // Insert application record
-        const { data: application, error: insError } = await supabase
+        const { data: application, error: insError } = await getSupabase()
             .from('job_applications')
             .insert({
                 user_id: userId,
@@ -86,7 +86,7 @@ router.get('/', verifyJWT, async (req, res) => {
     const status = req.query.status; // optional filter
 
     try {
-        let query = supabase
+        let query = getSupabase()
             .from('job_applications')
             .select(`
         id, status, auto_status, method, fit_score_at_apply, platform,
@@ -118,7 +118,7 @@ router.get("/:appId/resume", verifyJWT, async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from("job_applications")
             .select("tailored_resume_path")
             .eq("id", appId)
@@ -143,7 +143,7 @@ router.get("/:appId/cover-letter", verifyJWT, async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from("job_applications")
             .select("cover_letter_path")
             .eq("id", appId)

@@ -12,9 +12,16 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
-const supabase = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY  // anon key — RLS enforced, auth.uid() scoped
-);
+let _supabase = null;
 
-module.exports = supabase;
+function getSupabase() {
+    if (!_supabase) {
+        _supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY  // anon key — RLS enforced, auth.uid() scoped
+        );
+    }
+    return _supabase;
+}
+
+module.exports = { getSupabase };

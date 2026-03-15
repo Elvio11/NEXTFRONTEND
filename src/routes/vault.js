@@ -16,9 +16,10 @@
 'use strict';
 
 const router = require('express').Router();
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const { encrypt } = require('../lib/aes');
 const verifyJWT = require('../middleware/verifyJWT');
+const logger = require('../lib/logger');
 
 const ALLOWED_PLATFORMS = new Set(['linkedin', 'indeed']);
 
@@ -42,7 +43,7 @@ router.post('/capture', verifyJWT, async (req, res) => {
 
         // Upsert user_connections — one row per (user_id, platform)
         // RLS: user_id = auth.uid() enforced — can only write own row
-        const { error } = await supabase
+        const { error } = await getSupabase()
             .from('user_connections')
             .upsert({
                 user_id: req.user.id,
@@ -65,7 +66,7 @@ router.post('/capture', verifyJWT, async (req, res) => {
             is_valid: true,
         });
     } catch (err) {
-        console.error('[vault/capture] error (no session data logged):', err.message);
+        logger.error('vault/capture', `error (no session data logged): ${err.message}`);
         return res.status(500).json({ error: 'Failed to store session' });
     }
 });
@@ -77,7 +78,7 @@ router.post('/capture', verifyJWT, async (req, res) => {
 router.get('/status', verifyJWT, async (req, res) => {
     try {
         // Explicitly select only safe columns — session_encrypted never fetched
-        const { data, error } = await supabase
+        const { data, error } = await getSupabase()
             .from('user_connections')
             .select('platform, is_valid, consecutive_failures, estimated_expires_at, created_at')
             .eq('user_id', req.user.id);
@@ -86,7 +87,7 @@ router.get('/status', verifyJWT, async (req, res) => {
 
         return res.json({ connections: data ?? [] });
     } catch (err) {
-        console.error('[vault/status]', err.message);
+        logger.error('vault/status', err.message);
         return res.status(500).json({ error: 'Failed to fetch connection status' });
     }
 });

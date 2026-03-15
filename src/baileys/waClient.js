@@ -15,7 +15,8 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const { Boom } = require('@hapi/boom');
 const path = require('path');
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
+const logger = require('../lib/logger');
 
 // Auth state stored locally during dev. In prod: stored on FluxShare shared disk.
 const AUTH_DIR = path.join(process.cwd(), '.baileys_auth');
@@ -27,7 +28,7 @@ async function updateBotHealth(status, qrCode = null) {
         // wa_bot_health is a singleton (id = 1). Use service_role on Servers 2/3.
         // Here we update via anon key — must have appropriate policy or use service_role.
         // For Phase 2 dev: RLS policy allows Server 1 to update id=1 row.
-        await supabase
+        await getSupabase()
             .from('wa_bot_health')
             .update({
                 status,
@@ -37,7 +38,7 @@ async function updateBotHealth(status, qrCode = null) {
             })
             .eq('id', 1);
     } catch (err) {
-        console.error('[waClient] DB health update failed:', err.message);
+        logger.error('waClient', `DB health update failed: ${err.message}`);
     }
 }
 
@@ -54,14 +55,14 @@ async function connectWhatsApp() {
 
     sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
         if (qr) {
-            console.log('[waClient] QR ready — scan with WhatsApp');
+            logger.info('waClient', 'QR ready — scan with WhatsApp');
             await updateBotHealth('qr_pending', qr);
         }
 
         if (connection === 'close') {
             const reason = new Boom(lastDisconnect?.error)?.output?.statusCode;
             const shouldReconnect = reason !== DisconnectReason.loggedOut;
-            console.log(`[waClient] connection closed (reason: ${reason}). reconnect: ${shouldReconnect}`);
+            logger.info('waClient', `connection closed (reason: ${reason}). reconnect: ${shouldReconnect}`);
             await updateBotHealth('disconnected');
             if (shouldReconnect) {
                 // Simple backoff — reconnect after 5 seconds
@@ -70,7 +71,7 @@ async function connectWhatsApp() {
         }
 
         if (connection === 'open') {
-            console.log('[waClient] ✅ WhatsApp connected');
+            logger.info('waClient', 'WhatsApp connected');
             await updateBotHealth('connected');
         }
     });
@@ -81,14 +82,14 @@ async function connectWhatsApp() {
             if (!msg.key.fromMe && msg.message) {
                 const from = msg.key.remoteJid;
                 const text = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text ?? '[media]';
-                console.log(`[waClient] inbound from ${from}: ${text.slice(0, 80)}`);
+                logger.info('waClient', `inbound from ${from}: ${text.slice(0, 80)}`);
 
                 // --- 3-Layer Security Gate for Inbound Commands ---
                 try {
                     // Extract phone number from JID (e.g., '919876543210@s.whatsapp.net' -> '919876543210')
                     const phone = from.split('@')[0];
 
-                    const { data: user, error } = await supabase
+                    const { data: user, error } = await getSupabase()
                         .from('users')
                         .select('id, wa_opted_in, tier')
                         .eq('wa_phone', phone)
@@ -96,13 +97,13 @@ async function connectWhatsApp() {
 
                     // Gate 1: Phone exists?
                     if (error || !user) {
-                        console.log(`[waClient] Gate 1 failed: unrecognised phone ${phone}`);
+                        logger.info('waClient', `Gate 1 failed: unrecognised phone ${phone}`);
                         continue; // Silently ignore
                     }
 
                     // Gate 2: Opted in?
                     if (!user.wa_opted_in) {
-                        console.log(`[waClient] Gate 2 failed: user ${user.id} not opted in`);
+                        logger.info('waClient', `Gate 2 failed: user ${user.id} not opted in`);
                         await sock.sendMessage(from, { text: "Please connect WhatsApp via the Talvix dashboard to enable commands." });
                         continue;
                     }
@@ -110,16 +111,16 @@ async function connectWhatsApp() {
                     // Gate 3: Core commands are premium. (If command requires paid tier)
                     const isPremiumCommand = text.toLowerCase().startsWith('/apply') || text.toLowerCase().startsWith('/coach');
                     if (isPremiumCommand && user.tier !== 'paid') {
-                        console.log(`[waClient] Gate 3 failed: user ${user.id} is free tier attempting premium command`);
+                        logger.info('waClient', `Gate 3 failed: user ${user.id} is free tier attempting premium command`);
                         await sock.sendMessage(from, { text: "This command requires a premium subscription. Upgrade at talvix.in." });
                         continue;
                     }
 
                     // Handled: Valid command passed all gates.
-                    console.log(`[waClient] User ${user.id} authenticated for command: ${text}`);
+                    logger.info('waClient', `User ${user.id} authenticated for command: ${text}`);
                     // Future: Route to agent executor
                 } catch (err) {
-                    console.error('[waClient] Inbound gate error:', err.message);
+                    logger.error('waClient', `Inbound gate error: ${err.message}`);
                 }
             }
         }
@@ -134,24 +135,24 @@ async function connectWhatsApp() {
  */
 async function sendMessage(userId, message, eventType = 'notification') {
     if (!sock) {
-        console.error('[waClient] Cannot send message, socket not connected.');
+        logger.error('waClient', 'Cannot send message, socket not connected.');
         return false;
     }
 
     try {
-        const { data: user, error } = await supabase
+        const { data: user, error } = await getSupabase()
             .from('users')
             .select('wa_phone, wa_opted_in')
             .eq('id', userId)
             .single();
 
         if (error || !user) {
-            console.error(`[waClient] sendMessage failed: user ${userId} not found`);
+            logger.error('waClient', `sendMessage failed: user ${userId} not found`);
             return false;
         }
 
         if (!user.wa_opted_in || !user.wa_phone) {
-            console.error(`[waClient] sendMessage aborted: user ${userId} missing phone or opt-in`);
+            logger.error('waClient', `sendMessage aborted: user ${userId} missing phone or opt-in`);
             return false;
         }
 
@@ -159,10 +160,10 @@ async function sendMessage(userId, message, eventType = 'notification') {
         const jid = `${user.wa_phone}@s.whatsapp.net`;
         await sock.sendMessage(jid, { text: message });
 
-        console.log(`[waClient] Sent ${eventType} to user ${userId}`);
+        logger.info('waClient', `Sent ${eventType} to user ${userId}`);
         return true;
     } catch (err) {
-        console.error(`[waClient] sendMessage error for user ${userId}:`, err.message);
+        logger.error('waClient', `sendMessage error for user ${userId}: ${err.message}`);
         return false;
     }
 }

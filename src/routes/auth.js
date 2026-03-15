@@ -15,7 +15,7 @@
 
 const router = require('express').Router();
 const jwt = require('jsonwebtoken');
-const supabase = require('../lib/supabaseClient');
+const { getSupabase } = require('../lib/supabaseClient');
 const logger = require('../lib/logger');
 
 const JWT_EXPIRY = '15m';
@@ -50,7 +50,7 @@ router.post('/google', async (req, res) => {
 
     try {
         // Exchange code with Supabase Auth (handles Google OAuth internally)
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        const { data, error } = await getSupabase().auth.exchangeCodeForSession(code);
         if (error || !data.session) {
             return res.status(401).json({ error: error?.message ?? 'OAuth failed' });
         }
@@ -58,7 +58,7 @@ router.post('/google', async (req, res) => {
         const { user, session } = data;
 
         // Fetch tier from users table (Supabase session doesn't carry it)
-        const { data: profile } = await supabase
+        const { data: profile } = await getSupabase()
             .from('users')
             .select('tier, onboarding_completed, full_name')
             .eq('id', user.id)
@@ -106,7 +106,7 @@ router.post('/refresh', async (req, res) => {
         if (payload.purpose !== 'refresh') throw new Error('Invalid token purpose');
 
         // Fetch current profile to get up-to-date tier (may have been upgraded)
-        const { data: profile } = await supabase
+        const { data: profile } = await getSupabase()
             .from('users')
             .select('email, tier')
             .eq('id', payload.sub)
