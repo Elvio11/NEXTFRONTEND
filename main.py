@@ -89,6 +89,13 @@ except Exception as e:
     logger.error(f"FATAL: coach — {e}")
 
 try:
+    from routers import calibrate
+
+    logger.info("calibrate router OK")
+except Exception as e:
+    logger.error(f"FATAL: calibrate — {e}")
+
+try:
     from routers import cleanup
 
     logger.info("cleanup router OK")
@@ -144,6 +151,7 @@ app.include_router(career_intel.router, prefix="/api/agents")
 app.include_router(fit_score.router, prefix="/api/agents")
 app.include_router(jd_clean.router, prefix="/api/agents")
 app.include_router(coach.router, prefix="/api/agents")
+app.include_router(calibrate.router, prefix="/api/agents")
 app.include_router(cleanup.router, prefix="/api/agents/cleanup")
 if orchestrator_router is not None:
     app.include_router(orchestrator_router.router)
