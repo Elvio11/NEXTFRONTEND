@@ -11,6 +11,7 @@
 
 const express = require('express');
 const verifyAgentSecret = require('../middleware/verifyAgentSecret');
+const logger = require('../lib/logger');
 
 const router = express.Router();
 
@@ -23,11 +24,9 @@ router.use(verifyAgentSecret);
  * to trigger a WhatsApp push via Baileys.
  *
  * Body: { user_id: string, message: string, event_type?: string }
- * Response: { status: "sent" | "deferred" }
+ * Response: { status: "sent" | "failed" }
  *
- * Phase 2: Outbound WA sending is deferred to Phase 3.
- *          We accept the request and return 200 so agents don't error.
- *          The message is logged for debugging.
+ * BACKWARD COMPAT: This route is preserved. New callers should use /internal/notify.
  */
 router.post('/wa-send', async (req, res) => {
     const { user_id, message, event_type = 'agent_notification' } = req.body;
@@ -46,4 +45,45 @@ router.post('/wa-send', async (req, res) => {
     }
 });
 
+/**
+ * POST /internal/notify
+ * Unified notification endpoint — routes to ALL active channels for a user.
+ * Called by Server 2/3 agents via whatsapp_push.py send_notification().
+ *
+ * Body: {
+ *   user_id: string,
+ *   message_type: "job_alert"|"application_update"|"session_expiring_7d"|
+ *                 "session_expiring_3d"|"session_expired"|"apply_paused"|
+ *                 "coach"|"subscription_expiring"|"apply_submitted"|
+ *                 "interview_scheduled",
+ *   payload: { ...message-type specific data }
+ * }
+ *
+ * Response: { status: "delivered"|"partial"|"failed", channels: { sent: [], failed: [] } }
+ */
+router.post('/notify', async (req, res) => {
+    const { user_id, message_type, payload } = req.body;
+
+    if (!user_id || !message_type) {
+        return res.status(400).json({ error: 'user_id and message_type are required' });
+    }
+
+    try {
+        const { routeNotification } = require('../messaging/notifyRouter');
+        const result = await routeNotification(user_id, message_type, payload || {});
+
+        if (result.sent.length > 0 && result.failed.length === 0) {
+            return res.status(200).json({ status: 'delivered', channels: result });
+        } else if (result.sent.length > 0) {
+            return res.status(200).json({ status: 'partial', channels: result });
+        } else {
+            return res.status(200).json({ status: 'failed', channels: result });
+        }
+    } catch (err) {
+        logger.error('internal', `notify error: ${err.message}`);
+        return res.status(500).json({ error: 'notification delivery failed' });
+    }
+});
+
 module.exports = router;
+

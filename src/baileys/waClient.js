@@ -76,51 +76,46 @@ async function connectWhatsApp() {
         }
     });
 
-    // Phase 2/3: log inbound messages and apply 3-layer security gate
+    // Route inbound messages through unified commandRouter
+    // The 3-layer gate (phone check → opted-in → tier check) is handled by commandRouter
+    const commandRouter = require('../messaging/commandRouter');
+
     sock.ev.on('messages.upsert', async ({ messages }) => {
         for (const msg of messages) {
             if (!msg.key.fromMe && msg.message) {
                 const from = msg.key.remoteJid;
-                const text = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text ?? '[media]';
-                logger.info('waClient', `inbound from ${from}: ${text.slice(0, 80)}`);
+                const text = msg.message?.conversation ?? msg.message?.extendedTextMessage?.text ?? '';
 
-                // --- 3-Layer Security Gate for Inbound Commands ---
+                // Skip non-text messages (media, stickers, etc.)
+                if (!text) continue;
+
+                logger.info('waClient', `inbound message received`);
+
                 try {
-                    // Extract phone number from JID (e.g., '919876543210@s.whatsapp.net' -> '919876543210')
+                    // Extract phone number from JID (e.g., '919876543210@s.whatsapp.net')
                     const phone = from.split('@')[0];
 
-                    const { data: user, error } = await getSupabase()
-                        .from('users')
-                        .select('id, wa_opted_in, tier')
-                        .eq('wa_phone', phone)
-                        .single();
+                    // Parse command: first word, case-insensitive (constraint M2)
+                    const trimmed = text.trim();
+                    const parts = trimmed.split(/\s+/);
+                    const command = parts[0].toUpperCase();
+                    const args = parts.slice(1);
 
-                    // Gate 1: Phone exists?
-                    if (error || !user) {
-                        logger.info('waClient', `Gate 1 failed: unrecognised phone ${phone}`);
-                        continue; // Silently ignore
-                    }
+                    // WA send function with 1500ms rate limit (constraint M4)
+                    const sendFn = async (message) => {
+                        await sock.sendMessage(from, { text: message });
+                    };
 
-                    // Gate 2: Opted in?
-                    if (!user.wa_opted_in) {
-                        logger.info('waClient', `Gate 2 failed: user ${user.id} not opted in`);
-                        await sock.sendMessage(from, { text: "Please connect WhatsApp via the Talvix dashboard to enable commands." });
-                        continue;
-                    }
-
-                    // Gate 3: Core commands are premium. (If command requires paid tier)
-                    const isPremiumCommand = text.toLowerCase().startsWith('/apply') || text.toLowerCase().startsWith('/coach');
-                    if (isPremiumCommand && user.tier !== 'paid') {
-                        logger.info('waClient', `Gate 3 failed: user ${user.id} is free tier attempting premium command`);
-                        await sock.sendMessage(from, { text: "This command requires a premium subscription. Upgrade at talvix.in." });
-                        continue;
-                    }
-
-                    // Handled: Valid command passed all gates.
-                    logger.info('waClient', `User ${user.id} authenticated for command: ${text}`);
-                    // Future: Route to agent executor
+                    await commandRouter.handle({
+                        channel: 'whatsapp',
+                        channel_id: phone,
+                        command,
+                        args,
+                        sendFn,
+                        raw_text: trimmed,
+                    });
                 } catch (err) {
-                    logger.error('waClient', `Inbound gate error: ${err.message}`);
+                    logger.error('waClient', `Inbound handler error: ${err.message}`);
                 }
             }
         }

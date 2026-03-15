@@ -52,9 +52,11 @@ const webhooksRouter = require('./routes/webhooks');
 const internalRouter = require('./routes/internal');
 const whatsappRouter = require('./routes/whatsapp');
 const orchestrateRouter = require('./routes/orchestrate');
+const telegramRouter = require('./routes/telegram');
 
-// Baileys stub
+// Messaging layer
 const { connectWhatsApp } = require('./baileys/waClient');
+const { initTelegramBot, startTelegramPolling } = require('./telegram/tgClient');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // App setup
@@ -110,6 +112,7 @@ app.use('/api/user', userRouter);
 app.use('/api/applications', applicationsRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/whatsapp', verifyJWT, whatsappRouter);
+app.use('/api/telegram', telegramRouter);
 app.use('/api/orchestrate', orchestrateRouter);
 
 // Internal callbacks — Server 2/3 → Server 1 (X-Agent-Secret, NOT JWT)
@@ -147,11 +150,32 @@ app.listen(PORT, '0.0.0.0', () => {
     logger.info('server', `Environment: ${process.env.NODE_ENV ?? 'production'}`);
     logger.info('server', `CORS origin: ${process.env.FRONTEND_URL}`);
 
-    // Start Baileys socket (Phase 2 stub — connect, show QR, update wa_bot_health)
+    // Start Baileys socket
     connectWhatsApp().catch(err => {
         logger.error('server', `Baileys connection failed: ${err.message}`);
         // Non-fatal — server continues. WhatsApp is optional functionality.
     });
+
+    // Start Telegram bot
+    const tgBot = initTelegramBot();
+    if (tgBot) {
+        if (process.env.NODE_ENV === 'production') {
+            // Production: webhook mode — register webhook URL
+            const webhookUrl = `${process.env.FRONTEND_URL}/api/telegram/webhook`;
+            tgBot.api.setWebhook(webhookUrl, {
+                secret_token: process.env.TELEGRAM_WEBHOOK_SECRET,
+            }).then(() => {
+                logger.info('server', `Telegram webhook set: ${webhookUrl}`);
+            }).catch(err => {
+                logger.error('server', `Telegram webhook setup failed: ${err.message}`);
+            });
+        } else {
+            // Development: long-polling mode
+            startTelegramPolling().catch(err => {
+                logger.error('server', `Telegram polling failed: ${err.message}`);
+            });
+        }
+    }
 });
 
 module.exports = app; // export for Jest/Supertest
