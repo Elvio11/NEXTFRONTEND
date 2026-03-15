@@ -92,4 +92,36 @@ router.get('/status', verifyJWT, async (req, res) => {
     }
 });
 
+/**
+ * GET /api/vault/status/:platform
+ * Returns connection health for a specific platform — no encrypted fields.
+ */
+router.get('/status/:platform', verifyJWT, async (req, res) => {
+    const { platform } = req.params;
+
+    if (!ALLOWED_PLATFORMS.has(platform)) {
+        return res.status(400).json({ error: 'Invalid platform. Must be linkedin or indeed.' });
+    }
+
+    try {
+        const { data, error } = await getSupabase()
+            .from('user_connections')
+            .select('platform, is_valid, consecutive_failures, estimated_expires_at, created_at')
+            .eq('user_id', req.user.id)
+            .eq('platform', platform)
+            .single();
+
+        if (error) throw error;
+
+        return res.json({
+            platform: data.platform,
+            is_valid: data.is_valid,
+            estimated_expires_at: data.estimated_expires_at,
+        });
+    } catch (err) {
+        logger.error('vault/status/:platform', err.message);
+        return res.status(500).json({ error: 'Failed to fetch connection status' });
+    }
+});
+
 module.exports = router;
