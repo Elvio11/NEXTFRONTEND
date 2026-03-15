@@ -34,13 +34,13 @@ class CareerPlannerFlow(Flow):
     Usage:
         flow = CareerPlannerFlow()
         flow.user_id = "uuid-here"
-        flow.file_path = "/storage/uploads/uuid/resume.pdf"
+        flow.storage_key = "raw-resumes/uuid.pdf"
         await flow.kickoff_async()
     """
 
     # State: set before kickoff
-    user_id:   str = ""
-    file_path: str = ""
+    user_id:     str = ""
+    storage_key: str = ""
 
     # Internal state set by steps
     agent3_result: dict = {}
@@ -49,9 +49,9 @@ class CareerPlannerFlow(Flow):
     async def run_resume_intelligence(self) -> dict:
         """
         Step 1: Agent 3 — parse resume and generate personas.
-        Synchronous — all downstream agents depend on the parsed resume on FluxShare.
+        Synchronous — all downstream agents depend on the parsed resume on MinIO.
         """
-        result = await agent3.run(self.user_id, self.file_path)
+        result = await agent3.run(self.user_id, self.storage_key)
         self.agent3_result = result
         return result
 
@@ -86,14 +86,14 @@ class CareerPlannerFlow(Flow):
         }).eq("id", self.user_id).execute()
 
 
-async def run_onboarding_flow(user_id: str, file_path: str) -> dict:
+async def run_onboarding_flow(user_id: str, storage_key: str) -> dict:
     """
     Convenience wrapper called by the resume router.
     Runs the full CareerPlannerFlow and returns Agent 3's result
     (which contains persona_options and extracted_summary for Server 1).
     """
     flow = CareerPlannerFlow()
-    flow.user_id   = user_id
-    flow.file_path = file_path
+    flow.user_id     = user_id
+    flow.storage_key = storage_key
     await flow.kickoff_async()
     return flow.agent3_result

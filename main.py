@@ -11,25 +11,35 @@ Run: doppler run -- uvicorn main:app --host 0.0.0.0 --port 8080
 """
 
 import sys
-print(f"[BOOT] Python version: {sys.version}", flush=True)
-print(f"[BOOT] Starting Talvix Server 2...", flush=True)
+import logging
+
+# Configure startup logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    stream=sys.stdout,
+)
+logger = logging.getLogger("server2_startup")
+
+logger.info(f"Python version: {sys.version}")
+logger.info("Starting Talvix Server 2...")
 
 import os
 
 # ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
 # In production Flux-Orbit/Doppler values override these before any agent runs.
 # setdefault() only sets if the key is NOT already in the environment.
-os.environ.setdefault("SUPABASE_URL",         "https://placeholder.supabase.co")
-os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY",  "placeholder-service-key")
-os.environ.setdefault("AGENT_SECRET",          "placeholder-agent-secret-change-me")
-os.environ.setdefault("SARVAM_API_KEY",        "placeholder-sarvam-key")
-os.environ.setdefault("GEMINI_API_KEY",        "placeholder-gemini-key")
-os.environ.setdefault("SERVER1_URL",           "https://placeholder-server1.example.com")
-os.environ.setdefault("SERVER2_URL",           "https://placeholder-server2.example.com")
-os.environ.setdefault("SERVER3_URL",           "https://placeholder-server3.example.com")
-os.environ.setdefault("OPENAI_API_KEY",        "placeholder-openai-key")
+os.environ.setdefault("SUPABASE_URL", "https://placeholder.supabase.co")
+os.environ.setdefault("SUPABASE_SERVICE_ROLE_KEY", "placeholder-service-key")
+os.environ.setdefault("AGENT_SECRET", "placeholder-agent-secret-change-me")
+os.environ.setdefault("SARVAM_API_KEY", "placeholder-sarvam-key")
+os.environ.setdefault("GEMINI_API_KEY", "placeholder-gemini-key")
+os.environ.setdefault("SERVER1_URL", "https://placeholder-server1.example.com")
+os.environ.setdefault("SERVER2_URL", "https://placeholder-server2.example.com")
+os.environ.setdefault("SERVER3_URL", "https://placeholder-server3.example.com")
+os.environ.setdefault("OPENAI_API_KEY", "placeholder-openai-key")
 
-print("[BOOT] Env defaults set.", flush=True)
+logger.info("Env defaults set.")
 
 import traceback
 from fastapi import FastAPI, Request
@@ -38,59 +48,67 @@ from fastapi.responses import JSONResponse
 
 try:
     from routers import resume
-    print("[BOOT] resume router OK", flush=True)
+
+    logger.info("resume router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: resume — {e}", flush=True)
+    logger.error(f"FATAL: resume — {e}")
 
 try:
     from routers import skill_gap
-    print("[BOOT] skill_gap router OK", flush=True)
+
+    logger.info("skill_gap router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: skill_gap — {e}", flush=True)
+    logger.error(f"FATAL: skill_gap — {e}")
 
 try:
     from routers import career_intel
-    print("[BOOT] career_intel router OK", flush=True)
+
+    logger.info("career_intel router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: career_intel — {e}", flush=True)
+    logger.error(f"FATAL: career_intel — {e}")
 
 try:
     from routers import fit_score
-    print("[BOOT] fit_score router OK", flush=True)
+
+    logger.info("fit_score router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: fit_score — {e}", flush=True)
+    logger.error(f"FATAL: fit_score — {e}")
 
 try:
     from routers import jd_clean
-    print("[BOOT] jd_clean router OK", flush=True)
+
+    logger.info("jd_clean router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: jd_clean — {e}", flush=True)
+    logger.error(f"FATAL: jd_clean — {e}")
 
 try:
     from routers import coach
-    print("[BOOT] coach router OK", flush=True)
+
+    logger.info("coach router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: coach — {e}", flush=True)
+    logger.error(f"FATAL: coach — {e}")
 
 try:
     from routers import cleanup
-    print("[BOOT] cleanup router OK", flush=True)
+
+    logger.info("cleanup router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: cleanup — {e}", flush=True)
+    logger.error(f"FATAL: cleanup — {e}")
 
 try:
     from orchestrator import router as orchestrator_router
-    print("[BOOT] orchestrator router OK", flush=True)
+
+    logger.info("orchestrator router OK")
 except Exception as e:
-    print(f"[BOOT] FATAL: orchestrator — {e}", flush=True)
+    logger.error(f"FATAL: orchestrator — {e}")
     orchestrator_router = None  # type: ignore[assignment]
 
-print("[BOOT] All routers loaded. Starting uvicorn...", flush=True)
+logger.info("All routers loaded. Starting uvicorn...")
 
 app = FastAPI(
     title="Talvix Server 2 — Intelligence Layer",
     version="1.0.0",
-    docs_url=None,   # disable Swagger in production
+    docs_url=None,  # disable Swagger in production
     redoc_url=None,
 )
 
@@ -109,21 +127,24 @@ app.add_middleware(
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Catch-all: log and return 500. Never leak stack traces to caller."""
     tb = traceback.format_exc()[:1000]
-    print(f"[server2] Unhandled exception: {type(exc).__name__}: {str(exc)[:200]}\n{tb}")
+    logger.error(f"Unhandled exception: {type(exc).__name__}: {str(exc)[:200]}\n{tb}")
     return JSONResponse(
         status_code=500,
-        content={"status": "failed", "error": f"{type(exc).__name__}: {str(exc)[:200]}"},
+        content={
+            "status": "failed",
+            "error": f"{type(exc).__name__}: {str(exc)[:200]}",
+        },
     )
 
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
-app.include_router(resume.router,       prefix="/api/agents")
-app.include_router(skill_gap.router,    prefix="/api/agents")
+app.include_router(resume.router, prefix="/api/agents")
+app.include_router(skill_gap.router, prefix="/api/agents")
 app.include_router(career_intel.router, prefix="/api/agents")
-app.include_router(fit_score.router,    prefix="/api/agents")
-app.include_router(jd_clean.router,     prefix="/api/agents")
-app.include_router(coach.router,        prefix="/api/agents")
-app.include_router(cleanup.router,      prefix="/api/agents/cleanup")
+app.include_router(fit_score.router, prefix="/api/agents")
+app.include_router(jd_clean.router, prefix="/api/agents")
+app.include_router(coach.router, prefix="/api/agents")
+app.include_router(cleanup.router, prefix="/api/agents/cleanup")
 if orchestrator_router is not None:
     app.include_router(orchestrator_router.router)
 
@@ -131,7 +152,13 @@ if orchestrator_router is not None:
 # ─── Health (no auth) ────────────────────────────────────────────────────────
 @app.get("/health")
 async def health():
-    required = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "AGENT_SECRET", "GEMINI_API_KEY", "SARVAM_API_KEY"]
+    required = [
+        "SUPABASE_URL",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "AGENT_SECRET",
+        "GEMINI_API_KEY",
+        "SARVAM_API_KEY",
+    ]
     env_status = {k: "SET" if os.environ.get(k) else "MISSING" for k in required}
     return {
         "status": "ok",
@@ -144,6 +171,7 @@ async def health():
 # ─── Entry (for local dev without doppler wrapper) ───────────────────────────
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("APP_PORT", "8080"))
     uvicorn.run(
         "main:app",

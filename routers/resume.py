@@ -20,16 +20,16 @@ router = APIRouter()
 class ResumeRequest(BaseModel):
     agent:   str
     user_id: str
-    payload: dict  # must contain file_path
+    payload: dict  # must contain storage_key
 
 
 @router.post("/resume-intelligence", dependencies=[Depends(verify_agent_secret)])
 async def resume_intelligence(req: ResumeRequest):
-    file_path = req.payload.get("file_path", "")
-    if not file_path:
+    storage_key = req.payload.get("storage_key", "")
+    if not storage_key:
         return {"status": "failed", "duration_ms": 0,
-                "records_processed": 0, "error": "payload.file_path is required"}
+                "records_processed": 0, "error": "payload.storage_key is required"}
 
     # CareerPlannerFlow runs agent3 then fires agents 4+5+6 in background
-    result = await run_onboarding_flow(req.user_id, file_path)
+    result = await run_onboarding_flow(req.user_id, storage_key)
     return result

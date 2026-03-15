@@ -140,9 +140,9 @@ def gate_identity(
 def gate_safety(trigger: str, user_id: str | None = None) -> None:
     """
     Gate 2 — Safety.
-    Checks: LinkedIn global kill switch (1,500/day), Sarvam health, apply window.
+    Checks: LinkedIn global kill switch (DB-driven), Sarvam health, apply window.
 
-    This is the canonical single location for the LinkedIn 1,500/day check.
+    This is the canonical single location for the LinkedIn kill switch check.
     Agents (including Agent 13) do NOT need to re-check it separately.
 
     Raises GateFailure on any violation.
@@ -152,16 +152,19 @@ def gate_safety(trigger: str, user_id: str | None = None) -> None:
         result = (
             get_supabase()
             .table("system_daily_limits")
-            .select("total_linkedin_actions")
+            .select("total_linkedin_actions, linkedin_daily_limit")
             .eq("date", datetime.now(timezone.utc).date().isoformat())
             .single()
             .execute()
         )
-        total = (result.data or {}).get("total_linkedin_actions", 0)
-        if total >= 1500:
+        data = result.data or {}
+        total = data.get("total_linkedin_actions", 0)
+        limit = data.get("linkedin_daily_limit", 2000)  # Default to 2000 if column not yet populated
+        
+        if total >= limit:
             raise GateFailure(
                 gate="safety",
-                message=f"LinkedIn daily limit reached ({total}/1500). Deferring to tomorrow.",
+                message=f"LinkedIn daily limit reached ({total}/{limit}). Deferring to tomorrow.",
                 action="defer_to_tomorrow",
             )
 

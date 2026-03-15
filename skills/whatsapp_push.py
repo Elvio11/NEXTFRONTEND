@@ -6,7 +6,7 @@ Server 2 NEVER calls Baileys directly — Baileys lives on Server 1.
 This skill POSTs to Server 1's internal endpoint.
 Server 1 then checks wa_opted_in, quiet hours, rate limits before sending.
 
-Rate limit: 1 message per 1500ms — enforced by Server 1, not here.
+Rate limit: 1 message per 1.5s — enforced by Server 1, not here.
 """
 
 import os

@@ -11,13 +11,14 @@ Returns the parsed dict for downstream use by Agent 3.
 """
 
 import re
+import io
 from pathlib import Path
 from typing import Optional
 
 import PyPDF2
 from docx import Document
 
-from skills.storage_client import put_json_gz
+from skills.storage_client import put_json_gz, get_bytes
 
 
 class ParseError(Exception):
@@ -27,28 +28,29 @@ class ParseError(Exception):
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
-def _extract_pdf_text(file_path: str) -> str:
-    """Extract text from a PDF file. Raises ParseError on known failure modes."""
+def _extract_pdf_text(file_bytes: bytes) -> str:
+    """Extract text from PDF bytes."""
     try:
-        with open(file_path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
-            if reader.is_encrypted:
-                raise ParseError("password_protected")
-            pages = [page.extract_text() or "" for page in reader.pages]
-            text = "\n".join(pages).strip()
-            if not text:
-                raise ParseError("no_text_content")
-            return text
+        f = io.BytesIO(file_bytes)
+        reader = PyPDF2.PdfReader(f)
+        if reader.is_encrypted:
+            raise ParseError("password_protected")
+        pages = [page.extract_text() or "" for page in reader.pages]
+        text = "\n".join(pages).strip()
+        if not text:
+            raise ParseError("no_text_content")
+        return text
     except ParseError:
         raise
     except Exception as exc:
         raise ParseError(f"corrupt_file: {exc}") from exc
 
 
-def _extract_docx_text(file_path: str) -> str:
-    """Extract text from a DOCX file."""
+def _extract_docx_text(file_bytes: bytes) -> str:
+    """Extract text from DOCX bytes."""
     try:
-        doc = Document(file_path)
+        f = io.BytesIO(file_bytes)
+        doc = Document(f)
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
         return "\n".join(paragraphs)
     except Exception as exc:
@@ -123,18 +125,25 @@ def _infer_seniority(exp_years: int) -> str:
 
 # ─── Public API ──────────────────────────────────────────────────────────────
 
-async def parse_resume(file_path: str, user_id: str) -> dict:
+async def parse_resume(storage_key: str, user_id: str) -> dict:
     """
-    Parse a resume file (PDF or DOCX) and write gzip'd JSON to FluxShare.
+    Parse a resume file (PDF or DOCX) from MinIO.
     Returns the parsed dict.
     Raises ParseError with a reason string on failure.
     """
-    ext = Path(file_path).suffix.lower()
+    try:
+        file_bytes = await get_bytes(storage_key)
+    except FileNotFoundError:
+        raise ParseError("file_not_found")
+    except Exception as exc:
+        raise ParseError(f"storage_error: {exc}")
+
+    ext = Path(storage_key).suffix.lower()
 
     if ext == ".pdf":
-        raw_text = _extract_pdf_text(file_path)
+        raw_text = _extract_pdf_text(file_bytes)
     elif ext in (".docx", ".doc"):
-        raw_text = _extract_docx_text(file_path)
+        raw_text = _extract_docx_text(file_bytes)
     else:
         raise ParseError(f"unsupported_format:{ext}")
 

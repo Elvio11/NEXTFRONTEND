@@ -27,7 +27,7 @@ from skills.storage_client import put_json_gz
 from llm.sarvam import SarvamUnavailableError
 
 
-async def run(user_id: str, file_path: str) -> dict:
+async def run(user_id: str, storage_key: str) -> dict:
     """
     Full Agent 3 execution.
     Returns standard response envelope + persona_options + extracted_summary.
@@ -42,7 +42,7 @@ async def run(user_id: str, file_path: str) -> dict:
     try:
         # ── Step 1: Parse resume ──────────────────────────────────────────
         try:
-            parsed = await parse_resume(file_path, user_id)
+            parsed = await parse_resume(storage_key, user_id)
         except ParseError as pe:
             reason = str(pe)
             # Write failure to resumes table so frontend can surface error
