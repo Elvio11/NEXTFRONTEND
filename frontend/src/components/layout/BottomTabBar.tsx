@@ -7,15 +7,15 @@ import {
     FileText,
     TrendingUp,
     Settings2,
+    MessageCircle,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { usePermissions } from '@/hooks/usePermissions'
 
 const navItems = [
     { label: 'Home', href: '/dashboard', icon: LayoutDashboard, locked: false },
     { label: 'Jobs', href: '/jobs', icon: Briefcase, locked: false },
     { label: 'Apply', href: '/applications', icon: FileText, locked: true },
     { label: 'Skills', href: '/skill-gap', icon: TrendingUp, locked: false },
+    { label: 'Coach', href: '/coach', icon: MessageCircle, locked: false },
     { label: 'Settings', href: '/settings', icon: Settings2, locked: false },
 ]
 

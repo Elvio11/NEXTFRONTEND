@@ -8,15 +8,15 @@ import {
     TrendingUp,
     Settings2,
     Lock,
+    MessageCircle,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { usePermissions } from '@/hooks/usePermissions'
 
 const navItems = [
     { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, locked: false },
     { label: 'Jobs', href: '/jobs', icon: Briefcase, locked: false },
     { label: 'Applications', href: '/applications', icon: FileText, locked: true },
     { label: 'Skill Gap', href: '/skill-gap', icon: TrendingUp, locked: false },
+    { label: 'Coach', href: '/coach', icon: MessageCircle, locked: false },
     { label: 'Settings', href: '/settings', icon: Settings2, locked: false },
 ]
 
