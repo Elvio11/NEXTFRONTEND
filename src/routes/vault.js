@@ -1,0 +1,145 @@
+/**
+ * vault.js
+ * POST /api/vault/capture — capture platform session cookies from browser extension
+ * GET  /api/vault/status  — check connection validity per platform
+ *
+ * The Vault is how users connect LinkedIn/Indeed sessions to Talvix.
+ * Flow: browser extension extracts cookies → POST here → AES-256-CBC encrypt →
+ *       store { session_encrypted, session_iv } in user_connections.
+ *
+ * SECURITY:
+ *   - Plaintext cookies are NEVER logged.
+ *   - Encrypted blob and IV are never logged together.
+ *   - session_encrypted is stripped by stripSensitive on every response.
+ *   - Server 1 writes to user_connections via anon key + RLS (user_id = auth.uid()).
+ */
+'use strict';
+
+const router = require('express').Router();
+const { getSupabase } = require('../lib/supabaseClient');
+const { encrypt } = require('../lib/aes');
+const verifyJWT = require('../middleware/verifyJWT');
+const logger = require('../lib/logger');
+
+const ALLOWED_PLATFORMS = new Set(['linkedin', 'indeed']);
+
+/**
+ * POST /api/vault/capture
+ * Body: { platform: 'linkedin'|'indeed', cookies: object, user_agent: string, viewport: string }
+ */
+router.post('/capture', verifyJWT, async (req, res) => {
+    const { platform, cookies, user_agent, viewport } = req.body;
+
+    if (!platform || !ALLOWED_PLATFORMS.has(platform)) {
+        return res.status(400).json({ error: 'Invalid platform. Must be linkedin or indeed.' });
+    }
+    if (!cookies || typeof cookies !== 'object') {
+        return res.status(400).json({ error: 'cookies must be a non-null object' });
+    }
+
+    try {
+        // Encrypt — plaintext cleared from scope after this
+        const { encrypted, iv } = encrypt(JSON.stringify(cookies));
+
+        // Upsert user_connections — one row per (user_id, platform)
+        // RLS: user_id = auth.uid() enforced — can only write own row
+        const { error } = await getSupabase()
+            .from('user_connections')
+            .upsert({
+                user_id: req.user.id,
+                platform,
+                session_encrypted: encrypted,   // stripSensitive removes this from responses
+                session_iv: iv,           // same
+                is_valid: true,
+                consecutive_failures: 0,
+                user_agent: user_agent ?? null,
+                viewport: viewport ?? null,
+                created_at: new Date().toISOString(),
+            }, { onConflict: 'user_id,platform' });
+
+        if (error) throw error;
+
+        // Return only safe status fields — session_encrypted stripped automatically
+        return res.json({
+            status: 'captured',
+            platform,
+            is_valid: true,
+        });
+    } catch (err) {
+        logger.error('vault/capture', `error (no session data logged): ${err.message}`);
+        return res.status(500).json({ error: 'Failed to store session' });
+    }
+});
+
+/**
+ * GET /api/vault/status
+ * Returns connection health for each platform — no encrypted fields.
+ */
+router.get('/status', verifyJWT, async (req, res) => {
+    try {
+        // 1. Fetch cookie-based connections (LinkedIn/Indeed)
+        const { data: cookieConnections, error: cookieError } = await getSupabase()
+            .from('user_connections')
+            .select('platform, is_valid, consecutive_failures, estimated_expires_at, created_at')
+            .eq('user_id', req.user.id);
+
+        if (cookieError) throw cookieError;
+
+        // 2. Fetch Telegram linkage from user_notification_channels
+        const { data: tgData, error: tgError } = await getSupabase()
+            .from('user_notification_channels')
+            .select('platform, is_active, created_at')
+            .eq('user_id', req.user.id)
+            .eq('platform', 'telegram')
+            .single();
+
+        // 3. Combine results
+        const connections = [...(cookieConnections || [])];
+        if (!tgError && tgData) {
+            connections.push({
+                platform: 'telegram',
+                is_valid: tgData.is_active,
+                created_at: tgData.created_at,
+            });
+        }
+
+        return res.json({ connections });
+    } catch (err) {
+        logger.error('vault/status', err.message);
+        return res.status(500).json({ error: 'Failed to fetch connection status' });
+    }
+});
+
+/**
+ * GET /api/vault/status/:platform
+ * Returns connection health for a specific platform — no encrypted fields.
+ */
+router.get('/status/:platform', verifyJWT, async (req, res) => {
+    const { platform } = req.params;
+
+    if (!ALLOWED_PLATFORMS.has(platform)) {
+        return res.status(400).json({ error: 'Invalid platform. Must be linkedin or indeed.' });
+    }
+
+    try {
+        const { data, error } = await getSupabase()
+            .from('user_connections')
+            .select('platform, is_valid, consecutive_failures, estimated_expires_at, created_at')
+            .eq('user_id', req.user.id)
+            .eq('platform', platform)
+            .single();
+
+        if (error) throw error;
+
+        return res.json({
+            platform: data.platform,
+            is_valid: data.is_valid,
+            estimated_expires_at: data.estimated_expires_at,
+        });
+    } catch (err) {
+        logger.error('vault/status/:platform', err.message);
+        return res.status(500).json({ error: 'Failed to fetch connection status' });
+    }
+});
+
+module.exports = router;
