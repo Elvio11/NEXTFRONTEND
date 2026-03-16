@@ -125,10 +125,10 @@ module.exports = {
             }
 
             // ── Gate 3: paid-only commands ──
-            if (PAID_COMMANDS.has(command) && user.tier !== 'paid') {
+            if (PAID_COMMANDS.has(command) && user.tier === 'free') {
                 await sendFn(
                     `🔒 *${command}* requires a Talvix paid plan.\n` +
-                    'Upgrade at talvix.in for ₹499/month.\n\n' +
+                    'Upgrade at talvix.in — Student ₹117/mo, Professional ₹471/mo.\n\n' +
                     'Free commands: HELP, JOBS (top 3), STOP'
                 );
                 return;

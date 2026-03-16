@@ -18,6 +18,8 @@
  */
 'use strict';
 
+const logger = require('./lib/logger');
+
 // ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
 process.env.SUPABASE_URL = process.env.SUPABASE_URL || 'https://dummy.supabase.co';
 process.env.SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'dummy_anon_key';
@@ -53,6 +55,7 @@ const internalRouter = require('./routes/internal');
 const whatsappRouter = require('./routes/whatsapp');
 const orchestrateRouter = require('./routes/orchestrate');
 const telegramRouter = require('./routes/telegram');
+const onboardingRouter = require('./routes/onboarding');
 
 // Messaging layer
 const { connectWhatsApp } = require('./baileys/waClient');
@@ -114,6 +117,7 @@ app.use('/api/notifications', notificationsRouter);
 app.use('/api/whatsapp', verifyJWT, whatsappRouter);
 app.use('/api/telegram', telegramRouter);
 app.use('/api/orchestrate', orchestrateRouter);
+app.use('/api/onboarding', onboardingRouter);
 
 // Internal callbacks — Server 2/3 → Server 1 (X-Agent-Secret, NOT JWT)
 // Never expose these to the browser. verifyAgentSecret is applied inside the router.
@@ -139,9 +143,8 @@ app.use((err, _req, res, _next) => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Start
 // ─────────────────────────────────────────────────────────────────────────────
-const PORT = parseInt(process.env.PORT, 10);
 
-const logger = require('./lib/logger');
+const PORT = parseInt(process.env.PORT, 10);
 
 // ... (existing code)
 

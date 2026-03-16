@@ -45,36 +45,20 @@ async function routeNotification(userId, messageType, payload) {
 
     // Get all active channels for this user
     const channels = await getActiveChannels(userId);
+    
+    // Sort channels to ensure telegram is processed FIRST
+    // Requirement 14: Messaging layer will be telegram first.
+    const sortedChannels = [...channels].sort((a, b) => {
+        if (a.channel === 'telegram') return -1;
+        if (b.channel === 'telegram') return 1;
+        return 0;
+    });
 
-    // Also check WA directly (WA uses users.wa_phone, not notification_channels)
-    // This ensures backward compat — WA channel may not be in notification_channels table
-    const hasWAChannel = channels.some(c => c.channel === 'whatsapp');
+    let telegramSuccess = false;
 
-    if (!hasWAChannel) {
-        // Try WA send directly via Baileys (existing behavior)
+    for (const ch of sortedChannels) {
         try {
-            const waMessage = formatWA(messageType, payload);
-            const waSent = await sendWA(userId, waMessage, messageType);
-            if (waSent) {
-                sent.push('whatsapp');
-            }
-        } catch (err) {
-            logger.debug('notifyRouter', `WA direct send failed for user ${userId}: ${err.message}`);
-        }
-    }
-
-    for (const ch of channels) {
-        try {
-            if (ch.channel === 'whatsapp') {
-                const message = formatWA(messageType, payload);
-                const waSent = await sendWA(userId, message, messageType);
-                if (waSent) {
-                    sent.push('whatsapp');
-                    await touchChannel(userId, 'whatsapp');
-                } else {
-                    failed.push('whatsapp');
-                }
-            } else if (ch.channel === 'telegram') {
+            if (ch.channel === 'telegram') {
                 if (!telegramSendFn) {
                     logger.debug('notifyRouter', 'Telegram sender not registered — skipping');
                     failed.push('telegram');
@@ -83,12 +67,41 @@ async function routeNotification(userId, messageType, payload) {
                 const message = formatTG(messageType, payload);
                 await telegramSendFn(ch.channel_id, message);
                 sent.push('telegram');
+                telegramSuccess = true;
                 await touchChannel(userId, 'telegram');
+            } else if (ch.channel === 'whatsapp') {
+                // If Telegram already succeeded, we skip WA (Telegram-first)
+                // Unless the user profile or message types specify multi-channel delivery
+                if (telegramSuccess) {
+                    logger.debug('notifyRouter', `Skipping WA for user ${userId} since Telegram succeeded.`);
+                    continue;
+                }
+
+                const message = formatWA(messageType, payload);
+                const waSent = await sendWA(userId, message, messageType);
+                if (waSent) {
+                    sent.push('whatsapp');
+                    await touchChannel(userId, 'whatsapp');
+                } else {
+                    failed.push('whatsapp');
+                }
             }
         } catch (err) {
-            // C4: No channel_id in INFO logs
             logger.debug('notifyRouter', `${ch.channel} delivery failed for user ${userId}: ${err.message}`);
             failed.push(ch.channel);
+        }
+    }
+
+    // Backward compat for users with users.wa_phone but NO channel in user_notification_channels
+    if (sent.length === 0 && failed.indexOf('whatsapp') === -1) {
+        try {
+            const waMessage = formatWA(messageType, payload);
+            const waSent = await sendWA(userId, waMessage, messageType);
+            if (waSent) {
+                sent.push('whatsapp');
+            }
+        } catch (err) {
+            logger.debug('notifyRouter', `WA direct legacy fallthrough failed for user ${userId}: ${err.message}`);
         }
     }
 

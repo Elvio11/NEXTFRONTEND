@@ -77,15 +77,33 @@ router.post('/capture', verifyJWT, async (req, res) => {
  */
 router.get('/status', verifyJWT, async (req, res) => {
     try {
-        // Explicitly select only safe columns — session_encrypted never fetched
-        const { data, error } = await getSupabase()
+        // 1. Fetch cookie-based connections (LinkedIn/Indeed)
+        const { data: cookieConnections, error: cookieError } = await getSupabase()
             .from('user_connections')
             .select('platform, is_valid, consecutive_failures, estimated_expires_at, created_at')
             .eq('user_id', req.user.id);
 
-        if (error) throw error;
+        if (cookieError) throw cookieError;
 
-        return res.json({ connections: data ?? [] });
+        // 2. Fetch Telegram linkage from user_notification_channels
+        const { data: tgData, error: tgError } = await getSupabase()
+            .from('user_notification_channels')
+            .select('platform, is_active, created_at')
+            .eq('user_id', req.user.id)
+            .eq('platform', 'telegram')
+            .single();
+
+        // 3. Combine results
+        const connections = [...(cookieConnections || [])];
+        if (!tgError && tgData) {
+            connections.push({
+                platform: 'telegram',
+                is_valid: tgData.is_active,
+                created_at: tgData.created_at,
+            });
+        }
+
+        return res.json({ connections });
     } catch (err) {
         logger.error('vault/status', err.message);
         return res.status(500).json({ error: 'Failed to fetch connection status' });

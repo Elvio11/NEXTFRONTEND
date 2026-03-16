@@ -4,7 +4,7 @@
  *
  * Returns:
  *   - user profile (safe fields only — stripSensitive fires on response)
- *   - top fit scores (≤25 for paid, ≤3 for free)
+ *   - top fit scores (≤25 for professional, ≤10 for student, ≤3 for free)
  *   - skill gap top_gaps (top 3 from DB)
  *   - career intelligence summary
  *   - recent job applications (last 30)
@@ -60,9 +60,9 @@ router.get('/', verifyJWT, async (req, res) => {
         `)
                 .eq('user_id', userId)
                 .order('fit_score', { ascending: false })
-                .limit(req.user.tier === 'paid' ? 25 : 3),
+                .limit(req.user.tier === 'professional' ? 25 : req.user.tier === 'student' ? 10 : 3),
 
-            // Skill gap — top 3 from DB column (full report on FluxShare for paid)
+            // Skill gap — top 3 from DB column (full report on MinIO for student/professional)
             getSupabase()
                 .from('skill_gap_results')
                 .select('top_gaps, next_refresh_at')

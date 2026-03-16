@@ -1,6 +1,6 @@
 /**
  * jobs.js — JOBS command handler
- * Available to: free (top 3) + paid (top 5 via WA/TG; full 25 on dashboard)
+ * Available to: free (top 3) + student/professional (top 5 via WA/TG; full list on dashboard)
  *
  * DB reads: job_fit_scores JOIN jobs
  */
@@ -19,7 +19,7 @@ function fitLabel(score) {
 module.exports = {
     async execute({ user, sendFn }) {
         const supabase = getSupabase();
-        const isPaid = user.tier === 'paid';
+        const isPaid = user.tier === 'student' || user.tier === 'professional';
         const limit = isPaid ? 5 : 3;
 
         const { data: scores } = await supabase

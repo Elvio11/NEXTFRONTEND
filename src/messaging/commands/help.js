@@ -28,7 +28,7 @@ HELP — This message`;
 
 module.exports = {
     async execute({ user, sendFn }) {
-        const message = user.tier === 'paid' ? PAID_HELP : FREE_HELP;
+        const message = (user.tier === 'student' || user.tier === 'professional') ? PAID_HELP : FREE_HELP;
         await sendFn(message);
     },
 };

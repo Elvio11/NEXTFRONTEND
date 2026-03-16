@@ -3,7 +3,7 @@
  * POST /api/webhooks/razorpay — handle Razorpay payment events
  *
  * Events handled:
- *   payment.captured  → upgrade users.tier = 'paid', set subscription dates
+ *   payment.captured  → upgrade users.tier to student/professional, set subscription dates
  *   subscription.charged → extend subscription_expires_at
  *
  * Security: Razorpay HMAC-SHA256 signature verified before any processing.
@@ -95,7 +95,7 @@ router.post('/', async (req, res) => {
                 const { error } = await getSupabase()
                     .from('users')
                     .update({
-                        tier: 'paid',
+                        tier: planKey.startsWith('student') ? 'student' : 'professional',
                         subscription_started_at: now,
                         subscription_expires_at: expiresAt,
                         updated_at: now,
@@ -112,7 +112,8 @@ router.post('/', async (req, res) => {
                     plan: planKey, expires_at: expiresAt,
                 }).catch(err => logger.error('webhooks/razorpay', `wa-welcome failed: ${err.message}`));
 
-                logger.info('webhooks/razorpay', `payment.captured: user ${userId} → paid (${planKey}, ${months}mo)`);
+                const upgradedTier = planKey.startsWith('student') ? 'student' : 'professional';
+                logger.info('webhooks/razorpay', `payment.captured: user ${userId} → ${upgradedTier} (${planKey}, ${months}mo)`);
             }
         } catch (err) {
             logger.error('webhooks/razorpay', `async processing error: ${err.message}`);
