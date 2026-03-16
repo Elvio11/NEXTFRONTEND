@@ -3,7 +3,9 @@ import { useAuthStore } from '@/stores/authStore'
 
 export function usePermissions() {
     const state = useAuthStore((s) => s.permissionState)
+    const user = useAuthStore((s) => s.user)
     return {
+        user,
         canViewFitReasons: state !== null && state >= 3,
         canAutoApply: state !== null && state >= 3,
         canViewCoaching: state === 2 || state === 4,
