@@ -1,6 +1,8 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { usePermissions } from '@/hooks/usePermissions'
+import { cn } from '@/lib/utils'
 import {
     LayoutDashboard,
     Briefcase,

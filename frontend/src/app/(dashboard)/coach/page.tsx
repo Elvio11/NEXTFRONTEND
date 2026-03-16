@@ -2,7 +2,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { getSupabaseClient } from '@/lib/supabase/client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { UpgradeCTA } from '@/components/upgrade/UpgradeCTA'
 import { PricingModal } from '@/components/upgrade/PricingModal'
@@ -35,9 +35,9 @@ export default function CoachPage() {
     const [messages, setMessages] = useState<CoachMessage[]>([])
     const [loading, setLoading] = useState(true)
     const [pricingOpen, setPricingOpen] = useState(false)
-    const supabase = createClient()
 
     useEffect(() => {
+        const supabase = getSupabaseClient()
         async function fetchMessages() {
             if (!user) return
 
@@ -60,7 +60,7 @@ export default function CoachPage() {
         }
 
         fetchMessages()
-    }, [user, supabase])
+    }, [user])
 
     if (!canViewApplications) {
         return (
@@ -72,7 +72,7 @@ export default function CoachPage() {
                             Daily Career Coaching
                         </p>
                         <UpgradeCTA
-                            feature="coach"
+                            feature="coaching"
                             onUpgrade={() => setPricingOpen(true)}
                         />
                     </div>
