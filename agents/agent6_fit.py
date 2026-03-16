@@ -4,7 +4,7 @@ Agent 6 — Fit Scorer
 
 Two modes:
   full_scan  → single user, triggered after resume upload (fit_scores_stale=TRUE)
-  delta      → all active paid users, nightly run against is_new=TRUE jobs only
+  delta      → all active student/professional users, nightly run against is_new=TRUE jobs only
 
 Uses Sarvam-M Think (full_scan) / No-Think (delta).
 Never falls back to Gemini.
@@ -14,7 +14,7 @@ After all users scored for a scrape:
   - jobs.is_new = FALSE for all scored jobs
   - user_fit_score_cursors.last_scrape_run updated
 
-If score >= 75, user is paid, and job is Tier 1:
+If score >= 75, user is professional, and job is Tier 1:
   - Triggers Agent 10 (Resume Tailor) and Agent 11 (Cover Letter) on Server 3
 """
 
@@ -60,7 +60,8 @@ async def _score_single_user(
         .single()
         .execute()
     )
-    is_paid = (user_result.data or {}).get("tier") == "paid"
+    user_tier = (user_result.data or {}).get("tier", "free")
+    is_paid = user_tier in ("student", "professional")
 
     # Step 3: Batch LLM scoring
     scored_count = await score_jobs(
@@ -71,8 +72,8 @@ async def _score_single_user(
         mode=sarvam_mode,
     )
 
-    # Step 5: Trigger Agent 10 + 11 for high-fit scores (paid users, Tier 1 jobs)
-    if is_paid and mode == "full_scan":
+    # Step 5: Trigger Agent 10 + 11 for high-fit scores (professional users, Tier 1 jobs)
+    if user_tier == "professional" and mode == "full_scan":
         for job in jobs:
             score_result = (
                 get_supabase()
@@ -125,7 +126,7 @@ async def run(
     """
     Full Agent 6 execution.
     - full_scan: user_id must be set. Scores all active jobs for this user.
-    - delta:     user_id=None. Loops all active paid users, scores is_new=TRUE jobs.
+    - delta:     user_id=None. Loops all student/professional users, scores is_new=TRUE jobs.
     """
     run_id = new_run_id()
     start = time.time()
@@ -177,12 +178,12 @@ async def run(
             }
 
         else:
-            # Delta mode: loop all active paid users
+            # Delta mode: loop all active student + professional users
             users_result = (
                 get_supabase()
                 .table("users")
                 .select("id, tier")
-                .eq("tier", "paid")
+                .in_("tier", ["student", "professional"])
                 .eq("auto_apply_paused", False)
                 .execute()
             )

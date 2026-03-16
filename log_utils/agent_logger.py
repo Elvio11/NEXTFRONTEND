@@ -17,6 +17,23 @@ import uuid
 from db.client import get_supabase
 
 
+# Public Name Mapping (March 16 Branding Alignment)
+AGENT_PUBLIC_NAMES = {
+    "agent3_resume":       "Parichay",
+    "agent4_skill_gap":    "Kaushal",
+    "agent5_career_intel": "Niti",
+    "agent6_fit":          "Yogya",
+    "agent7_jd":           "Sarthis",
+    "agent8_coach":        "Guru",
+    "agent10_tailor":      "Shilpakaar",
+    "agent11_cover_letter": "Prerna",
+    "agent12_applier":     "Setu",
+    "agent13_anti_ban":    "Sarthis",
+    "agent14_follow_up":   "Anuvartan",
+    "agent15_calibrator":  "Sarthis",
+    "upload_security":     "Sarthis",
+}
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -27,9 +44,11 @@ async def log_start(
     run_id: str,
 ) -> None:
     """Insert an agent_logs row with status='started'."""
+    display_name = AGENT_PUBLIC_NAMES.get(agent_name, agent_name)
     get_supabase().table("agent_logs").insert({
         "id":           run_id,
         "agent_name":   agent_name,
+        "display_name": display_name,
         "user_id":      user_id,
         "status":       "started",
         "started_at":   _now().isoformat(),

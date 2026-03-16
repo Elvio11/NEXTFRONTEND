@@ -2,11 +2,11 @@
 agents/agent8_coach.py
 Agent 8 — WhatsApp Career Coach
 
-Generates personalised WhatsApp coaching messages for eligible paid users.
+Generates personalised coaching messages for eligible student/professional users.
 Triggered: 7 AM IST daily via pg_cron HTTP POST to /api/agents/coach
 
 Eligibility gate per user:
-  - tier = 'paid'
+  - tier IN ('student', 'professional')
   - wa_opted_in = TRUE
   - last_active_at > NOW() - 7 days
   - notif_prefs.coach_enabled = TRUE (if key exists)
@@ -104,7 +104,7 @@ async def run() -> dict:
                 .select(
                     "id, persona, experience_years, notif_prefs, wa_phone"
                 )
-                .eq("tier", "paid")
+                .in_("tier", ["student", "professional"])
                 .eq("wa_opted_in", True)
                 .execute()
             )

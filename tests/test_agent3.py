@@ -107,13 +107,13 @@ def test_corrupt_pdf_returns_failed_status():
 
 def test_password_protected_pdf_returns_failed_status(tmp_path):
     """Password-protected PDF → ParseError('password_protected')."""
-    import PyPDF2
+    from pypdf import PdfReader
     # Create a simple encrypted PDF for testing
     pdf_path = tmp_path / "encrypted.pdf"
     # Simulate password_protected detection
     from skills.resume_parser import ParseError
     # We can't easily create an encrypted PDF in tests, so test the branch directly
-    with patch("PyPDF2.PdfReader") as mock_reader:
+    with patch("skills.resume_parser.PdfReader") as mock_reader:
         mock_reader.return_value.is_encrypted = True
         with pytest.raises(ParseError) as exc_info:
             from skills.resume_parser import _extract_pdf_text

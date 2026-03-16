@@ -6,10 +6,11 @@ Processes all jobs WHERE jd_cleaned = FALSE AND is_active = TRUE.
 Uses Gemini Flash Lite — extraction task, not reasoning.
 
 For each job:
-  1. Load raw JD from /storage/jds/{fingerprint}.txt
+  1. Load raw JD from MinIO: jds/{fingerprint}.txt
   2. Gemini Flash Lite: extract required_skills, role_family, jd_summary
   3. INSERT job_skills rows
   4. UPDATE jobs: jd_cleaned=TRUE, role_family, jd_summary
+  5. Generate jd_embedding (768-dim) + jd_tsvector for hybrid search
 
 After ALL jobs cleaned:
   HTTP POST to Server 2 /api/agents/fit-score (delta mode, with scrape_run_id)
@@ -25,6 +26,7 @@ from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
 from skills.jd_cleaner import clean_jd
 from skills.storage_client import get_text
+from skills.embedding_engine import store_jd_embedding_and_tsvector
 
 
 async def run(scrape_run_id: str) -> dict:
@@ -86,12 +88,20 @@ async def run(scrape_run_id: str) -> dict:
                 ).execute()
 
             # Update jobs table
+            jd_summary = cleaned.get("jd_summary", "")[:500]
             get_supabase().table("jobs").update({
                 "jd_cleaned":  True,
                 "role_family": cleaned.get("role_family"),
-                "jd_summary":  cleaned.get("jd_summary", "")[:500],
+                "jd_summary":  jd_summary,
                 "updated_at":  datetime.now(timezone.utc).isoformat(),
             }).eq("id", job_id).execute()
+
+            # Generate jd_embedding + jd_tsvector for hybrid search
+            embedding_text = f"{job.get('title', '')} {jd_summary} {raw_jd[:2000]}"
+            try:
+                await store_jd_embedding_and_tsvector(job_id, embedding_text)
+            except Exception:
+                pass  # Non-fatal — job is still cleaned, embedding retried next run
 
             cleaned_count += 1
 

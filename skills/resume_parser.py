@@ -2,20 +2,26 @@
 skills/resume_parser.py
 Parses PDF and DOCX resume files into structured JSON.
 
-Supports:
-  .pdf  → PyPDF2 (text extraction layer; raises on password-protected / image-only)
-  .docx → python-docx
+6-Layer Upload Security (Layers 3-4 live here):
+  Layer 3: DOCX decompression bomb check (ratio < 100, uncompressed < 50MB)
+  Layer 4: Macro/OLE object stripping via XML reconstruction (DOCX only)
+  PDF:     pypdf text extraction only — never render, never execute
 
-Output written as gzip'd JSON to /storage/parsed-resumes/{user_id}.json.gz
+Supports:
+  .pdf  → pypdf (text extraction layer; raises on password-protected / image-only)
+  .docx → python-docx (after sanitisation)
+
+Output written as gzip'd JSON to MinIO: parsed-resumes/{user_id}.json.gz
 Returns the parsed dict for downstream use by Agent 3.
 """
 
 import re
 import io
+import zipfile
 from pathlib import Path
 from typing import Optional
 
-import PyPDF2
+from pypdf import PdfReader
 from docx import Document
 
 from skills.storage_client import put_json_gz, get_bytes
@@ -26,13 +32,100 @@ class ParseError(Exception):
     pass
 
 
+# ─── Layer 3: DOCX Decompression Bomb Check ─────────────────────────────────
+
+MAX_COMPRESSION_RATIO = 100
+MAX_UNCOMPRESSED_BYTES = 50 * 1024 * 1024  # 50 MB
+
+def _check_docx_bomb(file_bytes: bytes) -> None:
+    """
+    Layer 3: Check DOCX ZIP for decompression bombs BEFORE python-docx opens it.
+    Raises ParseError if ratio > 100 or uncompressed > 50MB.
+    """
+    compressed_size = len(file_bytes)
+    if compressed_size == 0:
+        raise ParseError("empty_file")
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(file_bytes), 'r') as zf:
+            total_uncompressed = sum(info.file_size for info in zf.infolist())
+    except zipfile.BadZipFile:
+        raise ParseError("corrupt_file: not a valid ZIP/DOCX archive")
+
+    if total_uncompressed > MAX_UNCOMPRESSED_BYTES:
+        raise ParseError(
+            f"docx_bomb: uncompressed size {total_uncompressed} exceeds {MAX_UNCOMPRESSED_BYTES}"
+        )
+
+    ratio = total_uncompressed / compressed_size
+    if ratio > MAX_COMPRESSION_RATIO:
+        raise ParseError(
+            f"docx_bomb: compression ratio {ratio:.1f} exceeds limit of {MAX_COMPRESSION_RATIO}"
+        )
+
+
+# ─── Layer 4: Macro / OLE Object Stripping ──────────────────────────────────
+
+ALLOWED_DOCX_PARTS = frozenset([
+    'word/document.xml',
+    'word/styles.xml',
+    'word/settings.xml',
+    'word/fontTable.xml',
+    'word/theme/theme1.xml',
+    'word/numbering.xml',
+    'docProps/core.xml',
+    'docProps/app.xml',
+    '[Content_Types].xml',
+    'word/_rels/document.xml.rels',
+    '_rels/.rels',
+])
+
+def _strip_macros_and_objects(file_bytes: bytes) -> bytes:
+    """
+    Layer 4: Reconstruct a clean DOCX by extracting only safe XML parts.
+    Strips: vbaProject.bin, any .bin files, embedded OLE objects, activeX controls.
+    Returns sanitised DOCX bytes.
+    """
+    output = io.BytesIO()
+
+    with zipfile.ZipFile(io.BytesIO(file_bytes), 'r') as src_zip:
+        with zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as dst_zip:
+            for item in src_zip.infolist():
+                name = item.filename
+
+                # Skip dangerous files
+                if name.endswith('.bin'):
+                    continue
+                if 'vbaProject' in name:
+                    continue
+                if 'activeX' in name.lower():
+                    continue
+                if 'oleObject' in name.lower():
+                    continue
+                if 'embeddings' in name.lower():
+                    continue
+
+                # Allow known safe parts + any media (images in word/media/)
+                is_allowed = (
+                    name in ALLOWED_DOCX_PARTS or
+                    name.startswith('word/media/') or
+                    name.startswith('word/_rels/')
+                )
+
+                if is_allowed:
+                    data = src_zip.read(name)
+                    dst_zip.writestr(item, data)
+
+    return output.getvalue()
+
+
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
 def _extract_pdf_text(file_bytes: bytes) -> str:
-    """Extract text from PDF bytes."""
+    """Extract text from PDF bytes. pypdf text extraction only — never render."""
     try:
         f = io.BytesIO(file_bytes)
-        reader = PyPDF2.PdfReader(f)
+        reader = PdfReader(f)
         if reader.is_encrypted:
             raise ParseError("password_protected")
         pages = [page.extract_text() or "" for page in reader.pages]
@@ -47,7 +140,10 @@ def _extract_pdf_text(file_bytes: bytes) -> str:
 
 
 def _extract_docx_text(file_bytes: bytes) -> str:
-    """Extract text from DOCX bytes."""
+    """
+    Extract text from DOCX bytes.
+    Runs AFTER Layer 3 (bomb check) and Layer 4 (macro strip).
+    """
     try:
         f = io.BytesIO(file_bytes)
         doc = Document(f)
@@ -125,25 +221,30 @@ def _infer_seniority(exp_years: int) -> str:
 
 # ─── Public API ──────────────────────────────────────────────────────────────
 
-async def parse_resume(storage_key: str, user_id: str) -> dict:
+async def parse_resume(s3_key: str, user_id: str) -> dict:
     """
     Parse a resume file (PDF or DOCX) from MinIO.
+    Applies Layers 3-4 for DOCX files before extraction.
     Returns the parsed dict.
     Raises ParseError with a reason string on failure.
     """
     try:
-        file_bytes = await get_bytes(storage_key)
+        file_bytes = await get_bytes(s3_key)
     except FileNotFoundError:
         raise ParseError("file_not_found")
     except Exception as exc:
         raise ParseError(f"storage_error: {exc}")
 
-    ext = Path(storage_key).suffix.lower()
+    ext = Path(s3_key).suffix.lower()
 
     if ext == ".pdf":
         raw_text = _extract_pdf_text(file_bytes)
     elif ext in (".docx", ".doc"):
-        raw_text = _extract_docx_text(file_bytes)
+        # ── Layer 3: DOCX bomb check (BEFORE python-docx opens it) ───
+        _check_docx_bomb(file_bytes)
+        # ── Layer 4: Strip macros and embedded objects ───────────────
+        clean_bytes = _strip_macros_and_objects(file_bytes)
+        raw_text = _extract_docx_text(clean_bytes)
     else:
         raise ParseError(f"unsupported_format:{ext}")
 
