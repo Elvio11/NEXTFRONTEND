@@ -25,7 +25,7 @@ from pydantic import BaseModel
 
 from middleware.auth import verify_agent_secret
 from db.client import get_supabase
-from log_utils.agent_logger import log_start, log_end, log_fail, log_skip
+from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from orchestrator.gates import (
     GateFailure,
     run_all_gates,
@@ -53,11 +53,12 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
     The Python gates below provide the full business logic gating.
     """
     t_start   = time.time()
+    run_id    = new_run_id()
     user_id   = req.user_id
     trigger   = req.trigger
     agent_secret = request.headers.get("X-Agent-Secret", "")
 
-    log_start("orchestrator", user_id)
+    await log_start("orchestrator", user_id, run_id)
 
     # ── Fetch user row if needed (single DB call for all account gates) ──────
     user = None
@@ -88,7 +89,7 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
         )
     except GateFailure as gf:
         duration_ms = int((time.time() - t_start) * 1000)
-        log_skip("orchestrator", user_id, reason=f"gate:{gf.gate} — {gf.message}")
+        await log_skip(run_id, reason=f"gate:{gf.gate} — {gf.message}")
         response = handle_gate_failure(gf, user_id)
         response["duration_ms"] = duration_ms
         return response
@@ -116,7 +117,7 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
         result = await crew.run()
     except Exception as exc:
         duration_ms = int((time.time() - t_start) * 1000)
-        log_fail("orchestrator", user_id, str(exc))
+        await log_fail(run_id, str(exc), duration_ms)
         return {
             "status":            "failed",
             "duration_ms":       duration_ms,
@@ -125,7 +126,7 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
         }
 
     duration_ms = int((time.time() - t_start) * 1000)
-    log_end("orchestrator", user_id, records_processed=result.get("records_processed"))
+    await log_end(run_id, records_processed=result.get("records_processed", 0), duration_ms=duration_ms)
 
     return {
         "status":            result.get("status", "success"),

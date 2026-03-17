@@ -102,3 +102,32 @@ async def log_skip(
 def new_run_id() -> str:
     """Generate a fresh UUID for a new agent run."""
     return str(uuid.uuid4())
+
+
+async def log_event(
+    agent_name: str,
+    level: str,
+    message: str,
+    user_id: Optional[str] = None,
+) -> None:
+    """
+    Insert a generic event log (e.g. warning, error) with a fresh run_id.
+    Used for events that don't follow the full start/end lifecycle.
+    """
+    run_id = new_run_id()
+    display_name = AGENT_PUBLIC_NAMES.get(agent_name, agent_name)
+
+    # TTL: warnings/errors 30 days, others 3 days
+    ttl_days = 30 if level in ["warn", "error", "failed"] else 3
+
+    get_supabase().table("agent_logs").insert({
+        "id":            run_id,
+        "agent_name":    agent_name,
+        "display_name":  display_name,
+        "user_id":       user_id,
+        "status":        level,
+        "error_message": message[:500],
+        "started_at":    _now().isoformat(),
+        "completed_at":  _now().isoformat(),
+        "expires_at":    (_now() + timedelta(days=ttl_days)).isoformat(),
+    }).execute()

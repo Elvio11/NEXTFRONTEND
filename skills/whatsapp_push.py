@@ -36,17 +36,19 @@ async def send_notification(user_id: str, message_type: str, payload: dict) -> b
             if resp.status_code == 200:
                 return True
             else:
-                log_event(
+                await log_event(
                     "whatsapp_push",
                     "warn",
                     f"notify returned {resp.status_code} for user {user_id}: {resp.text}",
+                    user_id=user_id,
                 )
                 return False
     except Exception as e:
-        log_event(
+        await log_event(
             "whatsapp_push",
             "error",
             f"Failed to notify user {user_id}: {str(e)}",
+            user_id=user_id,
         )
         return False
 

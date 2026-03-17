@@ -126,3 +126,22 @@ def test_no_secrets_in_agent_log_error_message():
 
     error_logged = updates[0].get("error_message", "")
     assert len(error_logged) <= 500, "Error message must be capped at 500 chars"
+
+
+def test_log_event_inserts_row_with_status_level():
+    """log_event must insert a row with the provided level as status."""
+    mock_db = MagicMock()
+    inserts = _capture_inserts(mock_db)
+
+    with patch("log_utils.agent_logger.get_supabase", return_value=mock_db):
+        from log_utils.agent_logger import log_event
+        asyncio.run(
+            log_event("test_agent", "warn", "test warning message", "user-123")
+        )
+
+    assert inserts, "No insert was made to agent_logs via log_event"
+    assert inserts[0]["status"] == "warn"
+    assert inserts[0]["agent_name"] == "test_agent"
+    assert inserts[0]["error_message"] == "test warning message"
+    assert inserts[0]["user_id"] == "user-123"
+    assert "id" in inserts[0], "log_event must generate a run_id (id)"
