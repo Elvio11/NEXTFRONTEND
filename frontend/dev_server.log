@@ -1,0 +1,17 @@
+
+> frontend@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.5.12
+   - Local:        http://localhost:3000
+   - Network:      http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 2.4s
+ ○ Compiling / ...
+ ✓ Compiled / in 14.2s (1640 modules)
+ HEAD / 200 in 16037ms
+ ○ Compiling /coach ...
+ ✓ Compiled /coach in 5.9s (1962 modules)
+ GET /coach 200 in 6994ms
+ GET /coach 200 in 159ms
