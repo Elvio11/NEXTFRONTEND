@@ -1,118 +1,80 @@
-# Talvix MCP Migration Report: Decoupling Brain and Hands
+# Talvix MCP Migration & Performance Report: Decoupling Brain and Hands
 
 **Date:** March 2026
 **Author:** Lead Technical Architect
-**Subject:** Strategy for migrating Server 2 and Server 3 execution layers to the Model Context Protocol (MCP).
+**Subject:** Full architectural pivot to move the execution layer ("Hands") to MCP.
 
 ---
 
-## 1. The "Delete" List (Unnecessary Tools)
+## 1. The "Delete & Deflate" List (Compute Optimization)
 
-Based on our assessment of the `deploy-server2` and `deploy-server3` branches, the following libraries, scripts, and custom logic blocks are now obsolete and should be removed.
+To save compute and RAM on our FluxCloud servers, we are removing all "heavy" execution libraries and manual browser-management code.
 
-### Server 3 (Execution Layer)
-- **Scraping Engine:**
-    - `jobspy` (Library)
-    - `beautifulsoup4` (Library)
-    - `skills/jobspy_runner.py` (Full file)
-    - `skills/custom_scraper.py` (Full file)
-    - `skills/free_api_scrapers.py` (Full file)
-- **Browser Automation:**
-    - `selenium` & `undetected-chromedriver` (Libraries)
-    - `webdriver-manager` (Library)
-    - `skills/browser_pool.py` (Full file)
-    - `skills/session_manager.py` (Full file)
-    - `skills/apply_engine.py` (Manual Selenium logic blocks)
-- **Email Operations:**
-    - Manual Gmail API polling and message construction in `agents/agent14_follow_up.py` and `_send_gmail`.
-- **Anti-Ban:**
-    - `skills/anti_ban_checker.py` and `agents/agent13_anti_ban.py` (Logic for IP rotation and fingerprinting is now handled by MCP infrastructure).
-
-### Server 2 (Intelligence Layer)
-- **Document Parsing:**
-    - `pypdf` (Library)
-    - `python-docx` (Library)
-    - `skills/resume_parser.py` (Extraction and sanitization logic; replaced by MCP tool calls).
+### Tools for Deletion:
+- **`undetected-chromedriver` & `selenium`:** Saves **~1.2GB of RAM per concurrent session**. Eliminates the need for local Chrome binaries and complex headless setup.
+- **`pypdf` & `python-docx`:** Prevents CPU spikes caused by local document parsing. Moving to specialized, Go/Rust-backed MCP servers offloads these heavy-duty extraction tasks.
+- **`jobspy` & `beautifulsoup4`:** Removes the maintenance overhead of local scrapers and their dependence on brittle DOM selectors.
 
 ---
 
-## 2. The MCP Mapping (3 Options per Need)
+## 2. Agent-by-Agent Reassessment (Servers 1, 2, and 3)
 
-For each execution capability, we have identified three publicly available MCP server options.
+| Agent | Name | Category | Current State (Legacy) | New MCP State (Tool) | Performance Impact (Speed/Reliability/Compute) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **3** | **Resume Parser** | **Hands** | Local `pypdf`/`docx` | **MarkItDown MCP** | **Compute:** Offloads text extraction from Python to a structural-aware Go/Rust parser. |
+| **4** | **Skill Gap** | **Brain** | Sarvam-M | **No MCP** | Pure logic. |
+| **5** | **Career Planner** | **Brain** | Sarvam-M | **No MCP** | Pure logic. |
+| **6** | **Fit Scorer** | **Brain** | Sarvam-M | **No MCP** | Pure logic. |
+| **7** | **JD Cleaner** | **Hands** | Gemini Flash | **Firecrawl / MarkItDown** | **Reliability:** Firecrawl handles messy JD structures better than local Regex. |
+| **8** | **Guru (Coach)** | **Hands+Brain** | LLM-only | **Tavily / Brave Search** | **Speed:** Real-time news access; **Reliability:** Live search for latest market trends. |
+| **9** | **Scraper** | **Hands** | JobSpy | **Firecrawl / Bright Data** | **Reliability:** Bypasses anti-bot at the source; no local IP blocking. |
+| **10** | **Tailor** | **Brain** | Sarvam-M Think | **No MCP** | Pure logic. |
+| **11** | **Cover Letter** | **Brain** | Gemini Flash | **No MCP** | Pure logic. |
+| **12** | **Auto-Applier** | **Hands** | Selenium | **Browserbase / Playwright** | **Reliability:** Self-healing selectors; **Compute:** subprocess vs. 1GB RAM browser. |
+| **13** | **Anti-Ban** | **DELETED** | Custom Python | **Natively in MCP** | **Reliability:** IP rotation handled natively by Premium MCP proxy pools. |
+| **14** | **Follow-up** | **Hands** | Gmail API (Manual) | **mcp-gmail / Workato** | **Speed:** API-level vs. manual polling; Better thread management. |
+| **15** | **Calibrator** | **Brain** | Pure Python | **No MCP** | Pure logic. |
 
-### A. Web Scraping & Job Discovery (Replacing JobSpy)
-1.  **Firecrawl MCP Server (Official):**
-    - *Reliability:* High. Best for general crawling and converting HTML to LLM-ready Markdown.
-    - *Integration:* Native support for Cursor/Claude/CrewAI.
-    - *Feature:* Handles site mapping and deep crawling automatically.
-2.  **Bright Data Indeed/LinkedIn MCP:**
-    - *Reliability:* Enterprise-grade. Highest success rates for scraping authenticated job boards.
-    - *Integration:* Standardized API; requires Bright Data proxy credentials.
-    - *Feature:* Specialized for job listings, company profiles, and salary data.
-3.  **Browserbase MCP:**
-    - *Reliability:* High. Best for "stealth" browsing on high-security job platforms.
-    - *Integration:* Cloud-based browser sessions with agent-browser automation.
-    - *Feature:* Automatic retries and rate limiting.
-
-### B. Complex Browser Automation (Replacing Selenium for Auto-Apply)
-1.  **Microsoft Playwright MCP:**
-    - *Reliability:* Exceptional. Official Microsoft implementation.
-    - *Integration:* Direct Playwright interaction via structured accessibility snapshots.
-    - *Feature:* LLM-friendly navigation without needing vision models.
-2.  **Browserbase Stagehand:**
-    - *Reliability:* High. An "Agentic" browser wrapper.
-    - *Integration:* Allows agents to interact with web pages using natural language commands.
-    - *Feature:* Intelligent element detection (no more brittle CSS selectors).
-3.  **MultiOn MCP:**
-    - *Reliability:* High. Autonomous agent-driven browser.
-    - *Integration:* Handles multi-step workflows (e.g., login -> search -> fill form -> submit) with minimal input.
-    - *Feature:* Self-healing; adapts to UI changes automatically.
-
-### C. Document Parsing (Replacing PyPDF/python-docx)
-1.  **AWS Labs Document Loader:**
-    - *Reliability:* High. Stable and battle-tested in AWS environments.
-    - *Integration:* Native support for parsing PDF/DOCX and extracting structured content.
-    - *Feature:* Directly integrates with S3/MinIO for storage-to-tool processing.
-2.  **Microsoft MarkItDown MCP:**
-    - *Reliability:* High. Best-in-class for preserving structural integrity (tables, lists).
-    - *Integration:* Python-based; converts various formats to clean Markdown.
-    - *Feature:* Excellent for resume extraction where structure is critical.
-3.  **Unstructured.io MCP:**
-    - *Reliability:* Medium-High. Best for messy or multi-column documents.
-    - *Integration:* Specialized API for document "partitioning".
-    - *Feature:* Extracts metadata and text from images/scanned PDFs.
-
-### D. Email Operations (Replacing custom Gmail API polling)
-1.  **Workato Gmail MCP:**
-    - *Reliability:* Enterprise. Comprehensive toolset (search, read, draft, send).
-    - *Integration:* Stable authentication flow; standard MCP tool signatures.
-    - *Feature:* Advanced thread management and label organization.
-2.  **LobeHub Gmail MCP:**
-    - *Reliability:* High. Optimized for agentic loops.
-    - *Integration:* Built for easy integration with Node/Python backends.
-    - *Feature:* Simplifies complex Gmail search queries into natural language.
-3.  **Postman MCP:**
-    - *Reliability:* High. Versatile for any Google Workspace interaction.
-    - *Integration:* Uses Postman collections to bridge LLMs to APIs.
-    - *Feature:* Highly customizable for specific Talvix outreach workflows.
+### Note on Agent 8 (Guru): Caching Guardrails
+To prevent API token exhaustion during peak hours (7 AM PST), Agent 8 will use **pg_cron caching**:
+1.  **Scheduled Fetch:** `pg_cron` triggers a global search for "Software Engineering Market Trends India" daily at 6:30 AM.
+2.  **Cache-First Logic:** Agent 8 first queries the `market_trends_cache` table before calling the Search MCP tool.
+3.  **Live Fallback:** A live search is only triggered if the cache is older than 12 hours or the user query is highly specific (e.g., recent news for a niche company).
 
 ---
 
-## 3. Implementation Strategy
+## 3. The MCP Mapping (3 Options per Need)
 
-### Phase 1: The MCP Gateway Utility
-We will implement a unified `skills/mcp_gateway.py` on both Server 2 and Server 3. This utility will use the `mcp` Python SDK to manage sessions with our chosen MCP servers (e.g., Firecrawl, Playwright).
+| Capability | Option 1 (Standard) | Option 2 (Managed) | Option 3 (Specialized) | Comparison |
+| :--- | :--- | :--- | :--- | :--- |
+| **Web Scraping & Discovery** | **Firecrawl MCP** | **Bright Data MCP** | **Browserbase MCP** | **Firecrawl** is best for general crawling; **Bright Data** is enterprise-ready for Indeed/LinkedIn success; **Browserbase** excels in stealth. |
+| **Browser Automation & Forms** | **Playwright MCP** | **Browserbase Stagehand** | **MultiOn MCP** | **Playwright** is official/stable; **Stagehand** provides agentic (NL) interaction; **MultiOn** is fully autonomous. |
+| **Document Parsing** | **AWS Labs Doc Loader** | **MarkItDown MCP** | **Unstructured.io MCP** | **AWS** is highly reliable for S3/MinIO; **MarkItDown** preserves complex structure; **Unstructured.io** handles multi-column layouts. |
+| **Email Operations** | **Workato Gmail MCP** | **LobeHub Gmail MCP** | **Postman MCP** | **Workato** is enterprise-grade; **LobeHub** is LLM-optimized; **Postman** is versatile for any API interaction. |
 
-### Phase 2: Context Injection (MinIO Integration)
-Instead of agents reading files from storage, they will pass the **MinIO file path** as an argument to the MCP tool. The MCP gateway will be configured with S3-compatible credentials, allowing the "Hands" (the MCP server) to fetch and process documents (like resumes) directly.
+*Comparison Criteria: Reliability (Uptime/Success rate), Ease of Integration (Standardized tool signatures), and Feature Completeness (Auth, stealth, structuring).*
 
-### Phase 3: Brain Preservation (The India Filter)
-The "India Remote Filter" in Agent 9 will remain a **Pure Python Skill**.
-- **The Flow:** Agent 9 calls **Firecrawl MCP** to get jobs -> Firecrawl returns JSON -> Agent 9 passes JSON through `skills/remote_filter.py` (untouched) -> Agent 9 decides what to save to Supabase.
-- This ensures the business logic remains under our direct control while the execution is outsourced.
+---
 
-### Phase 4: Authentication and Session Management
-For LinkedIn and Gmail, the existing `user_sessions` from Supabase will be retrieved by the Agent and passed into the MCP Tool's `environment` or `args` (e.g., injecting an `access_token`). This allows standardized MCP servers to act as authenticated users without us maintaining manual cookie injection logic.
+## 4. The Reliability & Stealth Architecture
 
-### Phase 5: Deployment Sidecars
-MCP servers will be deployed as sidecar processes (Node.js or Python) within our Docker environment, communicating with our FastAPI backends via `stdio` or internal `SSE` hubs.
+Moving Agent 12 and 14 to **Browserbase** or **Playwright MCP** increases reliability:
+- **Stealth:** Native spoofing of WebGL, canvas, and mouse movements.
+- **IP Safety:** All actions originate from Browserbase's residential proxy pool, keeping our Server 3 static IP clean.
+- **Reliability:** No more brittle CSS maintenance; MCP tools use accessibility snapshots or agentic vision to find elements.
+
+---
+
+## 5. Implementation Strategy via MCPorter & MinIO
+
+### Phase 1: Context Flow (MinIO to MCP)
+For tasks like document parsing (Agent 3) or resume tailoring (Agent 10), the agent will pass the **MinIO object path** to the MCP tool. The `mcp_gateway.py` utility will ensure the MCP tool (like `awslabs-document-loader`) has the necessary S4 credentials to fetch and extract the document directly, avoiding heavy file passing in memory.
+
+### Phase 2: Generating CLIs
+We will use `mcporter generate-cli --server-config path/to/mcp_config.json` to create standalone binaries for our MCP tools.
+
+### Phase 3: Lean Subprocess Interaction
+Our Python FastAPI backends will call these CLIs via the `subprocess` module.
+- **Speed:** Zero-latency tool invocation.
+- **Compute:** Only the specific MCP tool's lightweight subprocess occupies RAM during execution, rather than maintaining a persistent browser session in Python.
+- **Logic:** Allows the "Brain" to remain purely logic-focused while delegating the "Hands" work via clean, stateless shell commands.
