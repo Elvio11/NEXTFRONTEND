@@ -8,10 +8,14 @@ let client: ReturnType<typeof createBrowserClient> | undefined
  * Real URLs are always present at runtime (Vercel / local dev env vars).
  */
 export function getSupabaseClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    // Fallback to dummy values during build-time prerendering if env vars are missing
     if (!client) {
         client = createBrowserClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL ?? '',
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
+            supabaseUrl || 'https://placeholder.supabase.co',
+            supabaseAnonKey || 'placeholder'
         )
     }
     return client

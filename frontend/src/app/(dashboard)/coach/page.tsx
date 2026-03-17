@@ -31,7 +31,7 @@ function formatISTDate(dateString: string): string {
 }
 
 export default function CoachPage() {
-    const { canViewApplications, user } = usePermissions()
+    const { canViewCoaching, user } = usePermissions()
     const [messages, setMessages] = useState<CoachMessage[]>([])
     const [loading, setLoading] = useState(true)
     const [pricingOpen, setPricingOpen] = useState(false)
@@ -62,7 +62,7 @@ export default function CoachPage() {
         fetchMessages()
     }, [user])
 
-    if (!canViewApplications) {
+    if (!canViewCoaching) {
         return (
             <div className="max-w-4xl mx-auto">
                 <GlassCard className="flex items-center justify-center min-h-[400px]">
