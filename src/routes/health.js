@@ -7,7 +7,10 @@
 const router = require('express').Router();
 
 router.get('/', (_req, res) => {
-    res.json({ status: 'ok' });
+    res.json({
+        status: 'ok',
+        ts: new Date().toISOString()
+    });
 });
 
 module.exports = router;
