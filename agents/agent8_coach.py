@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.whatsapp_push import send_whatsapp
+from skills.mcp_wrapper import MCPWrapper
 from llm.sarvam import sarvam, SarvamUnavailableError
 from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 
@@ -52,12 +53,16 @@ Candidate profile:
 - Message structure: {structure}
 - Previous structure (do NOT repeat): {prev_structure}
 
+Real-time Market Insights (India):
+{market_trends}
+
 Rules:
 - 3-5 sentences maximum
 - End with ONE specific action for today
 - WhatsApp-friendly, not formal
 - Never start with "I hope you're doing well"
 - Match tone to their persona exactly
+- Weave in the market insight naturally to build urgency/context
 
 Output ONLY the message. No labels. No headers.
 
@@ -116,6 +121,14 @@ async def run() -> dict:
         ]
 
         messages_sent = 0
+
+        # Global fetch for market trends (caching logic / 1 call per run to avoid rate limits)
+        try:
+            mcp = MCPWrapper()
+            trends_result = await mcp.search_web("tech hiring trends software engineer India current month")
+            global_market_trends = trends_result.get("text") or trends_result.get("content") or str(trends_result)[:1000]
+        except Exception as e:
+            global_market_trends = "Tech hiring remains competitive. Focus on upskilling in AI and Cloud areas."
 
         for user in eligible:
             user_id = user["id"]
@@ -196,6 +209,7 @@ async def run() -> dict:
                 career_score=career_score,
                 structure=structure,
                 prev_structure=prev_structure,
+                market_trends=global_market_trends,
                 humanizer_guidelines=HUMANIZER_GUIDELINES,
             )
 

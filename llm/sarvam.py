@@ -17,7 +17,10 @@ Modes map to Sarvam's reasoning_effort parameter:
 
 import os
 import httpx
+import logging
 from typing import Literal
+
+logger = logging.getLogger("sarvam")
 
 SarvamMode = Literal["think", "no_think", "precise"]
 
@@ -44,6 +47,38 @@ class SarvamClient:
         if not key:
             raise SarvamUnavailableError("SARVAM_API_KEY not configured in Doppler")
         return key
+
+    def is_healthy(self) -> bool:
+        """
+        Synchronous health check — called by Gate 2 (sync context).
+        Returns True if Sarvam API is reachable; False otherwise.
+        Never raises.
+        """
+        import httpx as _httpx
+        key = os.environ.get("SARVAM_API_KEY", "")
+        if not key:
+            logger.warning("SARVAM_API_KEY missing — reporting unhealthy")
+            return False
+        try:
+            # Lightweight probe: send a minimal completion request
+            with _httpx.Client(timeout=5.0) as client:
+                resp = client.post(
+                    f"{_BASE_URL}/chat/completions",
+                    json={
+                        "model": "sarvam-m",
+                        "messages": [{"role": "user", "content": "ping"}],
+                        "reasoning_effort": "low",
+                        "max_tokens": 1,
+                    },
+                    headers={
+                        "api-subscription-key": key,
+                        "Content-Type": "application/json",
+                    },
+                )
+                return resp.status_code in (200, 201)
+        except Exception as exc:
+            logger.warning("Sarvam health check failed: %s", exc)
+            return False
 
     async def complete(self, prompt: str, mode: SarvamMode) -> str:
         """

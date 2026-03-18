@@ -1,5 +1,6 @@
 FROM python:3.11.9-slim
 
+# Install Node.js for MCPorter CLI (MCP tool execution)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -9,7 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     curl \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    gnupg \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
+# Install MCPorter CLI globally (required for MCP tool execution)
+RUN npm install -g mcporter
 
 WORKDIR /app
 

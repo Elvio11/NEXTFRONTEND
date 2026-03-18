@@ -1,8 +1,8 @@
 """
 main.py — Talvix Server 2 (Intelligence Layer)
-FastAPI application. Port 8080 (Flux-Orbit).
+FastAPI application. Internal container port: 8080 (via $PORT / fly.toml).
 
-Hosts: Agents 3, 4, 5, 6, 7, 8 (and stubs for 10, 11).
+Hosts: Agents 3, 4, 5, 6, 7, 8, 15 (and cleanup utilities).
 Auth: X-Agent-Secret header on all /api/agents/* routes.
 No JWT on this server — JWT lives on Server 1 only.
 No LLM calls here — all LLM logic in agents/ and skills/.
@@ -120,10 +120,10 @@ app = FastAPI(
 )
 
 # Internal server — only Server 1 calls us via X-Agent-Secret.
-# CORS is not needed for machine-to-machine, but allow origin for dev probing.
+# CORS: only allow from Server1 (not wildcard) in production.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[os.environ.get("SERVER1_URL", "*")],
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
@@ -145,6 +145,12 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
+from routers import resume, skill_gap, career_intel, fit_score, jd_clean, coach, calibrate, cleanup
+try:
+    from routers import orchestrator_router
+except ImportError:
+    orchestrator_router = None
+
 app.include_router(resume.router, prefix="/api/agents")
 app.include_router(skill_gap.router, prefix="/api/agents")
 app.include_router(career_intel.router, prefix="/api/agents")
@@ -174,6 +180,12 @@ async def health():
         "port": 8080,
         "env": env_status,
     }
+
+
+@app.get("/health/heartbeat")
+async def heartbeat():
+    """Minimal liveness probe used by TalvixGuard (Server 1 watchdog)."""
+    return {"status": "ok"}
 
 
 # ─── Entry (for local dev without doppler wrapper) ───────────────────────────

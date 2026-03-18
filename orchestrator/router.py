@@ -8,7 +8,7 @@ Flow:
   3. Gate 3 (Account)      → session, caps, tier, flags
   4. Gate 4 (System Health)→ storage mounted + S3 reachable
   5. Build context object
-  6. Hand to CrewAI Orchestrator (S2 intelligence crew)
+  6. Hand to IntelligenceCrew (S2 intelligence crew)
 
 Never routes to Server 3 directly — S3 is triggered via Server 1 only.
 """
@@ -18,6 +18,7 @@ from __future__ import annotations
 import os
 import time
 import logging
+import uuid
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Request
@@ -52,12 +53,13 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
     X-Agent-Secret is verified by the Depends(verify_agent_secret) above (Gate 1 HTTP level).
     The Python gates below provide the full business logic gating.
     """
-    t_start   = time.time()
-    user_id   = req.user_id
-    trigger   = req.trigger
+    t_start      = time.time()
+    user_id      = req.user_id
+    trigger      = req.trigger
     agent_secret = request.headers.get("X-Agent-Secret", "")
+    run_id       = str(uuid.uuid4())
 
-    log_start("orchestrator", user_id)
+    await log_start("orchestrator", user_id, run_id)
 
     # ── Fetch user row if needed (single DB call for all account gates) ──────
     user = None
@@ -88,7 +90,7 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
         )
     except GateFailure as gf:
         duration_ms = int((time.time() - t_start) * 1000)
-        log_skip("orchestrator", user_id, reason=f"gate:{gf.gate} — {gf.message}")
+        await log_skip(run_id, reason=f"gate:{gf.gate} — {gf.message}")
         response = handle_gate_failure(gf, user_id)
         response["duration_ms"] = duration_ms
         return response
@@ -110,13 +112,13 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
         daily_limits=daily_limits,
     )
 
-    # ── HAND TO CREWAI ───────────────────────────────────────────────────────
+    # ── HAND TO INTELLIGENCE CREW ────────────────────────────────────────────
     try:
         crew   = IntelligenceCrew(context=context, payload=req.payload)
         result = await crew.run()
     except Exception as exc:
         duration_ms = int((time.time() - t_start) * 1000)
-        log_fail("orchestrator", user_id, str(exc))
+        await log_fail(run_id, str(exc), duration_ms)
         return {
             "status":            "failed",
             "duration_ms":       duration_ms,
@@ -125,7 +127,7 @@ async def orchestrate(req: OrchestrateRequest, request: Request):
         }
 
     duration_ms = int((time.time() - t_start) * 1000)
-    log_end("orchestrator", user_id, records_processed=result.get("records_processed"))
+    await log_end(run_id, result.get("records_processed") or 0, duration_ms)
 
     return {
         "status":            result.get("status", "success"),

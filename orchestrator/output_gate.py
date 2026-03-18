@@ -57,14 +57,33 @@ def gate_output(
 # ─── AGENT-SPECIFIC VALIDATORS ────────────────────────────────────────────────
 
 def _validate_resume_tailor(output: dict, user: dict | None, app_id: str | None) -> None:
-    """Agent 10 — Resume Tailor: PDF must exist on FluxShare."""
+    """Agent 10 — Resume Tailor: PDF must exist on FluxShare (MinIO), not local disk."""
     pdf_path = output.get("pdf_path") or output.get("tailored_resume_path")
     if not pdf_path:
         raise OutputGateFailure("agent_10", "No PDF path in output")
-    if not os.path.exists(pdf_path):
+
+    # CRITICAL FIX: pdf_path is a MinIO object key, NOT a local filesystem path.
+    # os.path.exists() always returns False for MinIO keys — use storage_client.
+    import asyncio
+    from skills.storage_client import exists as minio_exists
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # We're inside an async context — cannot run nested event loop.
+            # Use a thread-based approach to check MinIO synchronously.
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(asyncio.run, minio_exists(pdf_path))
+                key_exists = future.result(timeout=10)
+        else:
+            key_exists = asyncio.run(minio_exists(pdf_path))
+    except Exception:
+        key_exists = False
+
+    if not key_exists:
         raise OutputGateFailure(
             "agent_10",
-            f"PDF file not found at {pdf_path} — storage write may have failed",
+            f"PDF not found in MinIO at key '{pdf_path}' — storage write may have failed",
         )
     if output.get("fabricated_experience"):
         raise OutputGateFailure(

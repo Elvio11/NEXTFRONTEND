@@ -4,7 +4,7 @@ Gemini async HTTP client for Server 2.
 
 Usage on this server:
   flash_lite → Agent 7 (JD Cleaning) ONLY
-  flash      → Agent 11 Cover Letters (Server 3, routed via stub)
+  flash      → Agent 15 Weekly Calibration
 
 Gemini is the FALLBACK for non-critical tasks only.
 NEVER use Gemini for tasks assigned to Sarvam-M.
@@ -13,13 +13,16 @@ API key from Doppler: GEMINI_API_KEY.
 
 import os
 import httpx
+import logging
 from typing import Literal
+
+logger = logging.getLogger("gemini")
 
 GeminiMode = Literal["flash", "flash_lite"]
 
 _MODEL_MAP = {
-    "flash":      "gemini-1.5-flash",
-    "flash_lite": "gemini-1.5-flash-8b",
+    "flash":      "gemini-2.0-flash",
+    "flash_lite": "gemini-2.0-flash-lite",
 }
 
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
@@ -29,7 +32,10 @@ class GeminiClient:
     @property
     def _api_key(self) -> str:
         """Lazy — read at call time so missing key doesn't crash at import."""
-        return os.environ.get("GEMINI_API_KEY", "")
+        key = os.environ.get("GEMINI_API_KEY", "")
+        if not key:
+            raise RuntimeError("GEMINI_API_KEY not set in Doppler environment")
+        return key
 
     async def complete(self, prompt: str, mode: GeminiMode) -> str:
         """

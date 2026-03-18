@@ -4,13 +4,26 @@
 #
 # The old send_whatsapp() function is preserved for backward compat but internally
 # delegates to /internal/wa-send (existing behavior).
+#
+# PRODUCTION FIX: server1 URL and agent secret are read lazily at call time,
+# NOT at module import time, to prevent crashes during test/startup.
 
 import os
 import httpx
 from log_utils.agent_logger import log_event
 
-SERVER1_URL = os.environ["SERVER1_URL"]
-AGENT_SECRET = os.environ["AGENT_SECRET"]
+
+def _server1_url() -> str:
+    """Read SERVER1_URL at call time — never at import time."""
+    url = os.environ.get("SERVER1_URL", "")
+    if not url:
+        log_event("whatsapp_push", "error", "SERVER1_URL not set — notifications disabled")
+    return url
+
+
+def _agent_secret() -> str:
+    """Read AGENT_SECRET at call time — never at import time."""
+    return os.environ.get("AGENT_SECRET", "")
 
 
 async def send_notification(user_id: str, message_type: str, payload: dict) -> bool:
@@ -19,17 +32,21 @@ async def send_notification(user_id: str, message_type: str, payload: dict) -> b
     Returns True if at least one channel delivered successfully.
     Never raises — always returns bool.
     """
+    server1_url = _server1_url()
+    if not server1_url:
+        return False
+
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
-                f"{SERVER1_URL}/internal/notify",
+                f"{server1_url}/internal/notify",
                 json={
                     "user_id": user_id,
                     "message_type": message_type,
                     "payload": payload,
                 },
                 headers={
-                    "X-Agent-Secret": AGENT_SECRET,
+                    "X-Agent-Secret": _agent_secret(),
                     "Content-Type": "application/json",
                 },
             )
@@ -62,17 +79,21 @@ async def send_whatsapp(
     Legacy function: sends WA message via /internal/wa-send.
     Preserved for any existing callers. New code should use send_notification().
     """
+    server1_url = _server1_url()
+    if not server1_url:
+        return False
+
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.post(
-                f"{SERVER1_URL}/internal/wa-send",
+                f"{server1_url}/internal/wa-send",
                 json={
                     "user_id": user_id,
                     "message": message,
                     "event_type": event_type,
                 },
                 headers={
-                    "X-Agent-Secret": AGENT_SECRET,
+                    "X-Agent-Secret": _agent_secret(),
                     "Content-Type": "application/json",
                 },
             )
