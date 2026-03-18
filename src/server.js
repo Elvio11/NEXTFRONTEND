@@ -37,6 +37,10 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const fileUpload = require('express-fileupload');
 
+// MCP Server & Watchdog
+const TalvixMCPServer = require('./lib/mcpServer');
+const talvixGuard = require('./lib/watchdog');
+
 // Middleware
 const stripSensitive = require('./middleware/stripSensitive');
 const verifyJWT = require('./middleware/verifyJWT');
@@ -123,6 +127,14 @@ app.use('/api/onboarding', onboardingRouter);
 // Never expose these to the browser. verifyAgentSecret is applied inside the router.
 app.use('/internal', internalRouter);
 
+// Set up MCP Server (if running in MCP mode)
+// Crucial: Mounted before the 404 handler, protected by verifyJWT
+if (process.env.MCP_MODE === 'true') {
+    const mcpServer = new TalvixMCPServer();
+    app.use('/api/mcp', verifyJWT, mcpServer.createRouter());
+    logger.info('server', 'MCP Server mapped to /api/mcp [Protected via JWT]');
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 404 handler
 // ─────────────────────────────────────────────────────────────────────────────
@@ -179,6 +191,9 @@ app.listen(PORT, '0.0.0.0', () => {
             });
         }
     }
+
+    // Start TalvixGuard Watchdog for AI Corp (Server 5)
+    talvixGuard.start();
 });
 
 module.exports = app; // export for Jest/Supertest

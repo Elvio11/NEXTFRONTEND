@@ -2,6 +2,9 @@ FROM node:24-bullseye-slim
 
 WORKDIR /app
 
+# Install MCPorter CLI globally (required for MCP tool execution)
+RUN npm install -g mcporter
+
 # Install dependencies first for caching layer
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production
