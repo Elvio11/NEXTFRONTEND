@@ -2,32 +2,18 @@ FROM python:3.11.9-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
-ENV DISPLAY=:99
 
-# Install system dependencies for Selenium & Chrome
+# Install Node.js for MCPorter CLI (MCP tool execution)
 RUN apt-get update && apt-get install -y \
-    wget \
-    gnupg \
-    unzip \
     curl \
-    xvfb \
-    libnss3 \
-    libgconf-2-4 \
-    libxss1 \
-    libasound2 \
-    fonts-liberation \
-    libappindicator3-1 \
-    xdg-utils \
-    libxshmfence1 \
-    libgbm1 \
-    && rm -rf /var/lib/apt/lists/*
+    gnupg \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
 
-# Install Google Chrome Stable
-RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | tee /etc/apt/sources.list.d/google-chrome.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
-    && rm -rf /var/lib/apt/lists/*
+# Install MCPorter CLI globally and register tools
+RUN npm install -g @mcporter/cli \
+    && mcporter install playwright firecrawl markitdown tavily mcp-gmail
 
 WORKDIR /app
 

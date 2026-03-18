@@ -31,6 +31,7 @@ from llm.sarvam import sarvam, SarvamUnavailableError
 from skills.session_manager import decrypt_session
 from skills.storage_client import put_json_gz
 from skills.anti_ban_checker import check_linkedin_limit
+from skills.mcp_wrapper import MCPWrapper
 
 # ─── Constants & CONFIG ───────────────────────────────────────────────────────
 
@@ -140,27 +141,12 @@ async def _generate_followup_email(
 async def _send_gmail(
     access_token: str, to: str, subject: str, body: str, thread_id: Optional[str] = None
 ) -> None:
-    """Send email via Gmail API."""
-    import base64
-    from email.message import EmailMessage
-
-    msg = EmailMessage()
-    msg.set_content(body)
-    msg["To"] = to
-    msg["Subject"] = subject
-
-    encoded_message = base64.urlsafe_b64encode(msg.as_bytes()).decode()
-    payload = {"raw": encoded_message}
-    if thread_id:
-        payload["threadId"] = thread_id
-
-    async with httpx.AsyncClient() as client:
-        resp = await client.post(
-            "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
-            json=payload,
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-        resp.raise_for_status()
+    """Send email via MCP Gmail."""
+    try:
+        mcp = MCPWrapper()
+        await mcp.send_email(to=to, subject=subject, body=body, token=access_token)
+    except Exception as e:
+        raise Exception(f"Failed to send email via MCP: {e}")
 
 
 # ─── Interview Detection & Calendar ───────────────────────────────────────────
@@ -169,53 +155,48 @@ async def _send_gmail(
 async def _detect_interview_and_notify(
     user_id: str, app_id: str, job_title: str, company: str, access_token: str
 ):
-    """Scan Gmail for interview triggers and handle notifications/calendar."""
+    """Scan Gmail for interview triggers and handle notifications/calendar via MCP."""
+    mcp = MCPWrapper()
+    
     # 1. Fetch recent messages
-    async with httpx.AsyncClient() as client:
-        resp = await client.get(
-            "https://gmail.googleapis.com/gmail/v1/users/me/messages",
-            params={"q": " ".join(INTERVIEW_KEYWORDS), "maxResults": 5},
-            headers={"Authorization": f"Bearer {access_token}"},
-        )
-        resp.raise_for_status()
-        messages = resp.json().get("messages", [])
+    query_str = "{" + " ".join(INTERVIEW_KEYWORDS) + "}"
+    search_result = await mcp.search_email(query=query_str, token=access_token)
+    
+    messages = search_result.get("messages", [])
+    
+    for m in messages:
+        snippet = m.get("snippet", "").lower()
 
-        for m in messages:
-            # Check if message is related to this application (simple thread check or text check)
-            # In a real agent, we'd be more precise. Here we check keywords in snippet.
-            detail = await client.get(
-                f"https://gmail.googleapis.com/gmail/v1/users/me/messages/{m['id']}",
-                headers={"Authorization": f"Bearer {access_token}"},
-            )
-            data = detail.json()
-            snippet = data.get("snippet", "").lower()
-
-            if any(kw in snippet for kw in INTERVIEW_KEYWORDS):
-                # Interview detected!
-                # 2. Update DB
-                now_iso = datetime.now(timezone.utc).isoformat()
-                get_supabase().table("job_applications").update(
-                    {
-                        "interview_detected": True,
-                        "interview_detected_at": now_iso,
-                    }
-                ).eq("id", app_id).execute()
-
-                # 3. Create Calendar Event (simplified)
-                # In real scenario, we'd parse the date. Here we stub it for tomorrow.
-                event = {
-                    "summary": f"Interview: {job_title} @ {company}",
-                    "start": {
-                        "dateTime": (
-                            datetime.now(timezone.utc) + timedelta(days=1)
-                        ).isoformat()
-                    },
-                    "end": {
-                        "dateTime": (
-                            datetime.now(timezone.utc) + timedelta(days=1, hours=1)
-                        ).isoformat()
-                    },
+        if any(kw in snippet for kw in INTERVIEW_KEYWORDS):
+            # Interview detected!
+            # 2. Update DB
+            now_iso = datetime.now(timezone.utc).isoformat()
+            get_supabase().table("job_applications").update(
+                {
+                    "interview_detected": True,
+                    "interview_detected_at": now_iso,
                 }
+            ).eq("id", app_id).execute()
+
+            # 3. Create Calendar Event (simplified via MCP if available, else omit for now)
+            # Future enhancement: `mcp.create_calendar_event(...)`
+            # For now we stub out the direct HTTPx calendar request since MCP is preferred.
+            event = {
+                "summary": f"Interview: {job_title} @ {company}",
+                "start": {
+                    "dateTime": (
+                        datetime.now(timezone.utc) + timedelta(days=1)
+                    ).isoformat()
+                },
+                "end": {
+                    "dateTime": (
+                        datetime.now(timezone.utc) + timedelta(days=1, hours=1)
+                    ).isoformat()
+                },
+            }
+            # If there was a calendar call, we dispatch it via HTTPx still, 
+            # unless a calendar MCP is provided
+            async with httpx.AsyncClient() as client:
                 await client.post(
                     "https://www.googleapis.com/calendar/v3/calendars/primary/events",
                     json=event,
@@ -353,7 +334,7 @@ async def run_follow_up() -> dict:
                     .execute()
                 )
                 for app in li_apps.data or []:
-                    # Placeholder for Selenium LinkedIn logic
+                    # Placeholder for MCP Playwright LinkedIn logic
                     # 1. Search recruiter -> connection request
                     # 2. If accepted -> send message
                     # After each action: _increment_linkedin_actions()

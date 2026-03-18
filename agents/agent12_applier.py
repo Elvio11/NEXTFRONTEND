@@ -41,7 +41,6 @@ from supabase import Client
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.session_manager import decrypt_session
-from skills.browser_pool import browser_context
 from skills.apply_engine import apply_indeed_easy, apply_linkedin_easy
 
 IST = pytz.timezone("Asia/Kolkata")
@@ -254,14 +253,7 @@ def _increment_apply_counts(user_id: str) -> None:
     get_supabase().rpc("increment_apply_counts", {"target_user_id": user_id}).execute()
 
 
-def _inject_session_cookies(driver, session_data: dict) -> None:
-    """Inject session cookies into the browser. Works for both LinkedIn and Indeed."""
-    cookies = session_data.get("cookies", [])
-    for cookie in cookies:
-        try:
-            driver.add_cookie(cookie)
-        except Exception:
-            pass  # some cookies fail silently (httpOnly domain mismatch) — OK
+# Empty (cookies injected via MCPWrapper now)
 
 
 # ─── Main Agent ───────────────────────────────────────────────────────────────
@@ -550,33 +542,22 @@ async def run_applier(
             if delay > 0:
                 await asyncio.sleep(delay)
 
-            # ── Apply via Selenium ───────────────────────────────────────────
+            # ── Apply via MCP Playwright ─────────────────────────────────────
             session_data = user_connections.get(platform)
             apply_result = {"status": "failed", "screenshot_path": None}
 
             try:
-                async with browser_context(headless=False) as driver:
-                    # Navigate to platform base domain first (required for cookie injection)
-                    if platform == "linkedin":
-                        driver.get("https://www.linkedin.com")
-                    else:
-                        driver.get("https://www.indeed.com")
+                if apply_method == "linkedin_easy":
+                    apply_result = await apply_linkedin_easy(
+                        session_data, job, {}, run_id
+                    )
+                else:
+                    apply_result = await apply_indeed_easy(session_data, job, {}, run_id)
 
-                    await asyncio.sleep(2.0)
-
-                    # Inject session cookies
-                    if session_data:
-                        _inject_session_cookies(driver, session_data)
-                        # CRITICAL: del session reference after use
-                        del session_data
-                        session_data = None
-
-                    if apply_method == "linkedin_easy":
-                        apply_result = await apply_linkedin_easy(
-                            driver, job, {}, run_id
-                        )
-                    else:
-                        apply_result = await apply_indeed_easy(driver, job, {}, run_id)
+                # Clear session data as directed by security rules
+                if session_data:
+                    del session_data
+                    session_data = None
 
             except Exception as exc:
                 apply_result = {
