@@ -42,3 +42,15 @@ next-env.d.ts
 .env
 
 archive/
+
+# Agent/Claude/Swarm Metadata
+.claude-flow/
+.claude/
+.mcp.json
+.swarm/
+AI Corp.md
+CLAUDE.md
+TALVIX_ENV_MASTER_TEMPLATE.md
+TalvixAI Corp/
+ruflo-src/
+memory.db
