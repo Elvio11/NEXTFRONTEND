@@ -15,6 +15,8 @@
 'use strict';
 
 const axios = require('axios');
+const logger = require('./logger');
+
 
 /**
  * @param {string} serverUrl   - Base URL of target server (e.g. process.env.SERVER2_URL)

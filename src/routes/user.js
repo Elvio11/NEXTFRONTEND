@@ -95,7 +95,7 @@ router.patch('/profile', verifyJWT, async (req, res) => {
     const SAFE_FIELDS = new Set([
         'full_name', 'city_canonical', 'work_mode_pref',
         'current_salary_lpa', 'target_salary_lpa', 'notif_prefs',
-        'auto_apply_enabled', 'daily_apply_limit',
+        'auto_apply_enabled', 'daily_apply_limit', 'persona',
     ]);
 
     const updates = {};

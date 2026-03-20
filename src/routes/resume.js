@@ -21,7 +21,7 @@ const verifyJWT = require('../middleware/verifyJWT');
 const forwardToAgent = require('../lib/forwardToAgent');
 const { uploadFile } = require('../lib/storageClient');
 const logger = require('../lib/logger');
-const { getSupabase } = require('../lib/supabase');
+const { getSupabase } = require('../lib/supabaseClient');
 
 // ── Layer 1: Extension whitelist + size cap ─────────────────────────────────
 const ALLOWED_EXT = new Set(['.pdf', '.docx']);

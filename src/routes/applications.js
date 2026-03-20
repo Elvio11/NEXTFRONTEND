@@ -162,4 +162,52 @@ router.get("/:appId/cover-letter", verifyJWT, async (req, res) => {
     }
 });
 
+// POST /api/applications/trigger-auto-apply
+router.post('/trigger-auto-apply', verifyJWT, async (req, res) => {
+    const userId = req.user.id;
+    const { getSupabase } = require('../lib/supabaseClient');
+    const { checkCooldown, setCooldown } = require('../messaging/rateLimiter');
+    
+    // 1. Check cooldown (4h)
+    const COOLDOWN_MS = 4 * 60 * 60 * 1000;
+    const cooldownKey = `apply_now:${userId}`;
+    const { limited, remainingMs } = checkCooldown(cooldownKey, COOLDOWN_MS);
+
+    if (limited) {
+        return res.status(429).json({ 
+            error: 'Rate limited', 
+            retry_after_ms: remainingMs 
+        });
+    }
+
+    try {
+        // 2. Check for valid sessions
+        const { data: connections } = await getSupabase()
+            .from('user_connections')
+            .select('platform')
+            .eq('user_id', userId)
+            .eq('is_valid', true);
+
+        if (!connections || connections.length === 0) {
+            return res.status(400).json({ error: 'No valid sessions. Connect LinkedIn/Indeed first.' });
+        }
+
+        // 3. Set cooldown
+        setCooldown(cooldownKey, COOLDOWN_MS);
+
+        // 4. Forward to Server 3
+        const server3Url = process.env.SERVER3_URL || 'http://localhost:8080';
+        forwardToAgent(server3Url, 'auto-apply', userId, { immediate: true })
+            .catch(err => logger.error('applications', `S3 trigger failed: ${err.message}`));
+
+        return res.status(202).json({ 
+            status: 'triggered', 
+            message: 'Auto-apply cycle initiated. You will receive updates via WhatsApp/Telegram.' 
+        });
+    } catch (err) {
+        logger.error('applications', `trigger-auto-apply error: ${err.message}`);
+        return res.status(500).json({ error: 'Failed to trigger application cycle' });
+    }
+});
+
 module.exports = router;

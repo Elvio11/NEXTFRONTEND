@@ -91,7 +91,6 @@ router.post('/', async (req, res) => {
                 }
 
                 // Upgrade tier and set subscription window
-<<<<<<< HEAD
                 // Student tier: daily_apply_limit = 3 (30/month via daily rolling)
                 // Note: anon key + RLS — the upsert targets the user's own row
                 const isStudent = planKey.startsWith('student');
@@ -108,17 +107,6 @@ router.post('/', async (req, res) => {
                 const { error } = await getSupabase()
                     .from('users')
                     .update(updateFields)
-=======
-                // Note: anon key + RLS — the upsert targets the user's own row
-                const { error } = await getSupabase()
-                    .from('users')
-                    .update({
-                        tier: planKey.startsWith('student') ? 'student' : 'professional',
-                        subscription_started_at: now,
-                        subscription_expires_at: expiresAt,
-                        updated_at: now,
-                    })
->>>>>>> 1f829cedfddfaccb2cad11b9969f82a2835c0de9
                     .eq('id', userId);
 
                 if (error) {
