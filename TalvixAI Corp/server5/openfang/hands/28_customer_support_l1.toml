@@ -1,0 +1,11 @@
+# Custom OpenFang Hand: Support L1 (Dept 28)
+name = "support_l1"
+description = "First-line support. 70%+ resolution. Billing, how-to, account status."
+llm_provider = "groq"
+model = "llama-3.3-70b-versatile"
+
+[schedule]
+# Always on, triggered by Commander (Telegram/WhatsApp inbound)
+
+[tools]
+enabled = ["get_user_status", "get_support_themes", "notify"]

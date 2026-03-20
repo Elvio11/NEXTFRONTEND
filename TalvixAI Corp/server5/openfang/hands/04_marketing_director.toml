@@ -1,0 +1,25 @@
+# Talvix AI Corp — Dept 4: Marketing Director
+# Role: Content Strategy, SEO, and Distribution Management
+
+[hand]
+id = 4
+name = "marketing_director"
+role = "Departmental Lead"
+schedule = "0 8 * * *" # Runs daily at 08:00
+priority = 8
+maxRuntime = 300       # 5 minutes max
+
+[execution]
+# Calls the Python Master OS bridge to execute the agent task
+type = "command"
+cmd = "python3 /app/src/agents/marketing_agent.py --task 'daily_content_strategy'"
+
+[llm]
+provider = "gemini"
+model = "gemini-1.5-flash"
+temperature = 0.7
+
+[memory]
+contextSize = 4096
+persist = true
+workspace = "marketing"

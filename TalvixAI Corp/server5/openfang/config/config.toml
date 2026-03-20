@@ -1,0 +1,39 @@
+# Talvix AI Corp — OpenFang Kernel Config (v3.0.0)
+# This file is loaded by the OpenFang Rust binary inside the Server 5 container.
+
+[kernel]
+name = "talvix-company-os"
+version = "3.2.0"
+logLevel = "info"
+budgetLimit = 150000  # Token limit per department per day
+
+[agent]
+dmPolicy = "allowlist"
+allowlist = ["${FOUNDER_TELEGRAM_ID}"] # Injected via FluxCloud env
+autoApprove = false                      # Executive check required
+memoryBackend = "hnsw"                   # RuVector v3 enabled
+
+[telegram]
+enabled = true
+# Token is injected from ENV: TELEGRAM_BOT_TOKEN
+accountId = "TalvixFounderBot"
+
+[mcp]
+# Connection to Server 1 (AaaS Product Gateway)
+[[mcp.servers]]
+name = "talvix-gateway"
+url = "http://localhost:8080/mcp"        # Internal bridge network
+headers = { "Authorization" = "Bearer ${AGENT_SECRET}" }
+
+[skills]
+path = "/app/openfang/skills"
+autoScan = true
+wasmValidation = true                    # Security Layer 1 enabled
+
+[hands]
+path = "/app/openfang/hands"
+autoScale = true
+
+[workflows]
+path = "/app/openfang/workflows"
+parallel = 6                             # Fan-out Morning Brief limit

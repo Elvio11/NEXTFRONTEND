@@ -1,0 +1,24 @@
+# 🦾 OpenFang Hand: Dept 2 — Chief of Staff
+# Version: 1.0.0
+
+[hand]
+id = 2
+name = "Chief of Staff"
+role = "Operations Manager"
+version = "1.0.0"
+llm = "Cerebras-Qwen3-235B"
+
+[abilities]
+track_tasks = "notion_task_sync"
+ops_review = "weekly_review_generator"
+flag_delays = "agent_status_monitor"
+
+[config]
+isolation_mode = "wasm"
+schedule = "cron: 0 8 * * *" # Daily 8 AM
+governance_file = "openfang/SOUL.md"
+
+[tools]
+- notion_mcp
+- memory_read
+- notify

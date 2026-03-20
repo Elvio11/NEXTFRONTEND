@@ -1,0 +1,10 @@
+# Built-in OpenFang Hand: Lead
+name = "lead"
+description = "Captures and qualifies inbound B2B enterprise leads from the public showcase."
+llm_provider = "cerebras"
+
+[schedule]
+# Event-driven (no cron), triggered by API webhook from Next.js frontend
+
+[tools]
+enabled = ["notify", "memory_write"]

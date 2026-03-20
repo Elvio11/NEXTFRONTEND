@@ -1,0 +1,18 @@
+# Workflow: Churn Prevention (Sequential)
+# Triggers daily to save at-risk accounts.
+name = "churn_prevention"
+description = "Identifies disengaged users and drafts customized win-back emails."
+
+[trigger]
+cron = "0 22 * * *" # Daily 10PM IST
+
+[pipeline]
+mode = "sequential"
+steps = [
+    { name = "data_analyst", action = "identify_at_risk_cohort", tool = "get_user_pipeline" },
+    { name = "retention_manager", action = "draft_win_back_emails", input_from = "data_analyst" }
+]
+
+[output]
+target = "commander"
+action = "request_founder_approval" # Human in the loop constraint

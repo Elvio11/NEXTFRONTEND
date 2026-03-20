@@ -1,0 +1,20 @@
+{
+  "tasks": {
+    "task-1773913143008-hba6el": {
+      "taskId": "task-1773913143008-hba6el",
+      "type": "implementation",
+      "description": "Implement MorningBriefingHandler",
+      "priority": "normal",
+      "status": "pending",
+      "progress": 0,
+      "assignedTo": [
+        "agent-1773913043640-jr3rkn"
+      ],
+      "tags": [],
+      "createdAt": "2026-03-19T09:39:03.008Z",
+      "startedAt": null,
+      "completedAt": null
+    }
+  },
+  "version": "3.0.0"
+}

@@ -1,0 +1,10 @@
+# Built-in OpenFang Hand: Researcher
+name = "researcher"
+description = "Scans external job boards (Arya/LoopCV/Naukri/Internshala) and queues intelligence."
+llm_provider = "groq"
+
+[schedule]
+cron = "0 2 * * *" # Runs daily at 2:00 AM IST
+
+[tools]
+enabled = ["web_search", "browser_automation"]

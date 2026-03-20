@@ -1,0 +1,10 @@
+# Built-in OpenFang Hand: Twitter
+name = "twitter"
+description = "Monitors @Talvix_AI mentions and drafts engagement responses."
+llm_provider = "groq"
+
+[schedule]
+cron = "0 */6 * * *" # Runs every 6 hours
+
+[tools]
+enabled = ["notify", "memory_read"]

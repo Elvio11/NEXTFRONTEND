@@ -1,0 +1,3 @@
+[submodule "server5/openfang/skills/agency-agents"]
+	path = server5/openfang/skills/agency-agents
+	url = https://github.com/msitarzewski/agency-agents

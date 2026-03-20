@@ -1,0 +1,25 @@
+# 🦾 OpenFang Hand: Dept 39 — Engineering Commander
+# Version: 3.5.0
+
+[hand]
+id = 39
+name = "Engineering Commander"
+role = "Swarm Orchestrator"
+version = "3.5.28"
+llm = "Claude-3-5-Sonnet" # Paid tier as per v1.3
+
+[abilities]
+triage = "bug_triage_flow"
+spawn_swarm = "ruflo_execution"
+git_sync = "github_pr_manager"
+
+[config]
+isolation_mode = "wasm"
+schedule = "event: github_issue_created"
+governance_file = "openfang/SOUL.md"
+
+[tools]
+- ruflo_mcp (215 tools)
+- github_mcp
+- terminal_mcp
+- docker_mcp

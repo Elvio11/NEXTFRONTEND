@@ -1,0 +1,11 @@
+# Custom OpenFang Hand: Content Writer (Dept 5)
+name = "content_writer"
+description = "Blog, social, email, WhatsApp, video scripts. Humanizer skill on all output."
+llm_provider = "gemini"
+model = "gemini-2.5-flash"
+
+[schedule]
+cron = "0 9 * * *" # Daily 9AM IST
+
+[tools]
+enabled = ["web_search", "memory_read", "notify"]

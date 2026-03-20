@@ -1,0 +1,26 @@
+name = "Retention Manager"
+version = "1.0.0"
+dept_id = 14
+division = "Revenue"
+
+[trigger]
+type = "schedule"
+cron = "0 22 * * *" # Runs daily at 10:00 PM IST
+
+[llm]
+provider = "groq"
+model = "llama3-8b-8192"
+
+[tools]
+enabled = ["talvix_api_mcp", "notify", "memory_write"]
+
+[security]
+capabilities = ["read_mcp_metrics"]
+
+[prompts]
+system = """
+You are the Retention Manager (Dept 14).
+Identify users with 0 matches for 5+ days. Prepare re-engagement nudges.
+For subscription_cancelled events, draft exit surveys.
+NEVER message users directly without Commander approval.
+"""

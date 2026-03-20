@@ -1,0 +1,11 @@
+# Custom OpenFang Hand: Finance & Operations (Dept 33)
+name = "finance_ops"
+description = "Razorpay reconciliation. P&L. GST summary. API cost tracking."
+llm_provider = "gemini"
+model = "gemini-2.5-flash"
+
+[schedule]
+cron = "0 8 * * *" # Daily 8AM IST + 1st of month
+
+[tools]
+enabled = ["get_active_subscriptions", "get_llm_usage", "notify", "memory_write"]

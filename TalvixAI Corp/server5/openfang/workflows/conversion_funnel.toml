@@ -1,0 +1,18 @@
+# Workflow: Conversion Funnel (Sequential)
+# Triggers daily to maximize free-to-paid conversions.
+name = "conversion_funnel"
+description = "Analyzes high-engagement free users and drafts upgrade nudges."
+
+[trigger]
+cron = "0 10 * * *" # Daily 10AM IST
+
+[pipeline]
+mode = "sequential"
+steps = [
+    { name = "data_analyst", action = "score_free_tier_engagement", tool = "get_conversion_data" },
+    { name = "conversion_specialist", action = "draft_upgrade_nudges", input_from = "data_analyst" }
+]
+
+[output]
+target = "commander"
+action = "request_founder_approval" # Human in the loop constraint
