@@ -2,8 +2,7 @@
 import { useAuthStore } from '@/stores/authStore'
 
 export function usePermissions() {
-    const state = useAuthStore((s) => s.permissionState)
-    const user = useAuthStore((s) => s.user)
+    const { permissionState: state, user } = useAuthStore()
     return {
         user,
         canViewFitReasons: state !== null && state >= 3,

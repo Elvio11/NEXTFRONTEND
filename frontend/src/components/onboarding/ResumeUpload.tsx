@@ -19,7 +19,7 @@ const schema = z.object({
             ].includes(f.type),
             'Only PDF or DOCX files are accepted'
         )
-        .refine((f) => f.size <= 10_485_760, 'File must be 10MB or less'),
+        .refine((f) => f.size <= 5_242_880, 'File must be 5MB or less'),
 })
 
 type FormData = z.infer<typeof schema>

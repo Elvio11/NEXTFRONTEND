@@ -8,15 +8,15 @@ import { GlowButton } from '@/components/ui/GlowButton'
 import { GlassCard } from '@/components/ui/GlassCard'
 
 const personaOptions = [
-    { value: 'student', label: 'Student' },
-    { value: 'professional', label: 'Professional' },
-    { value: 'switcher', label: 'Career Switcher' },
-    { value: 'returning', label: 'Returning to Work' },
-    { value: 'freelancer', label: 'Freelancer' },
+    { value: 'Student', label: 'Student' },
+    { value: 'Professional', label: 'Professional' },
+    { value: 'Switcher', label: 'Career Switcher' },
+    { value: 'Returning', label: 'Returning to Work' },
+    { value: 'Freelancer', label: 'Freelancer' },
 ] as const
 
 const schema = z.object({
-    persona: z.enum(['student', 'professional', 'switcher', 'returning', 'freelancer']),
+    persona: z.string(),
 })
 
 type FormData = z.infer<typeof schema>
@@ -31,13 +31,13 @@ export function PersonaDisplay({ detectedPersona, onComplete }: PersonaDisplayPr
 
     const { handleSubmit, control, formState: { errors } } = useForm<FormData>({
         resolver: zodResolver(schema),
-        defaultValues: { persona: (detectedPersona as FormData['persona']) ?? 'professional' },
+        defaultValues: { persona: detectedPersona ?? 'Professional' },
     })
 
     const onSubmit = async (data: FormData) => {
         setSaving(true)
         try {
-            await api.patch('/api/users/persona', { persona: data.persona })
+            await api.post('/api/onboarding/persona', { persona: data.persona })
             onComplete()
         } finally {
             setSaving(false)

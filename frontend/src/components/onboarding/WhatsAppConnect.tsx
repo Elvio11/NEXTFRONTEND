@@ -60,8 +60,8 @@ export function WhatsAppConnect({ onComplete, onSkip }: WhatsAppConnectProps) {
         setLoading(true)
         setTimeoutError(false)
         try {
-            const res = await api.get<{ qr_url: string }>('/api/wa/qr')
-            setQrUrl(res.data.qr_url)
+            const res = await api.get<{ qr_code: string }>('/api/whatsapp/status')
+            setQrUrl(res.data.qr_code)
             startPolling()
         } catch {
             setQrUrl(null)
@@ -79,7 +79,7 @@ export function WhatsAppConnect({ onComplete, onSkip }: WhatsAppConnectProps) {
     const handleSkip = async () => {
         setSkipping(true)
         try {
-            await api.patch('/api/users/onboarding_complete', { onboarding_complete: true })
+            await api.post('/api/onboarding/complete')
             onSkip()
         } finally {
             setSkipping(false)

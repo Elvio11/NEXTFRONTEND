@@ -10,7 +10,7 @@ const featureCopy: Record<string, { title: string; cta: string }> = {
         title: 'Auto-apply',
         cta: 'Enable auto-apply',
     },
-    coaching: {
+    coach: {
         title: 'Daily coaching',
         cta: 'Unlock daily coaching',
     },
@@ -32,6 +32,8 @@ interface UpgradeCTAProps {
 
 export function UpgradeCTA({ feature, compact = false, onUpgrade }: UpgradeCTAProps) {
     const copy = featureCopy[feature]
+
+    if (!copy) return null
 
     if (compact) {
         return (
