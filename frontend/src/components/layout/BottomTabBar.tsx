@@ -11,8 +11,6 @@ import {
     Settings2,
     MessageCircle,
 } from 'lucide-react'
-import { usePermissions } from '@/hooks/usePermissions'
-import { cn } from '@/lib/utils'
 
 const navItems = [
     { label: 'Home', href: '/dashboard', icon: LayoutDashboard, locked: false },
