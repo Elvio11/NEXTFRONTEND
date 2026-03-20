@@ -1,16 +1,15 @@
 """
 skills/resume_parser.py
-Parses PDF and DOCX resume files into structured JSON.
+Parses PDF and DOCX resume files into structured JSON using MarkItDown MCP.
 
 6-Layer Upload Security (Layers 3-4 live here):
-  Layer 3: DOCX decompression bomb check (ratio < 100, uncompressed < 50MB)
-  Layer 4: Macro/OLE object stripping via XML reconstruction (DOCX only)
+  Layer 3: DOCX decompression bomb check (ratio < 100, uncompressed < 50MB) [DEPRECATED]
+  Layer 4: Macro/OLE object stripping via XML reconstruction (DOCX only) [DEPRECATED]
   Layer 5: Subprocess sandboxing with 30s timeout (implemented in agent3_resume.py)
-  PDF:    pypdf text extraction only — never render, never execute
+  PDF:    MarkItDown MCP text extraction — never render, never execute
 
 Supports:
-  .pdf  → pypdf (text extraction layer; raises on password-protected / image-only)
-  .docx → python-docx (after sanitisation)
+  .pdf, .docx, .doc → MarkItDown MCP (via MCPWrapper)
 
 Output written as gzip'd JSON to MinIO: parsed-resumes/{user_id}.json.gz
 Returns the parsed dict for downstream use by Agent 3.

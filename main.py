@@ -24,7 +24,10 @@ logger = logging.getLogger("server2_startup")
 logger.info(f"Python version: {sys.version}")
 logger.info("Starting Talvix Server 2...")
 
+from dotenv import load_dotenv
 import os
+
+load_dotenv() # Load local .env before default sets
 
 # ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
 # In production Flux-Orbit/Doppler values override these before any agent runs.
@@ -147,9 +150,9 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 # ─── Routers ──────────────────────────────────────────────────────────────────
 from routers import resume, skill_gap, career_intel, fit_score, jd_clean, coach, calibrate, cleanup
 try:
-    from routers import orchestrator_router
+    from orchestrator.router import router as _orch_router
 except ImportError:
-    orchestrator_router = None
+    _orch_router = None
 
 app.include_router(resume.router, prefix="/api/agents")
 app.include_router(skill_gap.router, prefix="/api/agents")
@@ -159,8 +162,8 @@ app.include_router(jd_clean.router, prefix="/api/agents")
 app.include_router(coach.router, prefix="/api/agents")
 app.include_router(calibrate.router, prefix="/api/agents")
 app.include_router(cleanup.router, prefix="/api/agents/cleanup")
-if orchestrator_router is not None:
-    app.include_router(orchestrator_router.router)
+if _orch_router is not None:
+    app.include_router(_orch_router)
 
 
 # ─── Health (no auth) ────────────────────────────────────────────────────────
@@ -173,7 +176,7 @@ async def health():
         "GEMINI_API_KEY",
         "SARVAM_API_KEY",
     ]
-    env_status = {k: "SET" if os.environ.get(k) else "MISSING" for k in required}
+    env_status = {k: "SET" if os.environ.get(k) and "placeholder" not in os.environ.get(k, "") else "MISSING" for k in required}
     return {
         "status": "ok",
         "server": "server2",

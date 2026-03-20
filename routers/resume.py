@@ -25,10 +25,10 @@ class ResumeRequest(BaseModel):
 
 @router.post("/resume-intelligence", dependencies=[Depends(verify_agent_secret)])
 async def resume_intelligence(req: ResumeRequest):
-    storage_key = req.payload.get("storage_key", "")
+    storage_key = req.payload.get("storage_key") or req.payload.get("s3_key", "")
     if not storage_key:
         return {"status": "failed", "duration_ms": 0,
-                "records_processed": 0, "error": "payload.storage_key is required"}
+                "records_processed": 0, "error": "payload.storage_key (or s3_key) is required"}
 
     # CareerPlannerFlow runs agent3 then fires agents 4+5+6 in background
     result = await run_onboarding_flow(req.user_id, storage_key)
