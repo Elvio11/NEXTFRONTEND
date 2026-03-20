@@ -152,88 +152,125 @@ async def _send_gmail(
 # ─── Interview Detection & Calendar ───────────────────────────────────────────
 
 
+async def _classify_reply(text: str) -> str:
+    """Use Sarvam-M to classify a recruiter's reply."""
+    prompt = f"""
+    Analyze the following email reply from a recruiter and classify it into exactly one of these categories:
+    - INTERVIEW: If they are asking for availability, inviting to a call, or scheduling an interview.
+    - REJECTION: If they are saying they are not moving forward or the position is filled.
+    - NEUTRAL: If they are asking a follow-up question or providing an update without an invite yet.
+    - IGNORE: If it's an automated out-of-office or irrelevant message.
+
+    Reply text:
+    "{text}"
+
+    Classification:"""
+    try:
+        res = await sarvam.complete(prompt, mode="think") # Use think for better accuracy
+        res = res.strip().upper()
+        for cat in ["INTERVIEW", "REJECTION", "NEUTRAL"]:
+            if cat in res:
+                return cat
+        return "IGNORE"
+    except Exception:
+        return "IGNORE"
+
+
+async def _extract_event_details(thread_text: str) -> dict:
+    """Extract proposed interview date/time from the email thread using Sarvam-M."""
+    prompt = f"""
+    Extract the proposed interview date and time from the following email thread.
+    If multiple times are mentioned, pick the first one.
+    If no specific time is mentioned but it is an interview request, default to tomorrow at 10 AM.
+    Current time: {datetime.now(timezone.utc).isoformat()}
+
+    THREAD:
+    {thread_text}
+
+    Return ONLY a JSON object: {{"start_time": "ISO_FORMAT", "end_time": "ISO_FORMAT", "summary": "Short title"}}
+    """
+    try:
+        raw = await sarvam.complete(prompt, mode="precise")
+        # Extract JSON from potential markdown/text
+        if "{" in raw:
+            return json.loads(raw[raw.find("{"):raw.rfind("}")+1])
+        return {}
+    except Exception:
+        # Fallback to tomorrow 10am
+        start = (datetime.now(timezone.utc) + timedelta(days=1, hours=10)).isoformat()
+        end = (datetime.now(timezone.utc) + timedelta(days=1, hours=11)).isoformat()
+        return {"start_time": start, "end_time": end, "summary": "Interview"}
+
+
 async def _detect_interview_and_notify(
-    user_id: str, app_id: str, job_title: str, company: str, access_token: str
+    user_id: str, app_id: str, job_title: str, company: str, access_token: str, thread_id: Optional[str]
 ):
-    """Scan Gmail for interview triggers and handle notifications/calendar via MCP."""
+    """Scan the specific Gmail thread for replies and handle logic via LLM classification & MCP."""
+    if not thread_id:
+        return
+
     mcp = MCPWrapper()
-    
-    # 1. Fetch recent messages
-    query_str = "{" + " ".join(INTERVIEW_KEYWORDS) + "}"
-    search_result = await mcp.search_email(query=query_str, token=access_token)
-    
-    messages = search_result.get("messages", [])
-    
-    for m in messages:
-        snippet = m.get("snippet", "").lower()
+    try:
+        thread = await mcp.get_email_thread(thread_id=thread_id, token=access_token)
+        messages = thread.get("messages", [])
+        if len(messages) <= 1:
+            return  # Only the original message exists
 
-        if any(kw in snippet for kw in INTERVIEW_KEYWORDS):
-            # Interview detected!
-            # 2. Update DB
+        # Analyze the latest message from the recruiter
+        latest_message = messages[-1]
+        snippet = latest_message.get("snippet", "")
+        
+        classification = await _classify_reply(snippet)
+
+        if classification == "INTERVIEW":
+            # 1. Update DB
             now_iso = datetime.now(timezone.utc).isoformat()
-            get_supabase().table("job_applications").update(
-                {
-                    "interview_detected": True,
-                    "interview_detected_at": now_iso,
-                }
-            ).eq("id", app_id).execute()
+            get_supabase().table("job_applications").update({
+                "interview_detected": True,
+                "interview_detected_at": now_iso,
+                "follow_up_stopped": True
+            }).eq("id", app_id).execute()
 
-            # 3. Create Calendar Event (simplified via MCP if available, else omit for now)
-            # Future enhancement: `mcp.create_calendar_event(...)`
-            # For now we stub out the direct HTTPx calendar request since MCP is preferred.
-            event = {
-                "summary": f"Interview: {job_title} @ {company}",
-                "start": {
-                    "dateTime": (
-                        datetime.now(timezone.utc) + timedelta(days=1)
-                    ).isoformat()
-                },
-                "end": {
-                    "dateTime": (
-                        datetime.now(timezone.utc) + timedelta(days=1, hours=1)
-                    ).isoformat()
-                },
-            }
-            # If there was a calendar call, we dispatch it via HTTPx still, 
-            # unless a calendar MCP is provided
+            # 2. Extract specific time and Create Calendar Event via MCP
+            event_details = await _extract_event_details(str(messages))
+            
+            await mcp.create_calendar_event(
+                summary=event_details.get("summary", f"Interview: {job_title} @ {company}"),
+                start_time=event_details.get("start_time"),
+                end_time=event_details.get("end_time"),
+                token=access_token,
+                description=f"Automated booking for {job_title}. Classified from email thread {thread_id}."
+            )
+
+            # 3. Notify user via S1
+            s1_url = os.environ["SERVER1_URL"]
             async with httpx.AsyncClient() as client:
-                await client.post(
-                    "https://www.googleapis.com/calendar/v3/calendars/primary/events",
-                    json=event,
-                    headers={"Authorization": f"Bearer {access_token}"},
-                )
-
-                # 4. Notify user via S1
-                s1_url = os.environ["SERVER1_URL"]
                 await client.post(
                     f"{s1_url}/internal/notify",
                     json={
                         "type": "interview_detected",
                         "app_id": app_id,
                         "user_id": user_id,
+                        "details": f"New interview for {job_title} at {company}!"
                     },
                     headers={"x-agent-secret": os.environ["AGENT_SECRET"]},
                 )
 
-                # 5. Draft thank-you email
-                thank_you_prompt = f"Draft a professional thank-you email to be sent after an interview for {job_title} at {company}. Tone: Gracious and enthusiastic."
-                thank_you_draft = await sarvam.complete(
-                    thank_you_prompt, mode="precise"
-                )
-                get_supabase().table("job_applications").update(
-                    {"thank_you_draft": thank_you_draft}
-                ).eq("id", app_id).execute()
+        elif classification == "REJECTION":
+            get_supabase().table("job_applications").update({
+                "status": "rejected",
+                "follow_up_stopped": True
+            }).eq("id", app_id).execute()
 
-                # 6. Learning signal
-                get_supabase().table("learning_signals").insert(
-                    {
-                        "user_id": user_id,
-                        "type": "interview_detected",
-                        "payload": {"app_id": app_id, "company": company},
-                    }
-                ).execute()
+        elif classification == "NEUTRAL":
+            # Just notify, don't stop follow-up unless user intervenes? 
+            # Actually, if they replied, we should probably stop the automated sequence to avoid尷尬
+            get_supabase().table("job_applications").update({
+                "follow_up_stopped": True
+            }).eq("id", app_id).execute()
 
-                break  # Only handle one per run for now
+    except Exception as e:
+        print(f"Error in thread analysis for {app_id}: {e}")
 
 
 # ─── Main Run Logic ───────────────────────────────────────────────────────────
@@ -273,6 +310,7 @@ async def run_follow_up() -> dict:
                         app["job_title"],
                         app["company_name"],
                         access_token,
+                        app.get("follow_up_thread_id")
                     )
 
                     # Logic for sending next email sequence
@@ -334,12 +372,71 @@ async def run_follow_up() -> dict:
                     .execute()
                 )
                 for app in li_apps.data or []:
-                    # Placeholder for MCP Playwright LinkedIn logic
-                    # 1. Search recruiter -> connection request
-                    # 2. If accepted -> send message
-                    # After each action: _increment_linkedin_actions()
-                    pass
-
+                    try:
+                        app_user_id = app["user_id"]
+                        recruiter_url = app.get("recruiter_linkedin_url")
+                        
+                        if not recruiter_url:
+                            continue
+                            
+                        # Refresh LinkedIn Session via decrypting from DB
+                        conn = get_supabase().table("user_connections").select("session_encrypted").eq("user_id", app_user_id).eq("platform", "linkedin").single().execute()
+                        if not conn.data:
+                            continue
+                            
+                        session = decrypt_session(conn.data["session_encrypted"])
+                        cookies = session.get("cookies", [])
+                        
+                        mcp = MCPWrapper()
+                        
+                        # Stage logic: 
+                        # If stage == 0 -> Send Connection Request
+                        # If stage > 0 -> Send Follow-up Message
+                        stage = app.get("follow_up_stage", 0)
+                        
+                        if stage == 0:
+                            # 1. Connection Request
+                            msg = await sarvam.complete(f"Write a very brief (under 300 chars) LinkedIn connection request note to recruiter {app.get('recruiter_name', 'Recruiter')} regarding the {app.get('job_title')} role at {app.get('company_name')}. Be extremely professional and brief.", mode="precise")
+                            
+                            playwright_args = {
+                                "action": "connect",
+                                "note": msg[:299] # LinkedIn hard limit
+                            }
+                            
+                            res = await mcp.browse_page(
+                                task=f"Go to {recruiter_url} and send a connection request with note: {playwright_args['note']}",
+                                url=recruiter_url,
+                                cookies=cookies
+                            )
+                            
+                        else:
+                            # 2. Follow-up Message (assumes connected)
+                            msg = await sarvam.complete(f"Write a brief LinkedIn follow-up message to {app.get('recruiter_name', 'Recruiter')} checking in on the {app.get('job_title')} application at {app.get('company_name')}. Professional but conversational.", mode="precise")
+                            
+                            res = await mcp.browse_page(
+                                task=f"Go to {recruiter_url}, click Message, and send: {msg}",
+                                url=recruiter_url,
+                                cookies=cookies
+                            )
+                        
+                        # Check success and log action
+                        if res.get("status") != "error":
+                            await _increment_linkedin_actions()
+                            
+                            new_stage = stage + 1
+                            update_data = {
+                                "follow_up_stage": new_stage,
+                                "follow_up_last_sent_at": datetime.now(timezone.utc).isoformat(),
+                            }
+                            if new_stage >= 2:
+                                update_data["follow_up_stopped"] = True
+                                
+                            get_supabase().table("job_applications").update(update_data).eq("id", app["id"]).execute()
+                            records_processed += 1
+                            
+                    except Exception as e:
+                        await log_fail(run_id, f"LinkedIn App {app.get('id')} error: {e}", int((time.time() - start) * 1000))
+                        
         duration_ms = int((time.time() - start) * 1000)
         await log_end(run_id, records_processed, duration_ms)
         return {

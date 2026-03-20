@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from typing import Literal, Optional
 
 from middleware.auth import verify_agent_secret
-from agents.agent13_anti_ban import run_anti_ban
+from skills.anti_ban_checker import check_risk as run_anti_ban
 
 router = APIRouter()
 

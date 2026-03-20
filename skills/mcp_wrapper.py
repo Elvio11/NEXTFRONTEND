@@ -92,14 +92,33 @@ class MCPWrapper:
 
     async def send_email(self, to: str, subject: str, body: str, token: Optional[str] = None) -> Dict[str, Any]:
         """Wrapper for Gmail MCP - Send email"""
-        args = {"action": "send", "to": to, "subject": subject, "body": body}
+        args = {"to": to, "subject": subject, "body": body}
         if token:
             args["token"] = token
-        return await self.run_tool("mcp-gmail", args)
+        return await self.run_tool("gmail", args)
 
     async def search_email(self, query: str, token: Optional[str] = None) -> Dict[str, Any]:
         """Wrapper for Gmail MCP - Search emails"""
-        args = {"action": "search", "query": query}
+        args = {"query": query}
         if token:
             args["token"] = token
-        return await self.run_tool("mcp-gmail", args)
+        return await self.run_tool("gmail", args)
+
+    async def get_email_thread(self, thread_id: str, token: str) -> Dict[str, Any]:
+        """Wrapper for Gmail MCP - Get thread"""
+        return await self.run_tool("gmail", {"thread_id": thread_id, "token": token})
+
+    async def create_calendar_event(
+        self, summary: str, start_time: str, end_time: str, token: str, description: str = ""
+    ) -> Dict[str, Any]:
+        """Wrapper for Google Calendar MCP - Create calendar event"""
+        return await self.run_tool(
+            "google-calendar",
+            {
+                "summary": summary,
+                "start_time": start_time,
+                "end_time": end_time,
+                "token": token,
+                "description": description,
+            },
+        )

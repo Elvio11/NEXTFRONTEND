@@ -25,7 +25,10 @@ logger = logging.getLogger("server3_startup")
 logger.info(f"[BOOT] Python {sys.version}")
 logger.info(f"[BOOT] Starting Talvix Server 3...")
 
+from dotenv import load_dotenv
 import os
+
+load_dotenv() # Load local .env before default sets
 
 # ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
 # setdefault() only sets if the key is NOT already in the environment.
@@ -150,7 +153,7 @@ async def health():
     ]
     env_status = {
         k: "SET"
-        if os.environ.get(k) and "placeholder" not in os.environ.get(k, "")
+        if os.environ.get(k) and "placeholder" not in os.environ.get(k, "placeholder")
         else "MISSING"
         for k in required
     }

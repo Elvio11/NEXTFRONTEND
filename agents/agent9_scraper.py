@@ -1,14 +1,15 @@
 """
 agents/agent9_scraper.py
-Agent 9 — Job Scraper.
+Agent 9 — Job Scraper (V4 + MCP).
 
-Orchestrates:
-  - jobspy_runner (5 platforms): Indeed, LinkedIn, Glassdoor, Naukri, etc.
-  - custom_scraper (7 Indian sites): Shine, Monster, TimesJobs, Freshersworld, Hirist, Internshala, Unstop
-  - free_api_scrapers (3 APIs): Adzuna (India), Himalayas (Remote), Remotive (Remote)
+Orchestrates a consolidated scraping layer:
+  - Firecrawl MCP (Job Boards): Indeed, LinkedIn, Glassdoor, Naukri, Freshersworld, Hirist, etc.
+  - Free API Scrapers: Adzuna (India), Himalayas (Remote), Remotive (Remote)
 
-All sources run concurrently. One failure never blocks others.
-
+All sources run concurrently via official MCP and direct APIs.
+Deduplication and India remote filtering handled via skills/fingerprint and skills/remote_filter.
+"""
+"""
 For each job returned:
   - Compute SHA-256 fingerprint
   - If duplicate: UPDATE last_seen_at only
@@ -20,9 +21,9 @@ After completion: HTTP POST to Server 2 /api/agents/jd-clean to trigger Agent 7.
 LinkedIn: kill switch checked BEFORE passing LinkedIn to jobspy_runner.
 
 Pool Tier Assignment:
-  - Adzuna → Pool Tier 1 (India Domestic)
-  - Himalayas → Pool Tier 2 (Verified Global Remote) - via locationRestrictions
-  - Remotive → Pool Tier 2 (Verified Global Remote)
+  - Adzuna -> Pool Tier 1 (India Domestic)
+  - Himalayas -> Pool Tier 2 (Verified Global Remote) - via locationRestrictions
+  - Remotive -> Pool Tier 2 (Verified Global Remote)
 """
 
 import asyncio
@@ -37,9 +38,8 @@ import httpx
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
 from skills.fingerprint import compute_fingerprint, check_duplicate
-from skills.jobspy_runner import run_jobspy
-from skills.custom_scraper import run_custom_scrapers
 from skills.free_api_scrapers import run_free_api_scrapers
+from skills.firecrawl_scraper import run_firecrawl_scrapers
 from skills.storage_client import put_text
 from skills.remote_filter import (
     load_remote_filter_patterns,
@@ -151,9 +151,7 @@ async def _trigger_jd_clean(scrape_run_id: str) -> None:
 
 
 async def run_scraper(
-    sources: list[str],
-    custom_sources: list[str],
-    free_api_sources: list[str] | None = None,
+    free_api_sources: list[str] = ["adzuna", "himalayas", "remotive"],
     max_per_source: int = 5000,
     search_term: str = "software engineer",
     location: str = "India",
@@ -174,71 +172,44 @@ async def run_scraper(
 
     await log_start("agent9_scraper", None, run_id)
 
-    jobs_inserted = 0
-    jobs_updated = 0
-    all_failures = []
-    source_counts = {}
-    linkedin_skipped = False
+    jobs_inserted: int = 0
+    jobs_updated: int = 0
+    all_failures: list = []
+    source_counts: dict = {}
 
     try:
-        # ── Run all sources concurrently ────────────────────────────────────
-        jobspy_task = run_jobspy(run_id, sources, max_per_source, search_term, location)
-        custom_task = run_custom_scrapers(
-            run_id, custom_sources, search_term, location.lower(), max_per_source // 10
+        free_api_task = run_free_api_scrapers(
+            run_id,
+            free_api_sources,
+            search_term,
+            location.lower(),
+            max_per_source // 10,
         )
 
-        # Run free API scrapers (Adzuna, Himalayas, Remotive) if configured
-        free_api_task = None
-        if free_api_sources:
-            free_api_task = run_free_api_scrapers(
-                run_id,
-                free_api_sources,
-                search_term,
-                location.lower(),
-                max_per_source // 10,
-            )
+        firecrawl_task = run_firecrawl_scrapers(
+            search_term=search_term,
+            location=location
+        )
 
-        # Gather all tasks
-        if free_api_task:
-            jobspy_result, custom_result, free_api_result = await asyncio.gather(
-                jobspy_task, custom_task, free_api_task, return_exceptions=True
-            )
-        else:
-            jobspy_result, custom_result = await asyncio.gather(
-                jobspy_task, custom_task, return_exceptions=True
-            )
-            free_api_result = None
+        free_api_result, firecrawl_jobs = await asyncio.gather(
+            free_api_task, 
+            firecrawl_task,
+            return_exceptions=True
+        )
 
-        # Process JobSpy results
-        if isinstance(jobspy_result, Exception):
-            all_failures.append(f"jobspy: {str(jobspy_result)[:100]}")
-            all_jobs_from_jobspy = []
-        else:
-            linkedin_skipped = jobspy_result.get("linkedin_skipped", False)
-            all_jobs_from_jobspy = jobspy_result.get("jobs", [])
-            source_counts.update(jobspy_result.get("source_counts", {}))
-            all_failures.extend(jobspy_result.get("failures", []))
+        # Process results
+        all_jobs_from_free_api: list = []
+        if isinstance(free_api_result, dict):
+            all_jobs_from_free_api = free_api_result.get("jobs", [])
+            source_counts.update(free_api_result.get("source_counts", {}))
+            all_failures.extend(free_api_result.get("failures", []))
+        
+        # Ensure firecrawl_jobs is a list even on error
+        safe_firecrawl_jobs: list = []
+        if isinstance(firecrawl_jobs, list):
+            safe_firecrawl_jobs = firecrawl_jobs
 
-        # Process custom results
-        if isinstance(custom_result, Exception):
-            all_failures.append(f"custom: {str(custom_result)[:100]}")
-            all_jobs_from_custom = []
-        else:
-            all_jobs_from_custom = custom_result.get("jobs", [])
-            source_counts.update(custom_result.get("source_counts", {}))
-            all_failures.extend(custom_result.get("failures", []))
-
-        # Process free API results
-        all_jobs_from_free_api = []
-        if free_api_result is not None:
-            if isinstance(free_api_result, Exception):
-                all_failures.append(f"free_api: {str(free_api_result)[:100]}")
-            else:
-                all_jobs_from_free_api = free_api_result.get("jobs", [])
-                source_counts.update(free_api_result.get("source_counts", {}))
-                all_failures.extend(free_api_result.get("failures", []))
-
-        all_jobs = all_jobs_from_jobspy + all_jobs_from_custom + all_jobs_from_free_api
+        all_jobs = all_jobs_from_free_api + safe_firecrawl_jobs
 
         # ── Apply India Remote Filter ─────────────────────────────────────────
         # Load patterns from database
@@ -250,8 +221,8 @@ async def run_scraper(
         for job in all_jobs:
             # Compute remote viability score and pool tier
             remote_score, pool_tier = compute_remote_scores(job, compiled_patterns)
-            job["remote_viability_score"] = remote_score
-            job["pool_tier"] = pool_tier
+            job["remote_viability_score"] = float(remote_score)
+            job["pool_tier"] = int(pool_tier)
 
             # Legacy behavior: if location contains "India" and title/jd contains "Remote",
             # set source location to "Remote — India" and work_mode to "remote"
@@ -303,7 +274,6 @@ async def run_scraper(
             "jobs_inserted": jobs_inserted,
             "jobs_updated": jobs_updated,
             "deduped": jobs_updated,
-            "linkedin_skipped": linkedin_skipped,
             "source_failures": all_failures,
             "run_id": run_id,
             "duration_ms": duration_ms,

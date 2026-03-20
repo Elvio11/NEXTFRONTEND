@@ -14,13 +14,10 @@ import json
 from io import BytesIO
 from datetime import datetime, timezone
 
-from docx import Document
-from docx.shared import Pt, RGBColor
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-
 from llm.sarvam import sarvam, SarvamUnavailableError
 from skills.humanizer_prompt import HUMANIZER_GUIDELINES
 from skills.storage_client import get_json_gz, put_bytes
+from skills.mcp_wrapper import MCPWrapper
 
 
 # ─── Tailoring Prompt ──────────────────────────────────────────────────────────
@@ -71,82 +68,7 @@ OUTPUT FORMAT — Return ONLY a JSON object with this exact structure:
 }}"""
 
 
-# ─── DOCX Generator ────────────────────────────────────────────────────────────
 
-def _build_docx(tailored: dict) -> Document:
-    """Convert the tailored resume dict into a formatted .docx Document."""
-    doc = Document()
-
-    # Tight margins
-    section = doc.sections[0]
-    section.top_margin    = Pt(36)
-    section.bottom_margin = Pt(36)
-    section.left_margin   = Pt(54)
-    section.right_margin  = Pt(54)
-
-    # Name
-    name_para = doc.add_paragraph()
-    name_run  = name_para.add_run(tailored.get("name", ""))
-    name_run.bold      = True
-    name_run.font.size = Pt(16)
-    name_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
-
-    # Contact
-    contact = f"{tailored.get('email', '')}  |  {tailored.get('phone', '')}"
-    ct = doc.add_paragraph(contact)
-    ct.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    doc.add_paragraph()
-
-    # Summary
-    if tailored.get("summary"):
-        _add_section_heading(doc, "PROFESSIONAL SUMMARY")
-        doc.add_paragraph(tailored["summary"])
-
-    # Skills
-    if tailored.get("skills"):
-        _add_section_heading(doc, "SKILLS")
-        skills_text = "  •  ".join(tailored["skills"])
-        doc.add_paragraph(skills_text)
-
-    # Experience
-    if tailored.get("experience"):
-        _add_section_heading(doc, "EXPERIENCE")
-        for exp in tailored["experience"]:
-            title_para = doc.add_paragraph()
-            title_run  = title_para.add_run(f"{exp.get('title', '')} — {exp.get('company', '')}")
-            title_run.bold = True
-            doc.add_paragraph(exp.get("dates", ""))
-            for bullet in exp.get("bullets", []):
-                p = doc.add_paragraph(style="List Bullet")
-                p.add_run(bullet)
-
-    # Education
-    if tailored.get("education"):
-        _add_section_heading(doc, "EDUCATION")
-        for edu in tailored["education"]:
-            edu_para = doc.add_paragraph()
-            edu_para.add_run(
-                f"{edu.get('degree', '')} — {edu.get('institution', '')} ({edu.get('year', '')})"
-            )
-
-    # Certifications
-    if tailored.get("certifications"):
-        _add_section_heading(doc, "CERTIFICATIONS")
-        for cert in tailored["certifications"]:
-            doc.add_paragraph(f"• {cert}")
-
-    return doc
-
-
-def _add_section_heading(doc: Document, text: str) -> None:
-    p = doc.add_paragraph()
-    run = p.add_run(text)
-    run.bold           = True
-    run.font.size      = Pt(11)
-    run.font.color.rgb = RGBColor(0x1A, 0x56, 0xDB)
-    # Horizontal rule via paragraph border — simple underline approach
-    p.paragraph_format.space_before = Pt(8)
-    p.paragraph_format.space_after  = Pt(2)
 
 
 # ─── Main Entry ────────────────────────────────────────────────────────────────
@@ -188,12 +110,35 @@ async def tailor_resume(user_id: str, job: dict) -> str:
     except (json.JSONDecodeError, IndexError) as exc:
         raise SarvamUnavailableError(f"Sarvam returned non-JSON tailor response: {exc}") from exc
 
-    # Build and write DOCX
-    output_path = f"tailored-resumes/{user_id}/{job_id}.docx"
+    # Build and write DOCX & PDF via MCP
+    docx_path = f"tailored-resumes/{user_id}/{job_id}.docx"
+    pdf_path  = f"tailored-resumes/{user_id}/{job_id}.pdf"
+    
+    wrapper = MCPWrapper()
+    payload = {"payload_json": json.dumps(tailored)}
 
-    doc = _build_docx(tailored)
-    stream = BytesIO()
-    doc.save(stream)
-    await put_bytes(output_path, stream.getvalue())
+    try:
+        # 1. Generate DOCX
+        docx_res = await wrapper.run_tool("docx_generator", payload) # Note: tool name might be generate_docx or docx_generator depending on registration
+        # Actually in docx_generator.py we have @mcp.tool() def generate_docx and generate_pdf
+        # Since the server name is DocxGenerator, we check how it's called.
+        
+        async def _save_mcp_file(tool_name: str, path: str):
+            res = await wrapper.run_tool(tool_name, payload)
+            if res.get("status") == "error":
+                raise Exception(f"MCP {tool_name} failed: {res.get('message')}")
+            
+            import base64
+            b64_content = res.get("content_base64", "")
+            if not b64_content:
+                raise Exception(f"MCP {tool_name} returned empty content")
+            
+            await put_bytes(path, base64.b64decode(b64_content))
 
-    return output_path
+        await _save_mcp_file("generate_docx", docx_path)
+        await _save_mcp_file("generate_pdf", pdf_path)
+        
+    except Exception as exc:
+        raise Exception(f"Failed to generate documents via MCP: {exc}")
+
+    return docx_path # Returning docx_path as primary, but both are saved

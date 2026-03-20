@@ -2,8 +2,8 @@
 agents/agent12_applier.py
 Agent 12 — Auto-Applier.
 
-The most complex Server 3 agent. Orchestrates the full auto-apply pipeline:
-  eligibility gating → job selection → anti-ban → Selenium apply → DB record → WA notification
+Orchestrates the full auto-apply pipeline (V4 + MCP):
+  eligibility gating → job selection → anti-ban → MCP Playwright apply → DB record → WA notification
 
 Eligibility gates (ALL must pass — in order):
   1. subscription_tier = 'professional'
@@ -16,10 +16,10 @@ Job selection: job_fit_scores WHERE fit_score >= 60, ORDER BY fit_score DESC.
 Skip if: already applied to job, company in user blacklist.
 
 For each job:
-  1. Call Agent 13 (anti-ban) HTTP endpoint — abort if proceed=False
-  2. Inject decrypted session into browser
-  3. Apply via apply_engine (indeed_easy or linkedin_easy)
-  4. del decrypted session variable immediately after use
+  1. Call Agent 13 (anti-ban) — logic now integrated into MCP adaptive delay
+  2. MCP Wrapper handles session injection into browser
+  3. Apply via apply_engine (indeed_easy or linkedin_easy) via Playwright MCP
+  4. Session data cleared immediately after use
   5. INSERT job_applications row
   6. Increment daily_apply_count, monthly_apply_count
   7. LinkedIn: increment system_daily_limits.total_linkedin_actions
@@ -268,7 +268,7 @@ async def run_applier(
     Main entry point for Agent 12 Auto-Applier.
 
     Applies to up to max_applies Tier 1 jobs for the user within tonight's window.
-    All eligibility checks are enforced before any Selenium action.
+    All eligibility checks are enforced before any MCP Playwright action.
     """
     run_id = new_run_id()
     start = time.time()
@@ -296,7 +296,7 @@ async def run_applier(
             get_supabase()
             .table("users")
             .select(
-                "id, subscription_tier, wa_opted_in, auto_apply_enabled, auto_apply_paused, daily_apply_limit, auto_apply_activated_at"
+                "id, subscription_tier, wa_opted_in, auto_apply_enabled, auto_apply_paused, daily_apply_limit, auto_apply_activated_at, name, email, phone"
             )
             .eq("id", user_id)
             .single()
@@ -549,10 +549,12 @@ async def run_applier(
             try:
                 if apply_method == "linkedin_easy":
                     apply_result = await apply_linkedin_easy(
-                        session_data, job, {}, run_id
+                        session_data, job, u, run_id
                     )
                 else:
-                    apply_result = await apply_indeed_easy(session_data, job, {}, run_id)
+                    apply_result = await apply_indeed_easy(
+                        session_data, job, u, run_id
+                    )
 
                 # Clear session data as directed by security rules
                 if session_data:

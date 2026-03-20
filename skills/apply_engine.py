@@ -1,18 +1,13 @@
 """
 skills/apply_engine.py
-Selenium-based job application automation for Tier 1 platforms:
+V4 Reactive Apply Engine (MCP + Playwright).
+
+Automates 'Easy Apply' flows on Tier 1 platforms:
   - Indeed Easy Apply
   - LinkedIn Easy Apply
 
-CRITICAL RULES (never violate):
-  1. Anti-ban check FIRST — abort if proceed=False
-  2. WebDriverWait everywhere — ZERO time.sleep()
-  3. Randomise delays between field fills (0.5–2.5s via random.uniform)
-  4. Screenshot on EVERY exception → /storage/screenshots/{run_id}/{job_id}.png
-  5. LinkedIn: check kill switch AND increment total_linkedin_actions after apply
-  6. driver.quit() in finally — handled by browser_pool context manager
-
-Each function returns: {"status": "applied"|"failed", "screenshot_path": str|None}
+Logic now features a reactive human-in-the-loop (via Sarvam-M) Q&A system
+integrated directly into the Playwright MCP interaction layer.
 """
 
 import asyncio
@@ -25,6 +20,7 @@ from db.client import get_supabase
 from skills.storage_client import put_bytes
 from skills.anti_ban_checker import check_linkedin_limit
 from skills.mcp_wrapper import MCPWrapper
+from llm.sarvam import sarvam
 
 
 # ─── Constants ─────────────────────────────────────────────────────────────────
@@ -70,30 +66,53 @@ async def apply_indeed_easy(
 
     try:
         mcp = MCPWrapper()
+        from llm.sarvam import sarvam
         
-        # Build a robust AI task instruction for the Playwright agent
-        task = f"""
-        Navigate to {apply_url}. 
-        Click 'Apply now' or 'Easy Apply'.
-        If a multi-step form appears, automatically advance through it using these details:
-        Name: {user.get("name", "John Doe")}
-        Email: {user.get("email", "john@example.com")}
-        Phone: {user.get("phone", "555-0100")}
-        Always click 'Continue', 'Next', or 'Submit' until you see an application submitted success state.
-        Wait for confirmation that the application is fully submitted.
-        Return success only when you confirm submission, otherwise error.
-        """
+        # Initial standard info
+        user_info = f"Name: {user.get('name')}, Email: {user.get('email')}, Phone: {user.get('phone')}"
+        resume_content = user.get("resume_text", "No resume provided.")
         
-        # Cookies extraction
-        cookies = session_data.get("cookies", []) if session_data else None
+        # Reactive Q&A Loop
+        max_steps = 10
+        current_step = 0
+        while current_step < max_steps:
+            task = f"""
+            Navigate to {apply_url} (if not already there).
+            Advance the application. If you hit a question you can't answer with standard info ({user_info}), 
+            stop immediately and return 'NEED_ANSWER: [Question Text]'.
+            Otherwise, click 'Continue', 'Next', or 'Submit' until finished.
+            Return 'SUCCESS' if fully submitted.
+            """
+            
+            cookies = session_data.get("cookies", []) if session_data else None
+            result = await mcp.browse_page(task=task, url=apply_url, cookies=cookies)
+            
+            output = str(result.get("content") or result.get("text") or result)
+            
+            if "SUCCESS" in output:
+                return {"status": "applied", "screenshot_path": None, "failure_note": None}
+            
+            if "NEED_ANSWER:" in output:
+                parts = output.split("NEED_ANSWER:")
+                if len(parts) > 1:
+                    question = parts[1].strip()
+                    # Ask Sarvam for the answer based on resume
+                    ans_prompt = f"Using this resume: {resume_content}\n\nAnswer this job application question as concisely as possible: {question}"
+                    answer = await sarvam.complete(ans_prompt, mode="precise")
+                    
+                    # Update user_info with the new answer for the next iteration
+                    user_info += f", {question}: {answer}"
+                    current_step += 1
+                    continue
+            
+            if result.get("error"):
+                error_val = result.get("error")
+                error_str = str(error_val) if error_val else "Unknown error"
+                return {"status": "failed", "screenshot_path": None, "failure_note": error_str[:300]}
+                
+            break # Finished or stuck without explicit NEED_ANSWER
 
-        result = await mcp.browse_page(task=task, url=apply_url, cookies=cookies)
-        
-        if result and not result.get("error"):
-            # MCP succeeded
-            return {"status": "applied", "screenshot_path": None, "failure_note": None}
-        else:
-            return {"status": "failed", "screenshot_path": None, "failure_note": str(result.get("error"))[:300]}
+        return {"status": "failed", "screenshot_path": None, "failure_note": "Application timed out or stalled."}
 
     except Exception as exc:
         return {"status": "failed", "screenshot_path": None, "failure_note": str(exc)[:300]}
@@ -126,29 +145,51 @@ async def apply_linkedin_easy(
 
     try:
         mcp = MCPWrapper()
-        
-        # Build a robust AI task instruction for the Playwright agent
-        task = f"""
-        Navigate to {apply_url}. 
-        Click 'Easy Apply'.
-        Advance through the multi-step form up to 8 times using 'Next', 'Continue', or 'Review'.
-        Click 'Submit application' when reached.
-        Verify that the application was successfully submitted by checking for the success banner/modal.
-        If it asks for missing complex information (like unique screening questions), handle them intelligently or gracefully error.
-        Return success only when application is fully submitted.
-        """
-        
-        # Cookies extraction
-        cookies = session_data.get("cookies", []) if session_data else None
+        from llm.sarvam import sarvam
 
-        result = await mcp.browse_page(task=task, url=apply_url, cookies=cookies)
-        
-        if result and not result.get("error"):
-            # Increment LinkedIn counter
-            _increment_linkedin_counter()
-            return {"status": "applied", "screenshot_path": None, "failure_note": None}
-        else:
-            return {"status": "failed", "screenshot_path": None, "failure_note": str(result.get("error"))[:300]}
+        user_info = f"Full Name: {user.get('name')}, Email: {user.get('email')}, Phone: {user.get('phone')}"
+        resume_content = user.get("resume_text", "No resume provided.")
+
+        max_steps = 12
+        current_step = 0
+        while current_step < max_steps:
+            task = f"""
+            Navigate to {apply_url} (if not already there).
+            Click 'Easy Apply'.
+            Advance through the form. If you hit a question requiring complex info beyond {user_info}, 
+            stop and return 'NEED_ANSWER: [Question text]'.
+            Otherwise, click 'Next', 'Continue', or 'Review' and then 'Submit application'.
+            Return 'SUCCESS' if fully submitted and you see the confirmation.
+            """
+            
+            cookies = session_data.get("cookies", []) if session_data else None
+            result = await mcp.browse_page(task=task, url=apply_url, cookies=cookies)
+            
+            output = str(result.get("content") or result.get("text") or result)
+
+            if "SUCCESS" in output:
+                _increment_linkedin_counter()
+                return {"status": "applied", "screenshot_path": None, "failure_note": None}
+
+            if "NEED_ANSWER:" in output:
+                parts = output.split("NEED_ANSWER:")
+                if len(parts) > 1:
+                    question = parts[1].strip()
+                    ans_prompt = f"Using this resume: {resume_content}\n\nAnswer this job application question for LinkedIn: {question}"
+                    answer = await sarvam.complete(ans_prompt, mode="precise")
+                    
+                    user_info += f", {question}: {answer}"
+                    current_step += 1
+                    continue
+
+            if result.get("error"):
+                error_val = result.get("error")
+                error_str = str(error_val) if error_val else "Unknown error"
+                return {"status": "failed", "screenshot_path": None, "failure_note": error_str[:300]}
+
+            break # Finished or stuck
+
+        return {"status": "failed", "screenshot_path": None, "failure_note": "LinkedIn application timed out or stalled."}
 
     except Exception as exc:
         return {"status": "failed", "screenshot_path": None, "failure_note": str(exc)[:300]}
