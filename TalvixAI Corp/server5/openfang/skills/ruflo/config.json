@@ -1,5 +1,0 @@
-{
-  "engine": "ruflo-v3.5",
-  "upstream": "Elvio11/claude-flow",
-  "sparc_modes": ["architect", "coder", "tester", "reviewer", "optimizer", "documenter"]
-}
