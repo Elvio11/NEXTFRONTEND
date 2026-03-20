@@ -57,3 +57,4 @@ memory.db
 branch-server1/
 branch-server2/
 branch-server3/
+.agent/
