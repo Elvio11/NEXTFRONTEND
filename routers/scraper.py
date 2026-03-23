@@ -38,8 +38,6 @@ class ScraperRequest(BaseModel):
 )
 async def scraper_endpoint(body: ScraperRequest):
     return await run_scraper(
-        sources=body.sources,
-        custom_sources=body.custom_sources,
         free_api_sources=body.free_api_sources,
         max_per_source=body.max_per_source,
         search_term=body.search_term,

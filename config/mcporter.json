@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp"]
+    },
+    "firecrawl": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/firecrawl_mcp.py"]
+    },
+    "markitdown": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server2/mcp_server_markitdown.py"] 
+    },
+    "tavily": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/tavily_mcp.py"] 
+    },
+    "GoogleSuite": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/google_suite.py"]
+    },
+    "SupabaseData": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/supabase_data_mcp.py"]
+    },
+    "supabase": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/supabase_mcp.py"]
+    },
+    "DocxGenerator": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/docx_generator.py"]
+    }
+  }
+}

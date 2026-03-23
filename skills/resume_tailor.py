@@ -100,8 +100,12 @@ async def tailor_resume(user_id: str, job: dict) -> str:
 
     # Parse Sarvam-M JSON response
     try:
-        # Strip markdown fences if present
         clean = raw.strip()
+        # Strip <think> block if present
+        if "<think>" in clean and "</think>" in clean:
+            clean = clean.split("</think>")[-1].strip()
+            
+        # Strip markdown fences if present
         if clean.startswith("```"):
             clean = clean.split("```")[1]
             if clean.startswith("json"):
@@ -118,27 +122,34 @@ async def tailor_resume(user_id: str, job: dict) -> str:
     payload = {"payload_json": json.dumps(tailored)}
 
     try:
-        # 1. Generate DOCX
-        docx_res = await wrapper.run_tool("docx_generator", payload) # Note: tool name might be generate_docx or docx_generator depending on registration
-        # Actually in docx_generator.py we have @mcp.tool() def generate_docx and generate_pdf
-        # Since the server name is DocxGenerator, we check how it's called.
-        
         async def _save_mcp_file(tool_name: str, path: str):
             res = await wrapper.run_tool(tool_name, payload)
-            if res.get("status") == "error":
-                raise Exception(f"MCP {tool_name} failed: {res.get('message')}")
+            
+            # MCPorter JSON output has a 'content' array with 'text'
+            if "content" in res and len(res["content"]) > 0:
+                text_content = res["content"][0].get("text", "")
+                try:
+                    tool_data = json.loads(text_content)
+                except:
+                    tool_data = {}
+            else:
+                # Fallback if raw dict returned
+                tool_data = res
+
+            if tool_data.get("status") == "error":
+                raise Exception(f"MCP {tool_name} failed: {tool_data.get('message')}")
             
             import base64
-            b64_content = res.get("content_base64", "")
+            b64_content = tool_data.get("content_base64", "")
             if not b64_content:
-                raise Exception(f"MCP {tool_name} returned empty content")
+                raise Exception(f"MCP {tool_name} returned empty content. Raw res: {res}")
             
             await put_bytes(path, base64.b64decode(b64_content))
 
-        await _save_mcp_file("generate_docx", docx_path)
-        await _save_mcp_file("generate_pdf", pdf_path)
+        await _save_mcp_file("DocxGenerator.generate_docx", docx_path)
+        await _save_mcp_file("DocxGenerator.generate_pdf", pdf_path)
         
     except Exception as exc:
         raise Exception(f"Failed to generate documents via MCP: {exc}")
 
-    return docx_path # Returning docx_path as primary, but both are saved
+    return docx_path, 0 # Returning (path, tokens)

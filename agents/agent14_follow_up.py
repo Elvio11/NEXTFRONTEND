@@ -228,7 +228,7 @@ async def _detect_interview_and_notify(
             get_supabase().table("job_applications").update({
                 "interview_detected": True,
                 "interview_detected_at": now_iso,
-                "follow_up_stopped": True
+                "fu_stopped": True
             }).eq("id", app_id).execute()
 
             # 2. Extract specific time and Create Calendar Event via MCP
@@ -248,7 +248,7 @@ async def _detect_interview_and_notify(
                 await client.post(
                     f"{s1_url}/internal/notify",
                     json={
-                        "type": "interview_detected",
+                        "message_type": "interview_detected",
                         "app_id": app_id,
                         "user_id": user_id,
                         "details": f"New interview for {job_title} at {company}!"
@@ -259,14 +259,14 @@ async def _detect_interview_and_notify(
         elif classification == "REJECTION":
             get_supabase().table("job_applications").update({
                 "status": "rejected",
-                "follow_up_stopped": True
+                "fu_stopped": True
             }).eq("id", app_id).execute()
 
         elif classification == "NEUTRAL":
             # Just notify, don't stop follow-up unless user intervenes? 
             # Actually, if they replied, we should probably stop the automated sequence to avoid尷尬
             get_supabase().table("job_applications").update({
-                "follow_up_stopped": True
+                "fu_stopped": True
             }).eq("id", app_id).execute()
 
     except Exception as e:
@@ -310,7 +310,7 @@ async def run_follow_up() -> dict:
                         app["job_title"],
                         app["company_name"],
                         access_token,
-                        app.get("follow_up_thread_id")
+                        app.get("fu_thread_id")
                     )
 
                     # Logic for sending next email sequence
@@ -339,7 +339,7 @@ async def run_follow_up() -> dict:
                             ).isoformat(),
                         }
                         if new_stage >= 2:
-                            update_data["follow_up_stopped"] = True
+                            update_data["fu_stopped"] = True
 
                         get_supabase().table("job_applications").update(update_data).eq(
                             "id", app["id"]
@@ -349,8 +349,8 @@ async def run_follow_up() -> dict:
                         get_supabase().table("learning_signals").insert(
                             {
                                 "user_id": app_user_id,
-                                "type": "follow_up_sent",
-                                "payload": {"app_id": app["id"], "stage": stage},
+                                "signal_type": "followup_email_sent",
+                                "context": {"app_id": app["id"], "stage": stage},
                             }
                         ).execute()
 
@@ -420,6 +420,7 @@ async def run_follow_up() -> dict:
                             )
                         
                         # Check success and log action
+                        output = str(res.get("content") or res.get("text") or res)
                         if res.get("status") != "error":
                             await _increment_linkedin_actions()
                             
@@ -428,8 +429,14 @@ async def run_follow_up() -> dict:
                                 "follow_up_stage": new_stage,
                                 "follow_up_last_sent_at": datetime.now(timezone.utc).isoformat(),
                             }
+                            
+                            if stage == 0:
+                                update_data["li_connection_sent_at"] = update_data["follow_up_last_sent_at"]
+                            else:
+                                update_data["li_message_sent_at"] = update_data["follow_up_last_sent_at"]
+
                             if new_stage >= 2:
-                                update_data["follow_up_stopped"] = True
+                                update_data["fu_stopped"] = True
                                 
                             get_supabase().table("job_applications").update(update_data).eq("id", app["id"]).execute()
                             records_processed += 1

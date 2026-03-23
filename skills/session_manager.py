@@ -24,10 +24,12 @@ from cryptography.hazmat.backends import default_backend
 
 def _get_key() -> bytes:
     """
-    Read SESSION_KEY from Doppler env at call time (lazy — never at import).
+    Read AES_SESSION_KEY from Doppler env at call time (lazy — never at import).
     Key must be exactly 32 bytes (256-bit). Hex-encoded 64-char string expected.
     """
-    raw = os.environ["SESSION_KEY"]
+    raw = os.environ.get("AES_SESSION_KEY") or os.environ.get("SESSION_KEY")
+    if not raw:
+        raise KeyError("Neither AES_SESSION_KEY nor SESSION_KEY found in environment")
     try:
         key_bytes = bytes.fromhex(raw)
         if len(key_bytes) != 32:

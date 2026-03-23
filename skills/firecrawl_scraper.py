@@ -26,17 +26,39 @@ async def run_firecrawl_scrapers(
     platforms: Optional[list[str]] = None
 ) -> list[dict]:
     """
-    Scrape targeted job boards using Firecrawl MCP.
+    Scrape targeted job boards using Firecrawl MCP with structured extraction.
     Returns: List of job dicts in standard format.
     """
     if platforms is None:
-        platforms = list(PLATFORM_URLS.keys())
+        # Exclude linkedin from firecrawl due to service blocks, will use jobspy
+        platforms = [p for p in PLATFORM_URLS.keys() if p != "linkedin"]
         
     wrapper = MCPWrapper()
     all_jobs = []
     
     query = search_term.lower().replace(" ", "%20")
     loc   = location.lower().replace(" ", "%20")
+    
+    job_schema = {
+        "type": "object",
+        "properties": {
+            "jobs": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string"},
+                        "company": {"type": "string"},
+                        "location": {"type": "string"},
+                        "city_canonical": {"type": "string"},
+                        "apply_url": {"type": "string"},
+                        "raw_jd": {"type": "string"}
+                    },
+                    "required": ["title", "company", "location"]
+                }
+            }
+        }
+    }
     
     for platform in platforms:
         url_template = PLATFORM_URLS.get(platform.lower())
@@ -46,45 +68,25 @@ async def run_firecrawl_scrapers(
         url = url_template.format(query=query, location=loc)
         
         try:
-            # Call firecrawl to scrape and convert to markdown
-            res = await wrapper.run_tool("firecrawl", {"url": url})
+            # Call firecrawl to scrape and extract as JSON
+            res = await wrapper.run_tool("firecrawl", {
+                "url": url,
+                "formats": ["extract"],
+                "schema": job_schema
+            })
             
-            # Firecrawl result usually has 'content' or 'markdown'
-            markdown = res.get("content") or res.get("data", {}).get("markdown", "")
-            if not markdown:
-                continue
+            # Firecrawl extract endpoint returns the raw JSON under data.extract
+            extracted_data = res.get("data", {}).get("extract", {})
+            jobs = extracted_data.get("jobs", [])
+            
+            # Add source tracking
+            for j in jobs:
+                j["source"] = "firecrawl_" + platform
                 
-            # Extract jobs via Sarvam-M for structured parsing
-            extracted = await _extract_jobs_from_markdown(markdown, url)
-            all_jobs.extend(extracted)
+            all_jobs.extend(jobs)
             
         except Exception as exc:
             print(f"Firecrawl scrape failed for {platform} ({url}): {exc}")
             
     return all_jobs
 
-
-async def _extract_jobs_from_markdown(markdown: str, source_url: str) -> list[dict]:
-    """Use Sarvam-M to extract structured job listings from raw markdown."""
-    from llm.sarvam import sarvam
-    
-    prompt = f"""
-    Extract all job listings from the following markdown content obtained from {source_url}.
-    For each job, extract: title, company, location, city_canonical, apply_url, and a brief raw_jd.
-    
-    MARKDOWN:
-    {markdown[:5000]}
-    
-    Return ONLY a JSON list of objects.
-    """
-    try:
-        raw = await sarvam.complete(prompt, mode="precise")
-        if "[" in raw:
-            jobs = json.loads(raw[raw.find("["):raw.rfind("]")+1])
-            # Add site info
-            for j in jobs:
-                j["source"] = source_url
-            return jobs
-        return []
-    except Exception:
-        return []

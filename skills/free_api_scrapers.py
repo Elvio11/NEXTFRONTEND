@@ -184,7 +184,7 @@ async def scrape_himalayas(
 
     try:
         async with httpx.AsyncClient(headers=_HEADERS, timeout=30.0) as client:
-            while len(jobs) < max_jobs:
+            while len(jobs) < max_jobs and page <= 20:
                 params = {
                     "search": search_term,
                     "page": page,
@@ -272,7 +272,7 @@ async def scrape_remotive(
 
     try:
         async with httpx.AsyncClient(headers=_HEADERS, timeout=30.0) as client:
-            while len(jobs) < max_jobs:
+            while len(jobs) < max_jobs and page <= 10:
                 params = {
                     "search": search_term,
                     "limit": 100,

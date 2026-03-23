@@ -150,6 +150,10 @@ async def health():
         "SUPABASE_SERVICE_ROLE_KEY",
         "AGENT_SECRET",
         "SESSION_KEY",
+        "S4_URL",
+        "MINIO_ROOT_USER",
+        "MINIO_ROOT_PASSWORD",
+        "MINIO_BUCKET",
     ]
     env_status = {
         k: "SET"

@@ -18,8 +18,8 @@ from typing import Literal
 GeminiMode = Literal["flash", "flash_lite"]
 
 _MODEL_MAP = {
-    "flash":      "gemini-1.5-flash",
-    "flash_lite": "gemini-1.5-flash-8b",
+    "flash":      "gemini-flash-latest",
+    "flash_lite": "gemini-flash-lite-latest",
 }
 
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"

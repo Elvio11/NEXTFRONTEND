@@ -46,5 +46,36 @@ async def get_gmail_thread(thread_id: str, token: str) -> dict:
             return {"status": "error", "message": resp.text}
         return resp.json()
 
+@mcp.tool()
+async def send_email(to: str, subject: str, body: str, token: str) -> dict:
+    """Sends an email using Gmail API."""
+    url = "https://gmail.googleapis.com/gmail/v1/users/me/messages/send"
+    headers = {"Authorization": f"Bearer {token}"}
+    import base64
+    from email.message import EmailMessage
+    message = EmailMessage()
+    message.set_content(body)
+    message["To"] = to
+    message["Subject"] = subject
+    encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    payload = {"raw": encoded_message}
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(url, json=payload, headers=headers)
+        if resp.status_code != 200:
+            return {"status": "error", "message": resp.text}
+        return {"status": "success"}
+
+@mcp.tool()
+async def search_email(query: str, token: str) -> dict:
+    """Searches Gmail for messages."""
+    url = f"https://gmail.googleapis.com/gmail/v1/users/me/messages"
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {"q": query}
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(url, headers=headers, params=params)
+        if resp.status_code != 200:
+            return {"status": "error", "message": resp.text}
+        return resp.json()
+
 if __name__ == "__main__":
     mcp.run()

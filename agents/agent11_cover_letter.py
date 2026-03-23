@@ -35,12 +35,12 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
         # ── Eligibility: student or professional tier ────────────────────────
         user_result = (
             get_supabase().table("users")
-            .select("id, subscription_tier, ai_generated_persona")
+            .select("id, tier, ai_generated_persona")
             .eq("id", user_id)
             .single()
             .execute()
         )
-        if not user_result.data or user_result.data.get("subscription_tier") not in ("student", "professional"):
+        if not user_result.data or user_result.data.get("tier") not in ("student", "professional"):
             await log_skip(run_id, "free_tier_user")
             return {"status": "skipped", "storage_path": None, "reason": "free_tier_user"}
 
@@ -50,7 +50,7 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
         # ── Fetch job details ────────────────────────────────────────────────
         job_result = (
             get_supabase().table("jobs")
-            .select("id, title, company, jd_summary, raw_jd")
+            .select("id, fingerprint, title, company, jd_summary")
             .eq("id", job_id)
             .single()
             .execute()
@@ -90,6 +90,13 @@ async def run_cover_letter(user_id: str, job_id: str) -> dict:
             "required_skills": required_skills,
             "missing_skills":  missing_skills,
         }
+
+        # Load raw JD as fallback/context
+        try:
+            from skills.storage_client import get_text
+            job["raw_jd"] = await get_text(f"jds/{job_result.data['fingerprint']}.txt")
+        except Exception:
+            job["raw_jd"] = job_result.data.get("jd_summary", "")
 
         # ── Generate cover letter ────────────────────────────────────────────
         storage_path = await write_cover_letter(user_id, job, persona)

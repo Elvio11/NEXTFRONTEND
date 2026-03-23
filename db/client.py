@@ -21,8 +21,13 @@ def get_supabase() -> Client:
     """
     global _supabase_client
     if _supabase_client is None:
+        # Check for both Doppler name (SUPABASE_SERVICE_KEY) and Supabase default (SUPABASE_SERVICE_ROLE_KEY)
+        service_key = os.environ.get("SUPABASE_SERVICE_KEY") or os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+        if not service_key:
+            raise KeyError("Neither SUPABASE_SERVICE_KEY nor SUPABASE_SERVICE_ROLE_KEY found in environment")
+            
         _supabase_client = create_client(
             os.environ["SUPABASE_URL"],
-            os.environ["SUPABASE_SERVICE_KEY"],  # Doppler key: SUPABASE_SERVICE_KEY
+            service_key,
         )
     return _supabase_client

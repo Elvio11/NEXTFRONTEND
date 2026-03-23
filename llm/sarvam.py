@@ -22,7 +22,7 @@ from typing import Literal
 SarvamMode = Literal["think", "no_think", "precise"]
 
 # Fixed cloud endpoint — never changes
-_BASE_URL = "https://api.sarvam.ai"
+_BASE_URL = "https://api.sarvam.ai/v1"
 
 _MODE_TO_EFFORT = {
     "think":    "high",

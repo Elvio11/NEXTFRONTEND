@@ -122,8 +122,8 @@ def compute_remote_scores(
     Compute remote_viability_score (0-3) and pool_tier (1-3) for a job.
     Returns (remote_viability_score, pool_tier).
     """
-    title_text = job.get("title", "").lower()
-    jd_text = job.get("raw_jd", "").lower()
+    title_text = str(job.get("title") or "").lower()
+    jd_text = str(job.get("raw_jd") or "").lower()
     search_text = f"{title_text} {jd_text}"
 
     # 0. Check Free API Sources for direct pool assignment

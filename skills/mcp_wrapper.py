@@ -6,6 +6,7 @@ Replaces heavy Python libraries (Selenium, PyPDF) with MCPorter CLI calls.
 import asyncio
 import json
 import logging
+import subprocess
 from typing import Any, Dict, Optional
 from tenacity import retry, stop_after_attempt, wait_exponential
 
@@ -31,16 +32,37 @@ class MCPWrapper:
         """
         import subprocess
         try:
-            # Construct command: mcporter run <tool> --json <args>
-            cmd = [self.mcporter_path, "run", tool_name, "--json"]
+            # Bypass .CMD wrapper on Windows to avoid shell corruption of complex JSON/URLs
+            import sys
+            import os
+            
+            # Find the direct JS entry point for mcporter
+            npm_root = "C:/Users/DELL/AppData/Roaming/npm/node_modules"
+            cli_js = f"{npm_root}/mcporter/dist/cli.js"
+            
+            # Determine MCP call target
+            if "." in tool_name:
+                call_target = tool_name
+            else:
+                # Default function names for popular services if not fully qualified
+                method_map = {
+                    "playwright": "browser_navigate",
+                    "firecrawl": "scrape",
+                    "markitdown": "extract",
+                    "tavily": "search"
+                }
+                call_target = f"{tool_name}.{method_map.get(tool_name, 'execute')}"
 
-            # Flatten args into CLI flags
-            for key, value in args.items():
-                cmd.extend([f"--{key}", str(value)])
+            # Consolidate all args into one JSON string
+            json_args = json.dumps(args)
+            
+            # Formulate direct node command
+            cmd = ["node", cli_js, "call", call_target, "--args", json_args, "--output", "json"]
+
+            logger.info(f"Executing direct Node MCP command: node {cli_js} call {call_target} --args <JSON> --output json")
 
             logger.info(f"Executing MCP command: {' '.join(cmd)}")
 
-            # Create subprocess asynchronously
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stdout=subprocess.PIPE,
@@ -58,11 +80,46 @@ class MCPWrapper:
             if proc.returncode != 0:
                 raise Exception(f"MCP Tool Error: {stderr.decode()}")
 
-            return json.loads(stdout.decode())
+            # Robust JSON extraction
+            raw_output = stdout.decode().strip()
+            try:
+                # Find the first { and last }
+                start_idx = raw_output.find('{')
+                end_idx = raw_output.rfind('}')
+                
+                if start_idx != -1 and end_idx != -1:
+                    json_part = raw_output[start_idx : end_idx + 1]
+                    try:
+                        return json.loads(json_part)
+                    except json.JSONDecodeError:
+                        # Fallback: Parse as JS literal using node -e
+                        logger.info("Parsing output as JS literal fallback...")
+                        # We use a temp file to avoid shell escaping issues with complex JS
+                        import tempfile
+                        with tempfile.NamedTemporaryFile(mode='w', suffix='.js', delete=False) as tf:
+                            tf.write(f"const obj = {json_part}; console.log(JSON.stringify(obj));")
+                            temp_path = tf.name
+                        
+                        try:
+                            js_proc = await asyncio.create_subprocess_exec(
+                                "node", temp_path,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE,
+                            )
+                            js_stdout, js_stderr = await asyncio.wait_for(js_proc.communicate(), timeout=30)
+                            if js_proc.returncode == 0:
+                                return json.loads(js_stdout.decode())
+                            else:
+                                logger.error(f"JS fallback failed: {js_stderr.decode()}")
+                        finally:
+                            if os.path.exists(temp_path):
+                                os.remove(temp_path)
+                
+                return json.loads(raw_output)
 
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse MCP output: {e}")
-            raise
+            except Exception as e:
+                logger.error(f"Failed to parse MCP output: {e}. Raw: {raw_output}")
+                raise
         except Exception as e:
             logger.error(f"MCP execution failed: {str(e)}")
             raise
@@ -95,25 +152,25 @@ class MCPWrapper:
         args = {"to": to, "subject": subject, "body": body}
         if token:
             args["token"] = token
-        return await self.run_tool("gmail", args)
+        return await self.run_tool("GoogleSuite.send_email", args)
 
     async def search_email(self, query: str, token: Optional[str] = None) -> Dict[str, Any]:
         """Wrapper for Gmail MCP - Search emails"""
         args = {"query": query}
         if token:
             args["token"] = token
-        return await self.run_tool("gmail", args)
+        return await self.run_tool("GoogleSuite.search_email", args)
 
     async def get_email_thread(self, thread_id: str, token: str) -> Dict[str, Any]:
         """Wrapper for Gmail MCP - Get thread"""
-        return await self.run_tool("gmail", {"thread_id": thread_id, "token": token})
+        return await self.run_tool("GoogleSuite.get_gmail_thread", {"thread_id": thread_id, "token": token})
 
     async def create_calendar_event(
         self, summary: str, start_time: str, end_time: str, token: str, description: str = ""
     ) -> Dict[str, Any]:
         """Wrapper for Google Calendar MCP - Create calendar event"""
         return await self.run_tool(
-            "google-calendar",
+            "GoogleSuite.create_calendar_event",
             {
                 "summary": summary,
                 "start_time": start_time,

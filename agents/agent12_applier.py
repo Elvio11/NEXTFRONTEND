@@ -142,7 +142,8 @@ def _determine_apply_method(job: dict, user_connections: dict) -> Optional[str]:
     Returns the apply method to use for this job: 'indeed_easy', 'linkedin_easy', or None.
     Checks if the user has a valid session for that platform.
     """
-    source = job.get("source", "").lower()
+    source = job.get("platform") or job.get("source") or ""
+    source = source.lower()
     apply_url = job.get("apply_url", "").lower()
 
     if "linkedin" in source or "linkedin" in apply_url:
@@ -236,12 +237,11 @@ def _record_application(
             "auto_status": auto_status,
             "tailored_resume_path": tailored_path,
             "cover_letter_path": cover_path,
-            "method": method,
-            "fit_score_at_apply": fit_score,
-            "applied_at": now_iso,
-            "fu_email_1_sent_at": None,
-            "fu_email_2_sent_at": None,
-            "fu_close_loop_sent_at": None,
+            "method": "auto",
+            "platform": method.split('_')[0],
+            "tier_at_apply": str(apply_tier),
+            "fit_score_at_apply": int(fit_score),
+            "applied_at": now_iso
         }
     ).execute()
 
@@ -296,7 +296,7 @@ async def run_applier(
             get_supabase()
             .table("users")
             .select(
-                "id, subscription_tier, wa_opted_in, auto_apply_enabled, auto_apply_paused, daily_apply_limit, auto_apply_activated_at, name, email, phone"
+                "id, tier, wa_opted_in, auto_apply_enabled, auto_apply_paused, daily_apply_limit, auto_apply_activated_at, full_name, email, wa_phone"
             )
             .eq("id", user_id)
             .single()
@@ -314,7 +314,7 @@ async def run_applier(
 
         u = user_result.data
 
-        subscription_tier = u.get("subscription_tier", "free")
+        subscription_tier = u.get("tier", "free")
 
         # Free tier: no applies allowed
         if subscription_tier == "free":
@@ -488,7 +488,7 @@ async def run_applier(
             job_result = (
                 get_supabase()
                 .table("jobs")
-                .select("id, title, company, company_canonical, apply_url, source")
+                .select("id, title, company, company_canonical, apply_url")
                 .eq("id", job_id)
                 .single()
                 .execute()
@@ -514,7 +514,7 @@ async def run_applier(
                 applied_jobs.append(
                     {
                         "job_id": job_id,
-                        "site": job.get("source", ""),
+                        "site": "unknown",
                         "status": "skipped",
                         "reason": "no_valid_session",
                     }

@@ -35,19 +35,19 @@ async def run_tailor(user_id: str, job_id: str) -> dict:
         # ── Eligibility: student or professional tier ────────────────────────
         user_result = (
             get_supabase().table("users")
-            .select("id, subscription_tier")
+            .select("id, tier")
             .eq("id", user_id)
             .single()
             .execute()
         )
-        if not user_result.data or user_result.data.get("subscription_tier") not in ("student", "professional"):
+        if not user_result.data or user_result.data.get("tier") not in ("student", "professional"):
             await log_skip(run_id, "free_tier_user")
             return {"status": "skipped", "storage_path": None, "sarvam_tokens_used": 0, "reason": "free_tier_user"}
 
         # ── Fetch job details ────────────────────────────────────────────────
         job_result = (
             get_supabase().table("jobs")
-            .select("id, title, company, jd_summary, raw_jd")
+            .select("id, fingerprint, title, company, jd_summary")
             .eq("id", job_id)
             .single()
             .execute()
@@ -72,6 +72,13 @@ async def run_tailor(user_id: str, job_id: str) -> dict:
             "required_skills": required_skills,
         }
 
+        # Load raw JD as fallback/context for tailor
+        try:
+            from skills.storage_client import get_text
+            job["raw_jd"] = await get_text(f"jds/{job_result.data['fingerprint']}.txt")
+        except Exception:
+            job["raw_jd"] = job_result.data.get("jd_summary", "")
+
         # ── Tailor resume ────────────────────────────────────────────────────
         storage_path = await tailor_resume(user_id, job)
 
@@ -87,7 +94,7 @@ async def run_tailor(user_id: str, job_id: str) -> dict:
         if app_result.data:
             get_supabase().table("job_applications").update({
                 "tailored_resume_path": storage_path,
-                "status": "tailored", # Optionally move status forward
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }).eq("id", app_result.data[0]["id"]).execute()
 
         duration_ms = int((time.time() - start) * 1000)
