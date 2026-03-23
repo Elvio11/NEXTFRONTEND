@@ -2,12 +2,10 @@
 import asyncio
 import os
 import uuid
-from dotenv import load_dotenv
 from db.client import get_supabase
 from skills.storage_client import put
 from agents.agent7_jd import run as run_agent7
 
-load_dotenv()
 
 async def test_agent7():
     print("Setting up test job for Agent 7...")

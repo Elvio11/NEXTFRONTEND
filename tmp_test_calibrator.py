@@ -3,8 +3,6 @@ import os
 import json
 from unittest.mock import MagicMock, AsyncMock, patch
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
-load_dotenv()
 
 # Import agents
 from agents.agent15_calibrator import run_daily_calibration, run_weekly_calibration

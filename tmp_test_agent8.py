@@ -1,10 +1,8 @@
 
 import asyncio
 import os
-from dotenv import load_dotenv
 from agents.agent8_coach import run as run_agent8
 
-load_dotenv()
 
 async def test_agent8():
     print("Running Agent 8 (Coach)...")

@@ -24,10 +24,7 @@ logger = logging.getLogger("server2_startup")
 logger.info(f"Python version: {sys.version}")
 logger.info("Starting Talvix Server 2...")
 
-from dotenv import load_dotenv
 import os
-
-load_dotenv() # Load local .env before default sets
 
 # ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
 # In production Flux-Orbit/Doppler values override these before any agent runs.

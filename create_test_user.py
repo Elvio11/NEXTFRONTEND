@@ -1,12 +1,9 @@
 import os
-from dotenv import load_dotenv
 from supabase import create_client, Client
 
-load_dotenv('C:\\Users\\DELL\\Antigravity\\Talvix\\branch-server2\\.env')
 
-url: str = os.environ.get("SUPABASE_URL")
-key: str = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-supabase: Client = create_client(url, key)
+from db.client import get_supabase
+supabase = get_supabase()
 
 test_user = {
     'id': '22222222-2222-2222-2222-222222222222',

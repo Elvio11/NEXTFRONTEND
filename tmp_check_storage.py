@@ -1,10 +1,8 @@
 
 import asyncio
 import os
-from dotenv import load_dotenv
 from skills.storage_client import get_text, list_keys
 
-load_dotenv()
 
 async def check():
     print("Listing keys in jds/...")
