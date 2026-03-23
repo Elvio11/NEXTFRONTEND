@@ -19,10 +19,14 @@ WORKDIR /build
 
 COPY requirements.txt .
 
-# 1. Install torch CPU version specifically to avoid CUDA bloat (~2GB savings)
-# 2. Install the rest of the dependencies
-RUN pip install --no-cache-dir torch>=2.0,<3.0 --index-url https://download.pytorch.org/whl/cpu \
-    && pip install --no-cache-dir -r requirements.txt
+# 1. Upgrade pip
+# 2. Install torch CPU version via --extra-index-url to ensure it resolves against other deps
+# Note: torch is removed from requirements.txt to strictly control versioning here
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir \
+       "torch>=2.0,<3.0" \
+       -r requirements.txt \
+       --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Stage 2: Runtime - Minimal image for execution
 FROM python:3.11.9-slim
