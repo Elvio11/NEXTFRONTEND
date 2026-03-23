@@ -94,13 +94,16 @@ router.post('/upload', verifyJWT, async (req, res) => {
 
             // Track repeated magic byte failures for abuse detection
             try {
-                const sb = getSupabase();
+                const expiresAt = new Date();
+                expiresAt.setDate(expiresAt.getDate() + 30); // 30-day TTL for errors
+
                 await sb.from('agent_logs').insert({
                     agent_name: 'upload_security',
                     user_id: userId,
                     status: 'failed',
                     error_message: `Layer 2 reject: magic bytes mismatch for ${ext}`,
                     metadata: { original_filename: originalName },
+                    expires_at: expiresAt.toISOString(),
                 });
             } catch (_) { /* best-effort logging */ }
 
@@ -131,6 +134,16 @@ router.post('/upload', verifyJWT, async (req, res) => {
 
     if (result.status === 'failed') {
         return res.status(502).json({ error: result.error ?? 'Resume parsing failed' });
+    }
+
+    // Step 2 complete: update onboarding step
+    try {
+        await getSupabase()
+            .from('users')
+            .update({ onboarding_step: 2, updated_at: new Date().toISOString() })
+            .eq('id', userId);
+    } catch (err) {
+        logger.error('resume', `Failed to update onboarding step: ${err.message}`);
     }
 
     return res.json({

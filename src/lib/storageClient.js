@@ -9,8 +9,8 @@ function getS3() {
       endpoint: process.env.S4_URL,  // FluxCloud URL → :9000
       region: "us-east-1",
       credentials: {
-        accessKeyId: process.env.MINIO_ACCESS_KEY,
-        secretAccessKey: process.env.MINIO_SECRET_KEY,
+        accessKeyId: process.env.MINIO_ROOT_USER,
+        secretAccessKey: process.env.MINIO_ROOT_PASSWORD,
       },
       forcePathStyle: true,  // Required for MinIO
     });

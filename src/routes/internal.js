@@ -85,5 +85,40 @@ router.post('/notify', async (req, res) => {
     }
 });
 
+/**
+ * POST /internal/founder-notify
+ * Server 1 pushes critical events to Server 5 (OpenFang).
+ * Auth: X-Agent-Secret header.
+ */
+router.post('/founder-notify', async (req, res) => {
+    const { event_type, severity, details, timestamp } = req.body;
+    const axios = require('axios');
+
+    if (!event_type || !severity) {
+        return res.status(400).json({ error: 'event_type and severity are required' });
+    }
+
+    try {
+        const payload = {
+            event_type,
+            severity,
+            details: details || {},
+            timestamp: timestamp || new Date().toISOString()
+        };
+
+        // Forward to Server 5
+        await axios.post('https://server5.openfang.internal/founder-notify', payload, {
+            headers: { 'X-Agent-Secret': process.env.AGENT_SECRET }
+        });
+
+        logger.info('internal', `Founder alert forwarded: ${event_type} (${severity})`);
+        return res.status(200).json({ status: 'forwarded' });
+    } catch (err) {
+        logger.error('internal', `founder-notify forward failed: ${err.message}`);
+        // Log locally but acknowledge receipt to caller
+        return res.status(200).json({ status: 'failed_to_forward', error: err.message });
+    }
+});
+
 module.exports = router;
 

@@ -20,24 +20,32 @@ const logger = require('../lib/logger');
  * Step 1: Selection of user persona
  */
 router.post('/persona', verifyJWT, async (req, res) => {
-    const { persona } = req.body;
-    const validPersonas = [
-        'Student', 'Early Career', 'Professional', 
-        'Switcher', 'Returning', 'Freelancer'
-    ];
+    const personaMap = {
+        'Student': 'student',
+        'Early Career': 'early_career',
+        'Professional': 'professional',
+        'Switcher': 'switcher',
+        'Returning': 'returning',
+        'Freelancer': 'freelancer'
+    };
 
-    if (!validPersonas.includes(persona)) {
+    const dbPersona = personaMap[persona];
+    if (!dbPersona) {
         return res.status(400).json({ error: 'Invalid persona selected' });
     }
 
     try {
         const { error } = await getSupabase()
             .from('users')
-            .update({ persona, updated_at: new Date().toISOString() })
+            .update({ 
+                persona: dbPersona, 
+                onboarding_step: 1,
+                updated_at: new Date().toISOString() 
+            })
             .eq('id', req.user.id);
 
         if (error) throw error;
-        return res.json({ status: 'success', persona });
+        return res.json({ status: 'success', persona: dbPersona });
     } catch (err) {
         logger.error('onboarding/persona', err.message);
         return res.status(500).json({ error: 'Failed to save persona' });

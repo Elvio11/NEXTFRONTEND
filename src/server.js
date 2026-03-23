@@ -18,6 +18,7 @@
  */
 'use strict';
 
+require('dotenv').config();
 const logger = require('./lib/logger');
 
 // ── Dummy fallbacks so the server CAN START without Doppler injecting secrets.
@@ -31,6 +32,12 @@ process.env.SERVER2_URL = process.env.SERVER2_URL || 'http://localhost:8080';
 process.env.SERVER3_URL = process.env.SERVER3_URL || 'http://localhost:8080';
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.PORT = process.env.PORT || '8080';
+
+// Storage - MinIO (S3-Compatible)
+process.env.S4_URL = process.env.S4_URL || 'https://placeholder.minio.talvix.ai';
+process.env.MINIO_ROOT_USER = process.env.MINIO_ROOT_USER || 'placeholder-user';
+process.env.MINIO_ROOT_PASSWORD = process.env.MINIO_ROOT_PASSWORD || 'placeholder-pass';
+process.env.MINIO_BUCKET = process.env.MINIO_BUCKET || 'careeros';
 
 const express = require('express');
 const cors = require('cors');
@@ -123,6 +130,7 @@ app.use('/api/whatsapp', verifyJWT, whatsappRouter);
 app.use('/api/telegram', telegramRouter);
 app.use('/api/orchestrate', orchestrateRouter);
 app.use('/api/onboarding', onboardingRouter);
+app.use('/api', require('./routes/analytics'));
 
 // Internal callbacks — Server 2/3 → Server 1 (X-Agent-Secret, NOT JWT)
 // Never expose these to the browser. verifyAgentSecret is applied inside the router.
@@ -161,40 +169,42 @@ const PORT = parseInt(process.env.PORT, 10);
 
 // ... (existing code)
 
-app.listen(PORT, '0.0.0.0', () => {
-    logger.info('server', `Talvix Server 1 listening on port ${PORT} (0.0.0.0)`);
-    logger.info('server', `Environment: ${process.env.NODE_ENV ?? 'production'}`);
-    logger.info('server', `CORS origin: ${process.env.FRONTEND_URL}`);
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, '0.0.0.0', () => {
+        logger.info('server', `Talvix Server 1 listening on port ${PORT} (0.0.0.0)`);
+        logger.info('server', `Environment: ${process.env.NODE_ENV ?? 'production'}`);
+        logger.info('server', `CORS origin: ${process.env.FRONTEND_URL}`);
 
-    // Start Baileys socket
-    connectWhatsApp().catch(err => {
-        logger.error('server', `Baileys connection failed: ${err.message}`);
-        // Non-fatal — server continues. WhatsApp is optional functionality.
-    });
+        // Start Baileys socket
+        connectWhatsApp().catch(err => {
+            logger.error('server', `Baileys connection failed: ${err.message}`);
+            // Non-fatal — server continues. WhatsApp is optional functionality.
+        });
 
-    // Start Telegram bot
-    const tgBot = initTelegramBot();
-    if (tgBot) {
-        if (process.env.NODE_ENV === 'production') {
-            // Production: webhook mode — register webhook URL
-            const webhookUrl = `${process.env.FRONTEND_URL}/api/telegram/webhook`;
-            tgBot.api.setWebhook(webhookUrl, {
-                secret_token: process.env.TELEGRAM_WEBHOOK_SECRET,
-            }).then(() => {
-                logger.info('server', `Telegram webhook set: ${webhookUrl}`);
-            }).catch(err => {
-                logger.error('server', `Telegram webhook setup failed: ${err.message}`);
-            });
-        } else {
-            // Development: long-polling mode
-            startTelegramPolling().catch(err => {
-                logger.error('server', `Telegram polling failed: ${err.message}`);
-            });
+        // Start Telegram bot
+        const tgBot = initTelegramBot();
+        if (tgBot) {
+            if (process.env.NODE_ENV === 'production') {
+                // Production: webhook mode — register webhook URL
+                const webhookUrl = `${process.env.FRONTEND_URL}/api/telegram/webhook`;
+                tgBot.api.setWebhook(webhookUrl, {
+                    secret_token: process.env.TELEGRAM_WEBHOOK_SECRET,
+                }).then(() => {
+                    logger.info('server', `Telegram webhook set: ${webhookUrl}`);
+                }).catch(err => {
+                    logger.error('server', `Telegram webhook setup failed: ${err.message}`);
+                });
+            } else {
+                // Development: long-polling mode
+                startTelegramPolling().catch(err => {
+                    logger.error('server', `Telegram polling failed: ${err.message}`);
+                });
+            }
         }
-    }
 
-    // Start TalvixGuard Watchdog for AI Corp (Server 5)
-    talvixGuard.start();
-});
+        // Start TalvixGuard Watchdog for AI Corp (Server 5)
+        talvixGuard.start();
+    });
+}
 
 module.exports = app; // export for Jest/Supertest
