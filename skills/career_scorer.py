@@ -35,7 +35,8 @@ async def compute_career_score(
     if role_families:
         market_result = (
             get_supabase().table("job_skills")
-            .select("skill_name")
+            .select("skill_name, jobs!inner(role_family)")
+            .in_("jobs.role_family", role_families)
             .execute()
         )
         market_skills = {

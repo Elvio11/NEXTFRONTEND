@@ -175,6 +175,10 @@ async def health():
         "AGENT_SECRET",
         "GEMINI_API_KEY",
         "SARVAM_API_KEY",
+        "S4_URL",
+        "MINIO_ROOT_USER",
+        "MINIO_ROOT_PASSWORD",
+        "MINIO_BUCKET",
     ]
     env_status = {k: "SET" if os.environ.get(k) and "placeholder" not in os.environ.get(k, "") else "MISSING" for k in required}
     return {

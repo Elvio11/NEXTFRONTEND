@@ -123,51 +123,56 @@ async def hybrid_search(
     ts_terms = " | ".join(resume_keywords.split()[:20])  # cap at 20 terms
 
     sql = f"""
-        WITH vector_rank AS (
-            SELECT j.id, j.title, j.company, j.company_canonical,
-                   j.city_canonical, j.work_mode, j.role_family,
-                   j.seniority_level, j.apply_url, j.jd_summary,
-                   j.fingerprint, j.pool_tier, j.remote_viability_score,
-                   ROW_NUMBER() OVER (
-                       ORDER BY j.jd_embedding <=> '{resume_embedding}'::vector
-                   ) AS vec_rank
-            FROM jobs j
-            WHERE j.role_family IN (
-                SELECT role_family FROM user_target_roles WHERE user_id = '{user_id}'
+        SELECT coalesce(json_agg(t), '[]'::json) FROM (
+            WITH vector_rank AS (
+                SELECT j.id, j.title, j.company, j.company_canonical,
+                       j.city_canonical, j.work_mode, j.role_family,
+                       j.seniority_level, j.apply_url, j.jd_summary,
+                       j.fingerprint, j.pool_tier, j.remote_viability_score,
+                       ROW_NUMBER() OVER (
+                           ORDER BY j.jd_embedding <=> '{resume_embedding}'::vector
+                       ) AS vec_rank
+                FROM jobs j
+                WHERE j.role_family IN (
+                    SELECT role_family FROM user_target_roles WHERE user_id = '{user_id}'
+                )
+                AND j.is_active = TRUE
+                AND j.jd_embedding IS NOT NULL
+                AND j.company_canonical NOT IN (
+                    SELECT company_canonical FROM user_company_prefs
+                    WHERE user_id = '{user_id}' AND pref_type = 'blacklist'
+                )
+                {pool_clause}
+                {delta_clause}
+                ORDER BY j.jd_embedding <=> '{resume_embedding}'::vector
+                LIMIT 1000
+            ),
+            bm25_rank AS (
+                SELECT j.id,
+                       ROW_NUMBER() OVER (
+                           ORDER BY ts_rank_cd(j.jd_tsvector, to_tsquery('english', '{ts_terms}')) DESC
+                       ) AS bm25_rank
+                FROM jobs j
+                WHERE j.jd_tsvector @@ to_tsquery('english', '{ts_terms}')
+                AND j.is_active = TRUE
+                {pool_clause}
+                {delta_clause}
+                LIMIT 1000
             )
-            AND j.is_active = TRUE
-            AND j.jd_embedding IS NOT NULL
-            AND j.company_canonical NOT IN (
-                SELECT company_canonical FROM user_company_prefs
-                WHERE user_id = '{user_id}' AND pref_type = 'blacklist'
-            )
-            {pool_clause}
-            {delta_clause}
-            ORDER BY j.jd_embedding <=> '{resume_embedding}'::vector
-            LIMIT 1000
-        ),
-        bm25_rank AS (
-            SELECT j.id,
-                   ROW_NUMBER() OVER (
-                       ORDER BY ts_rank_cd(j.jd_tsvector, to_tsquery('english', '{ts_terms}')) DESC
-                   ) AS bm25_rank
-            FROM jobs j
-            WHERE j.jd_tsvector @@ to_tsquery('english', '{ts_terms}')
-            AND j.is_active = TRUE
-            {pool_clause}
-            {delta_clause}
-            LIMIT 1000
-        )
-        SELECT v.*, COALESCE(b.bm25_rank, 1000) as bm25_rank,
-               (1.0 / (60 + v.vec_rank)) + (1.0 / (60 + COALESCE(b.bm25_rank, 1000))) AS rrf_score
-        FROM vector_rank v
-        LEFT JOIN bm25_rank b ON v.id = b.id
-        ORDER BY rrf_score DESC
-        LIMIT {top_n}
+            SELECT v.*, COALESCE(b.bm25_rank, 1000) as bm25_rank,
+                   (1.0 / (60 + v.vec_rank)) + (1.0 / (60 + COALESCE(b.bm25_rank, 1000))) AS rrf_score
+            FROM vector_rank v
+            LEFT JOIN bm25_rank b ON v.id = b.id
+            ORDER BY rrf_score DESC
+            LIMIT {top_n}
+        ) t
     """
 
     result = get_supabase().rpc("sql_query", {"query": sql}).execute()
-    return result.data or []
+    if not result.data:
+        return []
+    # result.data is [{'coalesce': [...]}]
+    return result.data[0].get("coalesce", [])
 
 
 async def hyde_search(

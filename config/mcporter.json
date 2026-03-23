@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "markitdown": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server2/mcp_server_markitdown.py"]
+    },
+    "tavily": {
+      "command": "python",
+      "args": ["c:/Users/DELL/Antigravity/Talvix/branch-server3/mcp/tavily_mcp.py"]
+    }
+  }
+}

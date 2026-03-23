@@ -18,8 +18,8 @@ def get_s3_client():
         _s3_client = boto3.client(
             "s3",
             endpoint_url=os.environ["S4_URL"],  # FluxCloud URL → :9000
-            aws_access_key_id=os.environ["MINIO_ACCESS_KEY"],
-            aws_secret_access_key=os.environ["MINIO_SECRET_KEY"],
+            aws_access_key_id=os.environ["MINIO_ROOT_USER"],
+            aws_secret_access_key=os.environ["MINIO_ROOT_PASSWORD"],
             config=Config(signature_version="s3v4"),
             region_name="us-east-1"
         )

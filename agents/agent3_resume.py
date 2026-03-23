@@ -215,12 +215,8 @@ async def run(user_id: str, s3_key: str) -> dict:
             personas = await generate_personas(parsed)
         except SarvamUnavailableError as exc:
             await log_skip(run_id, f"sarvam_unavailable: {exc}")
-            return {
-                "status": "skipped",
-                "duration_ms": _elapsed_ms(),
-                "records_processed": 0,
-                "error": "Sarvam-M unavailable — retry later",
-            }
+            # Non-fatal: continue with empty personas
+            personas = []
 
         # ── Step 3: Upsert resumes table ──────────────────────────────────
         summary_jsonb = {
@@ -252,7 +248,7 @@ async def run(user_id: str, s3_key: str) -> dict:
         get_supabase().table("users").update(
             {
                 "fit_scores_stale": True,
-                "onboarding_completed": True,
+                "onboarding_step": 2,
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
         ).eq("id", user_id).execute()

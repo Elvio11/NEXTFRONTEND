@@ -20,7 +20,9 @@ LLM: Sarvam-M Think. Non-negotiable.
 
 import json
 import time
-from datetime import datetime, timezone
+import os
+import httpx
+from datetime import datetime, timezone, timedelta
 
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, log_skip, new_run_id
@@ -98,25 +100,45 @@ async def run() -> dict:
 
     try:
         # ── Eligibility query ─────────────────────────────────────────────
-        result = get_supabase().rpc(
-            "get_coach_eligible_users", {}
-        ).execute()
-
-        # Fallback SQL if RPC not defined:
-        if not result.data:
+        try:
+            result = get_supabase().rpc("get_coach_eligible_users", {}).execute()
+            eligible_data = result.data or []
+        except Exception:
+            # Fallback SQL if RPC not defined or fails
             result = (
                 get_supabase().table("users")
-                .select(
-                    "id, persona, experience_years, notif_prefs, wa_phone"
-                )
+                .select("id, persona, experience_years, notif_prefs, wa_phone")
                 .in_("tier", ["student", "professional"])
                 .eq("wa_opted_in", True)
                 .execute()
             )
+            eligible_data = result.data or []
+
+        # Enhanced IQ: Check user status via Server 1 to avoid interrupting active sessions
+        s1_url = os.environ.get("SERVER1_URL")
+        active_user_ids = []
+        if s1_url:
+            try:
+                async with httpx.AsyncClient() as client:
+                    status_resp = await client.get(
+                        f"{s1_url}/api/user-status",
+                        headers={"x-agent-secret": os.environ["AGENT_SECRET"]}
+                    )
+                    if status_resp.status_code == 200:
+                        # get_user_status returns list of users with last_active_at
+                        # We consider anyone active in last 10 min "busy"
+                        now = datetime.now(timezone.utc)
+                        for u_status in status_resp.json():
+                            last_active = datetime.fromisoformat(u_status["last_active_at"].replace("Z", "+00:00"))
+                            if (now - last_active) < timedelta(minutes=10):
+                                active_user_ids.append(u_status["id"])
+            except Exception:
+                pass # Fallback to sending if status check fails
 
         eligible = [
-            u for u in (result.data or [])
-            if not _is_in_quiet_hours(u.get("notif_prefs") or {})
+            u for u in eligible_data
+            if u["id"] not in active_user_ids
+            and not _is_in_quiet_hours(u.get("notif_prefs") or {})
             and (u.get("notif_prefs") or {}).get("coach_enabled", True)
         ]
 
@@ -150,10 +172,9 @@ async def run() -> dict:
                 get_supabase().table("skill_gap_results")
                 .select("top_gaps")
                 .eq("user_id", user_id)
-                .single()
                 .execute()
             )
-            top_gaps = (gap_result.data or {}).get("top_gaps") or []
+            top_gaps = (gap_result.data[0] if gap_result.data else {}).get("top_gaps") or []
             top_gap_str = top_gaps[0]["skill"] if top_gaps else "None identified yet"
 
             # Load career score
@@ -161,10 +182,9 @@ async def run() -> dict:
                 get_supabase().table("career_intelligence")
                 .select("career_score")
                 .eq("user_id", user_id)
-                .single()
                 .execute()
             )
-            career_score = (career_result.data or {}).get("career_score", 0)
+            career_score = (career_result.data[0] if career_result.data else {}).get("career_score", 0)
 
             # Load last message structure from notifications
             last_notif = (
@@ -225,9 +245,11 @@ async def run() -> dict:
                 }
 
             # Send via WhatsApp push stub
-            sent = await send_whatsapp(user_id, message, event_type="coach_message")
-
+            sent = await send_whatsapp(user_id, message)
             if sent:
+                # 48-hour TTL for low priority coach message
+                expires_at = (datetime.now(timezone.utc) + timedelta(hours=48)).isoformat()
+
                 # Write to notifications table
                 get_supabase().table("notifications").insert({
                     "user_id":    user_id,
@@ -238,6 +260,7 @@ async def run() -> dict:
                     "priority":   "low",
                     "status":     "sent",
                     "metadata":   {"structure": structure},
+                    "expires_at": expires_at,
                 }).execute()
                 messages_sent += 1
 

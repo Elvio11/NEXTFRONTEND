@@ -78,14 +78,15 @@ async def _score_single_user(
             score_result = (
                 get_supabase()
                 .table("job_fit_scores")
-                .select("fit_score, apply_tier")
+                .select("fit_score")
                 .eq("user_id", user_id)
                 .eq("job_id", job["id"])
-                .single()
+                .limit(1)
                 .execute()
             )
-            if score_result.data:
-                score = score_result.data.get("fit_score", 0)
+            if score_result.data is not None and isinstance(score_result.data, list) and len(score_result.data) > 0:
+                print(f"DEBUG: score_result.data is {score_result.data} (type: {type(score_result.data)})")
+                score = score_result.data[0].get("fit_score", 0)
                 apply_tier = job.get("apply_tier", 2)
                 if score >= 75 and apply_tier == 1:
                     app_result = (
@@ -94,15 +95,25 @@ async def _score_single_user(
                         .select("id")
                         .eq("user_id", user_id)
                         .eq("job_id", job["id"])
-                        .single()
                         .execute()
                     )
-                    if app_result.data:
-                        asyncio.create_task(
-                            _trigger_tailoring(
-                                user_id, job["id"], app_result.data["id"]
-                            )
-                        )
+                    
+                    if not app_result.data:
+                        # Create application record for Tier 1 auto-apply
+                        new_app = get_supabase().table("job_applications").insert({
+                            "user_id": user_id,
+                            "job_id": job["id"],
+                            "status": "applied", # Initial status
+                            "auto_status": "queued",
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }).execute()
+                        if new_app.data and len(new_app.data) > 0:
+                            app_id = new_app.data[0]["id"]
+                            asyncio.create_task(_trigger_tailoring(user_id, job["id"], app_id))
+                    else:
+                        if app_result.data and len(app_result.data) > 0:
+                            app_id = app_result.data[0]["id"]
+                            asyncio.create_task(_trigger_tailoring(user_id, job["id"], app_id))
 
     # Step 4: Update cursor
     if scrape_run_id:
@@ -237,6 +248,8 @@ async def run(
             }
 
     except Exception as exc:
+        import traceback
+        traceback.print_exc()
         await log_fail(run_id, str(exc), _ms())
         return {
             "status": "failed",

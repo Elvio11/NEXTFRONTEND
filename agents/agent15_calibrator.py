@@ -84,7 +84,7 @@ async def run_daily_calibration() -> dict:
                 get_supabase().table("model_weights").update(
                     {
                         "weight_value": new_val,
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "last_updated_at": datetime.now(timezone.utc).isoformat(),
                     }
                 ).eq("id", w["id"]).execute()
                 adjusted_count += 1
@@ -92,10 +92,10 @@ async def run_daily_calibration() -> dict:
         # 3. Record run
         get_supabase().table("calibration_runs").insert(
             {
-                "run_type": "daily",
-                "signals_used": len(signals.data),
-                "weights_adjusted": adjusted_count,
-                "summary": {"adjusted_keys_count": adjusted_count},
+                "run_type": "layer2_daily",
+                "signal_count": len(signals.data),
+                "weights_changed": {"adjusted_keys_count": adjusted_count},
+                "status": "completed"
             }
         ).execute()
 
@@ -181,14 +181,20 @@ async def run_weekly_calibration() -> dict:
         """
 
         raw_analysis = await gemini.complete(analysis_prompt, mode="flash")
-        analysis = json.loads(raw_analysis)
+        
+        # Extract JSON from potential markdown/text
+        if "{" in raw_analysis:
+            json_str = raw_analysis[raw_analysis.find("{"):raw_analysis.rfind("}")+1]
+            analysis = json.loads(json_str)
+        else:
+            analysis = {}
 
         adjusted_count = 0
         for key, rec in analysis.get("adjustments", {}).items():
             if rec.get("confidence", 0) >= 0.7:
                 # Apply with weekly bounds (20%)
                 # Search weight by key
-                w_row = next((w for w in weights if w["weight_key"] == key), None)
+                w_row = next((w for w in weights if w["weight_name"] == key), None)
                 if w_row:
                     current_val = w_row["weight_value"]
                     new_val = rec["new_value"]
@@ -206,7 +212,7 @@ async def run_weekly_calibration() -> dict:
                         get_supabase().table("model_weights").update(
                             {
                                 "weight_value": new_val,
-                                "updated_at": datetime.now(timezone.utc).isoformat(),
+                                "last_updated_at": datetime.now(timezone.utc).isoformat(),
                             }
                         ).eq("id", w_row["id"]).execute()
                         adjusted_count += 1
@@ -214,11 +220,25 @@ async def run_weekly_calibration() -> dict:
         # 4. Notify founder via S1
         s1_url = os.environ["SERVER1_URL"]
         async with httpx.AsyncClient() as client:
+            # Enhanced IQ: Pull real-time system metrics to contextualize the calibration
+            system_context = ""
+            try:
+                metrics_resp = await client.get(
+                    f"{s1_url}/api/metrics",
+                    headers={"x-agent-secret": os.environ["AGENT_SECRET"]}
+                )
+                if metrics_resp.status_code == 200:
+                    m = metrics_resp.json()
+                    system_context = f" (Conversion: {m.get('conversion_rate', 0)}%, Retention: {m.get('retention_rate', 0)}%)"
+            except Exception:
+                pass
+
             await client.post(
                 f"{s1_url}/internal/notify",
                 json={
-                    "type": "calibration_complete",
-                    "payload": analysis.get("summary"),
+                    "message_type": "calibration_complete",
+                    "payload": f"{analysis.get('summary')}{system_context}",
+                    "metadata": {"run_id": run_id, "signal_count": len(signals.data)}
                 },
                 headers={"x-agent-secret": os.environ["AGENT_SECRET"]},
             )
@@ -226,10 +246,10 @@ async def run_weekly_calibration() -> dict:
         # 5. Records
         get_supabase().table("calibration_runs").insert(
             {
-                "run_type": "weekly",
-                "signals_used": len(signals.data),
-                "weights_adjusted": adjusted_count,
-                "summary": {"gemini_summary": analysis.get("summary")},
+                "run_type": "layer3_weekly",
+                "signal_count": len(signals.data),
+                "weights_changed": {"gemini_summary": analysis.get("summary")},
+                "status": "completed"
             }
         ).execute()
 

@@ -21,8 +21,8 @@ logger = logging.getLogger("gemini")
 GeminiMode = Literal["flash", "flash_lite"]
 
 _MODEL_MAP = {
-    "flash":      "gemini-2.0-flash",
-    "flash_lite": "gemini-2.0-flash-lite",
+    "flash":      "gemini-flash-latest",
+    "flash_lite": "gemini-flash-lite-latest",
 }
 
 _GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta/models"

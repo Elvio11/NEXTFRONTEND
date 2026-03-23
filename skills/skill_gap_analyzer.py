@@ -60,11 +60,11 @@ async def analyze_skill_gaps(
     if not role_families:
         return {"top_gaps": [], "full_gaps": []}
 
-    # SQL skill frequency query
+    # SQL skill frequency query with inner join to jobs for role_family filter
     freq_result = (
         get_supabase().table("job_skills")
-        .select("skill_name, skill_type")
-        .in_("jobs.role_family", role_families)   # joined via FK
+        .select("skill_name, skill_type, jobs!inner(role_family)")
+        .in_("jobs.role_family", role_families)
         .execute()
     )
     all_market_skills = freq_result.data or []

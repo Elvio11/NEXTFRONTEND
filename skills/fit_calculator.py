@@ -92,9 +92,9 @@ async def score_jobs(
                 "title":        j.get("title", ""),
                 "company":      j.get("company", ""),
                 "role_family":  j.get("role_family", ""),
-                "jd_summary":   j.get("jd_summary", "")[:300],  # cap to save tokens
+                "jd_summary":   (j.get("jd_summary") or "")[:300],  # cap to save tokens
             }
-            for j in batch
+            for j in batch if j and "id" in j
         ]
 
         prompt = _SCORE_PROMPT.format(
@@ -142,11 +142,15 @@ async def score_jobs(
                 "fit_reasons":     s.get("fit_reasons") if is_paid else None,
                 "missing_skills":  s.get("missing_skills") if is_paid else None,
                 "strengths":       s.get("strengths") if is_paid else None,
-                "is_full_score":   is_paid,
+                "is_full_score":   True,
+                "week_number":     datetime.now().isocalendar()[1],
+                "year_number":     datetime.now().year,
+                "created_at":      datetime.now(timezone.utc).isoformat(),
                 "expires_at":      expires,
             })
 
         if rows_to_insert:
+            print(f"DEBUG: Inserting {len(rows_to_insert)} rows into job_fit_scores: {rows_to_insert}")
             get_supabase().table("job_fit_scores").upsert(
                 rows_to_insert, on_conflict="user_id,job_id"
             ).execute()

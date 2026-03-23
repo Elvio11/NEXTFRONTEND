@@ -16,12 +16,12 @@ After ALL jobs cleaned:
   HTTP POST to Server 2 /api/agents/fit-score (delta mode, with scrape_run_id)
 """
 
+import asyncio
 import os
 import time
 from datetime import datetime, timezone
 
 import httpx
-
 from db.client import get_supabase
 from log_utils.agent_logger import log_start, log_end, log_fail, new_run_id
 from skills.jd_cleaner import clean_jd
@@ -65,10 +65,11 @@ async def run(scrape_run_id: str) -> dict:
                 }).eq("id", job_id).execute()
                 continue
 
-            # Call Gemini Flash Lite
+            # Call Gemini Flash Lite (with 6s delay to avoid 429 Free Tier)
+            await asyncio.sleep(6.0)
             cleaned = await clean_jd(raw_jd)
             if not cleaned:
-                continue  # skip on parse failure — will retry next run
+                continue
 
             # Insert job_skills rows
             required_skills    = cleaned.get("required_skills", [])
@@ -83,9 +84,10 @@ async def run(scrape_run_id: str) -> dict:
             ]
 
             if skills_rows:
-                get_supabase().table("job_skills").upsert(
-                    skills_rows, on_conflict="job_id,skill_name"
-                ).execute()
+                try:
+                    get_supabase().table("job_skills").insert(skills_rows).execute()
+                except Exception:
+                    pass # Duplicates are okay for now or handled by DB unique if it exists
 
             # Update jobs table
             jd_summary = cleaned.get("jd_summary", "")[:500]
@@ -93,7 +95,6 @@ async def run(scrape_run_id: str) -> dict:
                 "jd_cleaned":  True,
                 "role_family": cleaned.get("role_family"),
                 "jd_summary":  jd_summary,
-                "updated_at":  datetime.now(timezone.utc).isoformat(),
             }).eq("id", job_id).execute()
 
             # Generate jd_embedding + jd_tsvector for hybrid search

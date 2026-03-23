@@ -28,7 +28,7 @@ Return ONLY a JSON object with these fields:
 {{
   "required_skills": ["skill1", "skill2", ...],
   "nice_to_have_skills": ["skill1", ...],
-  "role_family": "<one of: swe_backend, swe_frontend, swe_fullstack, data_scientist, data_engineer, ml_engineer, devops, cloud_engineer, product_manager, designer, qa_engineer, mobile_dev, solutions_architect, engineering_manager, other>",
+  "role_family": "<one of: software_engineering, data_science, data_engineering, ml_engineering, devops, product_management, design, qa_engineering, other>",
   "jd_summary": "<2-3 sentence plain text summary of the role>"
 }}
 

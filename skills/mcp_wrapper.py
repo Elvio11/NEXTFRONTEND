@@ -30,11 +30,30 @@ class MCPWrapper:
             Dict containing tool output
         """
         try:
-            cmd = [self.mcporter_path, "run", tool_name, "--json"]
-            for key, value in args.items():
-                cmd.extend([f"--{key}", str(value)])
+            # Bypass .CMD wrapper on Windows to avoid shell corruption of complex JSON/URLs
+            import sys
+            import os
+            
+            # Find the direct JS entry point for mcporter
+            npm_root = "C:/Users/DELL/AppData/Roaming/npm/node_modules"
+            cli_js = f"{npm_root}/mcporter/dist/cli.js"
+            
+            # Determine MCP call target
+            if "." in tool_name:
+                call_target = tool_name
+            else:
+                method_map = {
+                    "markitdown": "extract",
+                    "tavily": "search",
+                    "firecrawl": "scrape"
+                }
+                call_target = f"{tool_name}.{method_map.get(tool_name, 'execute')}"
 
-            logger.info(f"Executing MCP command: {' '.join(cmd)}")
+            # Consolidate all args into one JSON string for robust CLI handover
+            json_args = json.dumps(args)
+            cmd = ["node", cli_js, "call", call_target, "--args", json_args, "--output", "json"]
+
+            logger.info(f"Executing direct Node MCP command: node {cli_js} call {call_target} --args <JSON> --output json")
 
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
