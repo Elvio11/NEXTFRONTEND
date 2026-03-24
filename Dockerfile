@@ -10,9 +10,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gnupg \
     build-essential \
+    git \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g @mcporter/cli \
+    && npm install -g mcporter \
     && mcporter install playwright firecrawl markitdown tavily mcp-gmail
 
 # Create virtual environment and install Python dependencies
