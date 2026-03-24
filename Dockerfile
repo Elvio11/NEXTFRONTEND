@@ -14,18 +14,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm config set prefix /usr/local \
-    && npm install -g mcporter playwright
+    && npm install -g mcporter @playwright/mcp playwright
 
-# Install playwright system dependencies using the official CLI
-# This ensures ALL libraries needed for chromium/firefox/webkit are present
-RUN npx playwright install-deps
-
-# Install MCP tools individually for better resilience and debugging
-RUN mcporter install playwright
-RUN mcporter install firecrawl
-RUN mcporter install markitdown
-RUN mcporter install tavily
-RUN mcporter install mcp-gmail
+# Install playwright system dependencies and Chromium browser
+RUN npx playwright install-deps \
+    && npx playwright install chromium
 
 # Create virtual environment and install Python dependencies
 COPY requirements.txt .
@@ -58,6 +51,8 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /root/.mcporter /root/.mcporter
+# Copy playwright browsers from builder (stored in /root/.cache/ms-playwright)
+COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
 # Set environment paths
 ENV PATH="/opt/venv/bin:$PATH"
