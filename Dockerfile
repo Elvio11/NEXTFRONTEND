@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm config set prefix /usr/local \
-    && npm install -g @mcporter/cli
+    && npm install -g mcporter
 
 # Install MCP tools individually for better resilience and debugging
 RUN mcporter install playwright
