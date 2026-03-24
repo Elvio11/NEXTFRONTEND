@@ -19,8 +19,6 @@ const { getSupabase } = require('../lib/supabaseClient');
 const logger = require('../lib/logger');
 
 const { useS3AuthState } = require('./s3AuthAdapter');
-const { getSupabase } = require('../lib/supabaseClient');
-const logger = require('../lib/logger');
 
 let sock = null;
 

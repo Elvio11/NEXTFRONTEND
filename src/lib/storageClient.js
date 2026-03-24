@@ -26,6 +26,16 @@ async function getPresignedUrl(key, expiresIn = 3600) {
   return await getSignedUrl(getS3(), command, { expiresIn });
 }
 
+async function uploadFile(key, body, contentType) {
+  const command = new PutObjectCommand({
+    Bucket: process.env.MINIO_BUCKET,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+  });
+  return await getS3().send(command);
+}
+
 /**
  * Download a file from MinIO as a buffer or string.
  */
