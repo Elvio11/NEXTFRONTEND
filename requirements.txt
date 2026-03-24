@@ -28,10 +28,5 @@ pytz>=2024.1
 cryptography>=42.0,<44.0
 boto3>=1.34,<2.0
 
-# Testing
-pytest>=8.0,<9.0
-pytest-asyncio>=0.23,<1.0
-psutil>=5.9,<6.0
-
 # Compression (stdlib gzip used — no pip entry needed)
 # All secrets via Doppler — no python-dotenv

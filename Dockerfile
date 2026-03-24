@@ -1,30 +1,56 @@
+# Stage 1: Builder
+FROM python:3.11.9-slim AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+# Install search/scraping build tools, Node.js, and mcporter
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    build-essential \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g @mcporter/cli \
+    && mcporter install playwright firecrawl markitdown tavily mcp-gmail
+
+# Create virtual environment and install Python dependencies
+COPY requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+# Stage 2: Final
 FROM python:3.11.9-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
-
-# Install Node.js for MCPorter CLI (MCP tool execution)
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
-
-# Install MCPorter CLI globally and register tools
-RUN npm install -g @mcporter/cli \
-    && mcporter install playwright firecrawl markitdown tavily mcp-gmail
+ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install minimal runtime dependencies (curl for Node.js, libss3 for Playwright)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
+# Copy virtual environment and global Node.js tools from builder
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Set environment paths
+ENV PATH="/opt/venv/bin:$PATH"
+ENV PORT=8080
+
+# Copy application source
 COPY . .
 
+# Ensure start script is executable
 RUN chmod +x /app/start.sh
 
-ENV PORT=8080
 EXPOSE 8080
 
 ENTRYPOINT ["sh", "/app/start.sh"]
