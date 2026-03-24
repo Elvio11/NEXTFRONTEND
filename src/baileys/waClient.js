@@ -18,8 +18,9 @@ const path = require('path');
 const { getSupabase } = require('../lib/supabaseClient');
 const logger = require('../lib/logger');
 
-// Auth state stored locally during dev. In prod: stored on FluxShare shared disk.
-const AUTH_DIR = path.join(process.cwd(), '.baileys_auth');
+const { useS3AuthState } = require('./s3AuthAdapter');
+const { getSupabase } = require('../lib/supabaseClient');
+const logger = require('../lib/logger');
 
 let sock = null;
 
@@ -43,7 +44,7 @@ async function updateBotHealth(status, qrCode = null) {
 }
 
 async function connectWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState(AUTH_DIR);
+    const { state, saveCreds } = await useS3AuthState();
 
     sock = makeWASocket({
         auth: state,
