@@ -56,5 +56,3 @@ RUN chmod +x /app/start.sh
 EXPOSE 8080
 
 ENTRYPOINT ["sh", "/app/start.sh"]
-走
-走
