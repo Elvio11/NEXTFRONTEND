@@ -50,7 +50,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /root/.mcporter /root/.mcporter
 # Copy playwright browsers from builder (stored in /root/.cache/ms-playwright)
 COPY --from=builder /root/.cache/ms-playwright /root/.cache/ms-playwright
 
