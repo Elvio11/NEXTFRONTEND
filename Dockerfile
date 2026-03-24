@@ -1,6 +1,9 @@
-FROM python:3.11.9-slim
+# Stage 1: Builder
+FROM python:3.11.9-slim AS builder
 
-# Install Node.js for MCPorter CLI (MCP tool execution)
+WORKDIR /app
+
+# Install build dependencies, Node.js, and mcporter
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -11,26 +14,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     git \
     gnupg \
-    && rm -rf /var/lib/apt/lists/* \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g mcporter
 
-# Install MCPorter CLI globally (required for MCP tool execution)
-RUN npm install -g mcporter
-
-WORKDIR /app
-
+# Create virtual environment and install Python dependencies
 COPY requirements.txt .
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Stage 2: Final
+FROM python:3.11.9-slim
 
-RUN chmod +x /app/start.sh
+WORKDIR /app
 
+# Install runtime dependencies (e.g., libpq for postgres, curl for healthchecks)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy virtual environment and global Node.js tools from builder
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Set environment paths
+ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PORT=8080
+
+# Copy application source
+COPY . .
+
+# Ensure start script is executable
+RUN chmod +x /app/start.sh
 
 EXPOSE 8080
 
