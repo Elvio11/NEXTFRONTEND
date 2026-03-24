@@ -5,32 +5,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /app
 
-# Install build tools, Node.js, and many system dependencies required by Playwright/MCP tools
+# Install build tools, Node.js, and mcporter
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     gnupg \
     build-essential \
     git \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm config set prefix /usr/local \
-    && npm install -g mcporter
+    && npm install -g mcporter playwright
+
+# Install playwright system dependencies using the official CLI
+# This ensures ALL libraries needed for chromium/firefox/webkit are present
+RUN npx playwright install-deps
 
 # Install MCP tools individually for better resilience and debugging
 RUN mcporter install playwright
@@ -55,32 +43,20 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 WORKDIR /app
 
-# Install minimal runtime dependencies (curl for Node.js, libss3 for Playwright)
+# Install minimal runtime dependencies + Playwright system deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    libnss3 \
-    libnspr4 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libxkbcommon0 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxrandr2 \
-    libgbm1 \
-    libpango-1.0-0 \
-    libcairo2 \
-    libasound2 \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npx playwright install-deps \
+    && apt-get purge -y nodejs \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy virtual environment and global Node.js tools from builder
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=builder /usr/local/bin /usr/local/bin
-# Copy mcporter config/tools if they are in home
 COPY --from=builder /root/.mcporter /root/.mcporter
 
 # Set environment paths
