@@ -1,0 +1,15 @@
+node_modules/
+.npm/
+npm-debug.log
+.git/
+.github/
+.gitignore
+.baileys_auth/
+tests/
+**/__tests__/
+archive/
+*.log
+Dockerfile
+.dockerignore
+mock_*.pdf
+mock_*.docx
