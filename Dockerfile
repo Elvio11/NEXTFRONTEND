@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
+    && npm config set prefix /usr/local \
     && npm install -g mcporter \
     && mcporter install playwright firecrawl markitdown tavily mcp-gmail
 
@@ -55,3 +56,5 @@ RUN chmod +x /app/start.sh
 EXPOSE 8080
 
 ENTRYPOINT ["sh", "/app/start.sh"]
+走
+走
