@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libffi-dev \
     libssl-dev \
     libpq-dev \
+    libopenblas-dev \
+    libomp-dev \
     curl \
     git \
     gnupg \
@@ -22,9 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
-# Install torch separately first to ensure CPU version is picked up
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir torch>=2.2.0+cpu --extra-index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
 
 # Stage 2: Final
