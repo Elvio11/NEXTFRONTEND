@@ -8,6 +8,9 @@ supabase>=2.4,<3.0
 pydantic>=2.6,<3.0
 httpx>=0.27,<1.0
 python-multipart>=0.0.9,<1.0
+python-jobspy>=1.1.66
+pandas>=2.2.0
+playwright>=1.42.0
 
 # Browser automation (Migrated to Playwright MCP)
 
