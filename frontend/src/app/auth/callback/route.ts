@@ -5,7 +5,6 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/dashboard'
 
   if (code) {
@@ -17,31 +16,34 @@ export async function GET(request: Request) {
         cookies: {
           getAll: () => cookieStore.getAll(),
           setAll: (cookiesToSet) => {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
+            cookiesToSet.forEach(({ name, value, options }) => {
+              try {
                 cookieStore.set(name, value, options)
-              )
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
+              } catch {
+                // In middleware or server components, ignore set failures
+              }
+            })
           },
         },
       }
     )
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const isLocalEnv = process.env.NODE_ENV === 'development'
-      if (isLocalEnv) {
-        // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-        return NextResponse.redirect(`${origin}${next}`)
-      } else {
-        return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL || origin}${next}`)
-      }
+      // After exchange, create the redirect and copy ALL set cookies onto it
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin
+      const redirectUrl = `${siteUrl}${next}`
+      const response = NextResponse.redirect(redirectUrl)
+
+      // Copy cookies set during the exchange onto the redirect response
+      // so the browser stores the session before hitting the protected route
+      cookieStore.getAll().forEach(({ name, value }) => {
+        response.cookies.set(name, value)
+      })
+
+      return response
     }
   }
 
-  // return the user to an error page with instructions
   return NextResponse.redirect(`${origin}/login?error=auth-code-exchange-failed`)
 }
