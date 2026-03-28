@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import type { JobApplication } from '@/types/job'
 import { formatDate } from '@/lib/utils'
 import { cn } from '@/lib/utils'
@@ -70,7 +69,10 @@ export function ApplicationRow({ application }: ApplicationRowProps) {
               "p-2.5 rounded-xl border transition-all duration-500",
               config.bgColor
             )}>
-              <config.icon className={cn("w-4 h-4", config.color)} />
+              {(() => {
+                const Icon = config.icon as any
+                return <Icon className={cn("w-4 h-4", config.color)} />
+              })()}
             </div>
 
             {/* Job Details */}

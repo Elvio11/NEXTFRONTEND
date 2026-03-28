@@ -1,13 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
 import { api } from '@/lib/axios'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { X, Plus, Search, Star, Sparkles } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export function DreamCompanies() {
@@ -25,7 +24,7 @@ export function DreamCompanies() {
         .select('company_name')
         .eq('user_id', user!.id)
         .eq('is_blacklist', false)
-      return data?.map(d => d.company_name) || []
+      return data?.map((d: { company_name: string }) => d.company_name) || []
     },
   })
 
@@ -83,7 +82,7 @@ export function DreamCompanies() {
         {/* List */}
         <div className="flex flex-wrap gap-2.5">
           <AnimatePresence>
-            {companies?.map((name) => (
+            {companies?.map((name: string) => (
               <motion.div
                 key={name}
                 initial={{ opacity: 0, scale: 0.9 }}

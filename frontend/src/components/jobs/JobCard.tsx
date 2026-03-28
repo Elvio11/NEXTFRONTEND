@@ -1,7 +1,5 @@
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { FitScoreMeter } from './FitScoreMeter'
 import { UpgradeCTA } from '@/components/upgrade/UpgradeCTA'

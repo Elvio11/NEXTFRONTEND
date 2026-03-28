@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+'use client'
 import { GridBackground } from '@/components/ui/GridBackground'
 import { RadialGlow } from '@/components/ui/RadialGlow'
 import { useDashboardStore } from '@/stores/dashboardStore'

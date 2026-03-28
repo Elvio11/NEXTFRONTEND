@@ -1,11 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useJobs } from '@/hooks/useJobs'
 import { JobCard } from './JobCard'
 import { useDashboardStore } from '@/stores/dashboardStore'
-import { Filter, Search, GraduationCap, Briefcase, Grid, List as ListIcon } from 'lucide-react'
+import { Filter, Search, Grid, List as ListIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface JobFeedProps {

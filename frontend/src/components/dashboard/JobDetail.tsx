@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, MapPin, ShieldCheck, Zap, ArrowUpRight, BarChart3, Globe, Briefcase } from 'lucide-react'
 import { GlassCard } from '@/components/ui/GlassCard'

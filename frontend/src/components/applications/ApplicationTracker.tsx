@@ -1,15 +1,11 @@
 'use client'
 
-import React from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { formatDate } from '@/lib/utils'
 import type { JobApplication } from '@/types/job'
 import { ApplicationRow } from './ApplicationRow'
 import { Activity, ShieldCheck, Box, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
 export function ApplicationTracker() {
     const { user } = useAuthStore()
@@ -91,5 +87,3 @@ export function ApplicationTracker() {
         </div>
     )
 }
-
-export { formatDate }

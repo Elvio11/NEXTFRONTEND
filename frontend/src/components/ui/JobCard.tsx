@@ -1,11 +1,10 @@
 'use client'
 
-import React from 'react'
+'use client'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { Badge } from '@/components/ui/Badge'
 import { ScoreMeter } from '@/components/ui/ScoreMeter'
-import { Building2, MapPin, Clock, ArrowRight, ShieldCheck, Zap } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Building2, MapPin, Clock, ArrowRight, ShieldCheck } from 'lucide-react'
 
 interface JobCardProps {
   job: {

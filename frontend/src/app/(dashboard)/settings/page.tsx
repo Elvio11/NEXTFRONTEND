@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { ApplyPreferences } from '@/components/settings/ApplyPreferences'
 import { DreamCompanies } from '@/components/settings/DreamCompanies'
 import { BlacklistManager } from '@/components/settings/BlacklistManager'

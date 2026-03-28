@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -16,11 +15,11 @@ const sizes = {
   lg: { radius: 32, stroke: 6, fontSize: 'text-sm' },
 }
 
-export const FitScoreMeter: React.FC<FitScoreMeterProps> = ({ 
+export const FitScoreMeter = ({ 
   score, 
   size = 'md',
   className 
-}) => {
+}: FitScoreMeterProps) => {
   const { radius, stroke, fontSize } = sizes[size]
   const normalizedRadius = radius - stroke * 2
   const circumference = normalizedRadius * 2 * Math.PI
@@ -31,10 +30,6 @@ export const FitScoreMeter: React.FC<FitScoreMeterProps> = ({
     score >= 60 ? 'text-accent-blue' : 
     'text-red-500'
 
-  const glowColor = 
-    score >= 80 ? 'shadow-glow-green' : 
-    score >= 60 ? 'shadow-glow-blue' : 
-    'shadow-glow-red'
 
   return (
     <div className={cn("relative flex items-center justify-center", className)}>

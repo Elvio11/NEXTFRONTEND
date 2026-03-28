@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { 
@@ -11,11 +10,9 @@ import {
   GraduationCap, 
   Settings, 
   ChevronRight,
-  ShieldCheck,
-  ZapOff
+  ShieldCheck
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDashboardStore } from '@/stores/dashboardStore'
 
 const MENU_ITEMS = [
   { label: 'Command Center', icon: LayoutDashboard, href: '/dashboard' },
@@ -28,7 +25,6 @@ const MENU_ITEMS = [
 
 export function Sidebar() {
     const pathname = usePathname()
-    const { studentMode } = useDashboardStore()
 
     return (
         <aside className="fixed left-0 top-[72px] bottom-0 w-64 bg-[#050505]/50 backdrop-blur-xl border-r border-white/5 flex flex-col p-4 hidden lg:flex">

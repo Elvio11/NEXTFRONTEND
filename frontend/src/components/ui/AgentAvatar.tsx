@@ -1,5 +1,4 @@
-import React from 'react'
-import { LucideIcon } from 'lucide-react'
+import { type LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
@@ -11,13 +10,13 @@ interface AgentAvatarProps {
   glowIntensity?: 'low' | 'medium' | 'high'
 }
 
-export const AgentAvatar: React.FC<AgentAvatarProps> = ({
+export const AgentAvatar = ({
   icon: Icon,
   color,
   name,
   className,
   glowIntensity = 'medium'
-}) => {
+}: AgentAvatarProps) => {
   const intensityMap = {
     low: 'opacity-20 blur-lg',
     medium: 'opacity-40 blur-xl',
@@ -28,6 +27,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
     <div className={cn("relative flex items-center justify-center", className)}>
       {/* Outer Cybernetic Ring */}
       <motion.div
+        title={name}
         className="absolute inset-0 rounded-full border border-white/5"
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}

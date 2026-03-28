@@ -1,7 +1,6 @@
-import React from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GlowButton } from '@/components/ui/GlowButton'
-import { Check, ShieldCheck, Zap, Sparkles } from 'lucide-react'
+import { Check, ShieldCheck } from 'lucide-react'
 
 const PLANS = [
   {

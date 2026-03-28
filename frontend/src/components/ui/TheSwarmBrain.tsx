@@ -1,6 +1,4 @@
-'use client'
-
-import React, { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import gsap from 'gsap'
 import {
@@ -53,7 +51,7 @@ const CONNECTIONS = [
   [3, 4], [4, 5], [5, 6], [6, 12], [9, 6], [10, 12], [11, 12], [12, 13], [12, 14], [8, 5], [1, 2], [2, 3], [15, 6]
 ]
 
-export const TheSwarmBrain: React.FC = () => {
+export const TheSwarmBrain = () => {
   const containerRef = useRef<SVGSVGElement>(null)
   const centerX = 400
   const centerY = 400
@@ -68,7 +66,7 @@ export const TheSwarmBrain: React.FC = () => {
     })
   }, [])
 
-  const [mounted, setMounted] = React.useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)

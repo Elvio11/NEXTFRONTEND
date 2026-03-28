@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { Target, Search, X, Check, Globe, Laptop, Zap } from 'lucide-react'
+import { Target, Search, X, Check, Globe, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 

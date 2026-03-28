@@ -6,13 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { api } from '@/lib/axios'
 import { getSupabaseClient } from '@/lib/supabase/client'
-import { GlowButton } from '@/components/ui/GlowButton'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { 
   Upload, 
   FileText, 
-  AlertCircle, 
-  CheckCircle2, 
   Loader2, 
   ShieldCheck, 
   ShieldAlert, 

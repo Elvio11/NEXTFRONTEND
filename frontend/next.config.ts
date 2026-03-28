@@ -8,9 +8,6 @@ const nextConfig: NextConfig = {
     unoptimized: true,
     formats: ['image/avif', 'image/webp'],
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 }
 
 export default nextConfig

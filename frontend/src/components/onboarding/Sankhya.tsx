@@ -1,8 +1,8 @@
 'use client'
 
 import { GlassCard } from '@/components/ui/GlassCard'
-import { CheckCircle2, AlertCircle, ShieldCheck, User, Target, Briefcase, Zap, IndianRupee } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { AlertCircle, ShieldCheck, User, Target, Briefcase, Zap, IndianRupee } from 'lucide-react'
+// No cn needed
 
 interface SankhyaProps {
   data: {

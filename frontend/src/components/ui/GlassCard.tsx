@@ -7,7 +7,7 @@ interface GlassCardProps {
     className?: string
     glow?: 'blue' | 'violet' | 'green' | 'none'
     hover?: boolean
-    as?: keyof JSX.IntrinsicElements
+    as?: React.ElementType
 }
 
 export function GlassCard({
@@ -17,8 +17,9 @@ export function GlassCard({
     hover = false,
     as: Tag = 'div',
 }: GlassCardProps) {
+    const TagComp = Tag as any
     return (
-        <Tag
+        <TagComp
             className={cn(
                 'relative rounded-2xl overflow-hidden',
                 'bg-glass border border-glass-border',
@@ -39,6 +40,6 @@ export function GlassCard({
             )}
         >
             {children}
-        </Tag>
+        </TagComp>
     )
 }

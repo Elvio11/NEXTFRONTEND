@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { MapPin, Globe, Building2, IndianRupee, Sparkles, Navigation, Send } from 'lucide-react'
+import { MapPin, Globe, Building2, IndianRupee, Sparkles, Navigation } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+// No motion needed
 
 interface PrernaProps {
   onComplete: (prefs: any) => void

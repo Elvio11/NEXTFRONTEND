@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRealtime } from '@/hooks/useRealtime'
 import { useDashboardStore } from '@/stores/dashboardStore'

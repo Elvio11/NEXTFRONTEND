@@ -1,15 +1,16 @@
 'use client'
 
-import React from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { GridBackground } from '@/components/ui/GridBackground'
 import { RadialGlow } from '@/components/ui/RadialGlow'
-import { ShieldCheck, LogIn, Chrome, Mail, Sparkles, UserCircle } from 'lucide-react'
+import { ShieldCheck, Chrome, Mail, Sparkles, UserCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
 
-export default function LoginPage() {
+import { Suspense } from 'react'
+
+function LoginContent() {
   const supabase = getSupabaseClient()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
@@ -101,5 +102,21 @@ export default function LoginPage() {
         </motion.div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 relative overflow-hidden">
+        <GridBackground />
+        <div className="animate-pulse flex flex-col items-center gap-8">
+           <div className="w-48 h-12 bg-white/5 rounded-full" />
+           <div className="w-80 h-96 bg-white/5 rounded-3xl" />
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

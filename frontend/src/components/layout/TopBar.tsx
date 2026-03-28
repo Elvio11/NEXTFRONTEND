@@ -32,8 +32,6 @@ export function TopBar() {
         router.push('/login')
     }
 
-    const firstLetter = profile?.id?.charAt(0).toUpperCase() ?? '?'
-
     return (
         <header className="bg-bg-base/80 backdrop-blur-xl border-b border-white/5 px-4 md:px-8 py-4 flex items-center justify-between sticky top-0 z-40">
             {/* Left: Page Title & Mode Signal */}

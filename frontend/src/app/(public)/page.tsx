@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { motion } from 'framer-motion'
 import { TheSwarmBrain } from '@/components/ui/TheSwarmBrain'
 import { MNCWall } from '@/components/ui/MNCWall'
@@ -11,7 +10,6 @@ import { GlassCard } from '@/components/ui/GlassCard'
 import { BentoGrid } from '@/components/ui/BentoGrid'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import {
-  FileText,
   Zap,
   BarChart3,
   ArrowRight,

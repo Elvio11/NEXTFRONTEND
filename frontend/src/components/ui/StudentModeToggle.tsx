@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
+'use client'
 import { GraduationCap, Briefcase } from 'lucide-react'
 import { useDashboardStore } from '@/stores/dashboardStore'
 import { cn } from '@/lib/utils'

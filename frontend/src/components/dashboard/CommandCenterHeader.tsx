@@ -1,38 +1,38 @@
 'use client'
 
-import React from 'react'
-import { motion } from 'framer-motion'
 import { Shield, Zap, Send, MessageSquare, Signal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface StatusItemProps {
   label: string
   status: 'online' | 'offline' | 'warning'
-  icon: React.ElementType
+  icon: any
   color: string
 }
 
-const StatusItem: React.FC<StatusItemProps> = ({ label, status, icon: Icon, color }) => (
-  <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/5">
-    <div className={cn("p-1.5 rounded-lg", color.replace('text-', 'bg-').concat('/10'))}>
-      <Icon className={cn("w-4 h-4", color)} />
-    </div>
-    <div className="flex flex-col">
-      <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle">
-        {label}
-      </span>
-      <div className="flex items-center gap-1.5">
-        <span className={cn(
-          "h-1.5 w-1.5 rounded-full",
-          status === 'online' ? 'bg-green-500' : status === 'offline' ? 'bg-red-500' : 'bg-yellow-500'
-        )} />
-        <span className="text-xs font-mono font-bold text-white uppercase">
-          {status}
+const StatusItem = ({ label, status, icon: Icon, color }: StatusItemProps) => {
+  return (
+    <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-white/[0.03] border border-white/5">
+      <div className={cn("p-1.5 rounded-lg", color.replace('text-', 'bg-').concat('/10'))}>
+        <Icon className={cn("w-4 h-4", color)} />
+      </div>
+      <div className="flex flex-col">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle">
+          {label}
         </span>
+        <div className="flex items-center gap-1.5">
+          <span className={cn(
+            "h-1.5 w-1.5 rounded-full",
+            status === 'online' ? 'bg-green-500' : status === 'offline' ? 'bg-red-500' : 'bg-yellow-500'
+          )} />
+          <span className="text-xs font-mono font-bold text-white uppercase">
+            {status}
+          </span>
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 export const CommandCenterHeader = () => {
   return (

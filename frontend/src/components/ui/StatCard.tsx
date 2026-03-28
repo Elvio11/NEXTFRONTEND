@@ -1,6 +1,5 @@
 'use client'
 
-import React from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { ArrowUpRight, ArrowDownRight, Activity } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -9,7 +8,7 @@ interface StatCardProps {
     label: string
     value: string | number
     trend?: { value: string; type: 'up' | 'down' }
-    icon?: React.ElementType
+    icon?: any
 }
 
 export function StatCard({ label, value, trend, icon: Icon = Activity }: StatCardProps) {

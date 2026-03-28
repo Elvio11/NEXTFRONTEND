@@ -1,11 +1,9 @@
 'use client'
 
-import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShieldCheck, User, Search, Bell, Menu, GraduationCap } from 'lucide-react'
+import { ShieldCheck, Search, Bell, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { GlassCard } from '@/components/ui/GlassCard'
 import { StudentModeToggle } from '@/components/ui/StudentModeToggle'
 import { useAuthStore } from '@/stores/authStore'
 import { useDashboardStore } from '@/stores/dashboardStore'
@@ -72,7 +70,7 @@ export function Navbar() {
                     {profile ? (
                       <Link href="/dashboard" className="p-1 rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all bg-white/[0.02]">
                         <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center font-black text-white text-[10px]">
-                           {profile.full_name?.charAt(0) || 'U'}
+                           {profile.id?.charAt(0).toUpperCase() || 'U'}
                         </div>
                       </Link>
                     ) : (

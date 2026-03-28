@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { Lock, ShieldCheck, Globe, Smartphone, Check, Zap, AlertTriangle, ShieldAlert, ArrowRight } from 'lucide-react'
+import { Lock, ShieldCheck, Globe, Smartphone, ShieldAlert, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { motion, AnimatePresence } from 'framer-motion'
+
 
 interface TheVaultProps {
   onComplete: () => void

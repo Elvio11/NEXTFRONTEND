@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+'use client'
 import { motion } from 'framer-motion'
 import { Send, CheckCircle2, ShieldCheck, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'

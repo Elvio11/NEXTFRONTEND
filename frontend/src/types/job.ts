@@ -16,6 +16,7 @@ export interface JobFitScore {
 
 export type AppStatus =
     | 'queued'
+    | 'applying'
     | 'submitted'
     | 'callback'
     | 'rejected'

@@ -1,8 +1,7 @@
 'use client'
 
-import React from 'react'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { Sparkles, Activity, ShieldCheck, Zap } from 'lucide-react'
+import { Activity, ShieldCheck, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useDashboardStore } from '@/stores/dashboardStore'
 

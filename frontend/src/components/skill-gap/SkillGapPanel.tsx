@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+'use client'
 import { useQuery } from '@tanstack/react-query'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'

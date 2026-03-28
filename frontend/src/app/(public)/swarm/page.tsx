@@ -1,7 +1,6 @@
-import React from 'react'
 import { AgentHeartbeatGrid } from '@/components/ui/AgentHeartbeatGrid'
 import { GlassCard } from '@/components/ui/GlassCard'
-import { Search, Globe, FileText, Send } from 'lucide-react'
+import { Search, FileText, Send } from 'lucide-react'
 
 export default function SwarmPage() {
   return (

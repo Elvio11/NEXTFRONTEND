@@ -1,4 +1,4 @@
-import React from 'react'
+// Company logos and metadata
 
 export const COMPANY_LOGOS = {
   zomato: {

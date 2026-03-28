@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { GridBackground } from '@/components/ui/GridBackground'
@@ -12,8 +12,7 @@ import {
   Search, 
   ShieldCheck, 
   Zap, 
-  Sparkles,
-  UserCircle
+  Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
