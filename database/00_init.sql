@@ -17,7 +17,7 @@
 --   6. FK from job_applications → jobs is SET NULL on DELETE so application
 --      history survives job expiry.
 --   7. Soft deletes only on user records (status = 'withdrawn'). Never hard DELETE.
---   8. All secrets come from Doppler. No .env references anywhere in this file.
+--   8. All secrets are injected via runtime environment variables. No .env references in SQL logic.
 --   9. pg_cron schedules match triggers.json exactly (UTC cron expressions).
 --  10. CHECK constraints enforce model_weights bounds — miscalibration is
 --      physically impossible at DB level.
@@ -533,7 +533,13 @@ CREATE TABLE IF NOT EXISTS job_applications (
     retry_count             INT         NOT NULL DEFAULT 0 CHECK (retry_count >= 0),
     failure_note            TEXT,       -- specific failure_reason on failed_not_found
 
+    -- Recruiter details for follow-up
+    recruiter_email         TEXT,
+    fu_thread_id            TEXT,       -- Gmail thread ID for Anuvartan sequence
+
     -- Follow-up email state (Track 1 of Agent 14)
+    follow_up_stage        INT         NOT NULL DEFAULT 0 CHECK (follow_up_stage >= 0),
+    follow_up_last_sent_at TIMESTAMPTZ,
     fu_stopped              BOOLEAN     NOT NULL DEFAULT FALSE,
     fu_stop_reason          TEXT        CHECK (fu_stop_reason IN (
                                 'reply_received', 'rejected', 'withdrawn', 'manual'
@@ -541,6 +547,10 @@ CREATE TABLE IF NOT EXISTS job_applications (
     fu_email_1_sent_at      TIMESTAMPTZ,    -- Day 7 follow-up
     fu_email_2_sent_at      TIMESTAMPTZ,    -- Day 14 follow-up
     fu_close_loop_sent_at   TIMESTAMPTZ,   -- Day 21 close-loop
+
+    -- Interview/Reply detection
+    interview_detected      BOOLEAN     NOT NULL DEFAULT FALSE,
+    interview_detected_at   TIMESTAMPTZ,
 
     -- LinkedIn outreach state (Track 2 of Agent 14)
     li_recruiter_name       TEXT,
@@ -1029,6 +1039,86 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION increment_apply_counts(target_user_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE users
+    SET daily_apply_count = daily_apply_count + 1,
+        monthly_apply_count = monthly_apply_count + 1,
+        updated_at = NOW()
+    WHERE id = target_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION get_eligible_followups(p_user_id UUID)
+RETURNS TABLE (
+    id UUID,
+    user_id UUID,
+    job_title TEXT,
+    company_name TEXT,
+    user_full_name TEXT,
+    recruiter_email TEXT,
+    follow_up_stage INT,
+    follow_up_thread_id TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.id,
+        a.user_id,
+        j.title as job_title,
+        j.company as company_name,
+        u.full_name as user_full_name,
+        a.recruiter_email,
+        a.follow_up_stage,
+        a.fu_thread_id as follow_up_thread_id
+    FROM job_applications a
+    JOIN jobs j ON a.job_id = j.id
+    JOIN users u ON a.user_id = u.id
+    WHERE a.user_id = p_user_id
+      AND a.fu_stopped = FALSE
+      AND a.status = 'applied'
+      AND (
+          (a.follow_up_stage = 0 AND a.applied_at < NOW() - INTERVAL '7 days' AND a.follow_up_last_sent_at IS NULL) OR
+          (a.follow_up_stage = 1 AND a.follow_up_last_sent_at < NOW() - INTERVAL '7 days') OR
+          (a.follow_up_stage = 2 AND a.follow_up_last_sent_at < NOW() - INTERVAL '7 days')
+      );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION get_eligible_linkedin_tasks(p_user_id UUID)
+RETURNS TABLE (
+    id UUID,
+    user_id UUID,
+    job_title TEXT,
+    company_name TEXT,
+    recruiter_name TEXT,
+    recruiter_linkedin_url TEXT,
+    follow_up_stage INT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        a.id,
+        a.user_id,
+        j.title as job_title,
+        j.company as company_name,
+        a.li_recruiter_name as recruiter_name,
+        a.li_recruiter_url as recruiter_linkedin_url,
+        a.follow_up_stage
+    FROM job_applications a
+    JOIN jobs j ON a.job_id = j.id
+    WHERE a.user_id = p_user_id
+      AND a.li_recruiter_url IS NOT NULL
+      AND a.fu_stopped = FALSE
+      AND (
+          (a.follow_up_stage = 0 AND a.applied_at < NOW() - INTERVAL '2 days' AND a.li_connection_sent_at IS NULL) OR
+          (a.follow_up_stage = 1 AND a.li_connection_sent_at < NOW() - INTERVAL '3 days' AND a.li_connection_status = 'accepted' AND a.li_message_sent_at IS NULL)
+      );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- =============================================================================
 -- pg_cron SCHEDULED JOBS
@@ -1052,7 +1142,7 @@ SELECT cron.schedule(
 SELECT cron.schedule(
     'talvix-agent9-job-scraper', '30 14 * * *',
     $$ SELECT net.http_post(
-        url     := current_setting('app.server3_url') || '/api/agents/scrape',
+        url     := current_setting('app.server3_url') || '/api/agents/scraper',
         headers := jsonb_build_object('Content-Type','application/json',
                                       'X-Agent-Secret', current_setting('app.agent_secret')),
         body    := '{"agent":"job_scraper","user_id":null,"payload":{}}'::jsonb
@@ -1211,17 +1301,17 @@ VALUES
     ('devops',      'remote',    2.0, 5.0, 14.0, 20.0, 30.0, 46.0,190,'2025-01-01')
 ON CONFLICT (role_category, city, exp_years_min, exp_years_max, data_month) DO NOTHING;
 
--- prompt_versions — initial v1 active prompts (text loaded from Doppler at runtime)
+-- prompt_versions — initial v1 active prompts (text loaded from Environment Variables at runtime)
 INSERT INTO prompt_versions (agent_name, version, prompt_text, active, activated_at)
 VALUES
-    ('fit_scorer',      1, '-- Loaded from Doppler: PROMPT_FIT_SCORER_V1',    TRUE, NOW()),
-    ('daily_coach',     1, '-- Loaded from Doppler: PROMPT_DAILY_COACH_V1',   TRUE, NOW()),
-    ('resume_tailor',   1, '-- Loaded from Doppler: PROMPT_TAILOR_V1',        TRUE, NOW()),
-    ('cover_letter',    1, '-- Loaded from Doppler: PROMPT_COVER_LETTER_V1',  TRUE, NOW()),
-    ('skill_gap',       1, '-- Loaded from Doppler: PROMPT_SKILL_GAP_V1',     TRUE, NOW()),
-    ('career_intel',    1, '-- Loaded from Doppler: PROMPT_CAREER_INTEL_V1',  TRUE, NOW()),
-    ('form_answerer',   1, '-- Loaded from Doppler: PROMPT_FORM_QA_V1',       TRUE, NOW()),
-    ('follow_up_email', 1, '-- Loaded from Doppler: PROMPT_FOLLOWUP_V1',      TRUE, NOW())
+    ('fit_scorer',      1, '-- Loaded from Env: PROMPT_FIT_SCORER_V1',    TRUE, NOW()),
+    ('daily_coach',     1, '-- Loaded from Env: PROMPT_DAILY_COACH_V1',   TRUE, NOW()),
+    ('resume_tailor',   1, '-- Loaded from Env: PROMPT_TAILOR_V1',        TRUE, NOW()),
+    ('cover_letter',    1, '-- Loaded from Env: PROMPT_COVER_LETTER_V1',  TRUE, NOW()),
+    ('skill_gap',       1, '-- Loaded from Env: PROMPT_SKILL_GAP_V1',     TRUE, NOW()),
+    ('career_intel',    1, '-- Loaded from Env: PROMPT_CAREER_INTEL_V1',  TRUE, NOW()),
+    ('form_answerer',   1, '-- Loaded from Env: PROMPT_FORM_QA_V1',       TRUE, NOW()),
+    ('follow_up_email', 1, '-- Loaded from Env: PROMPT_FOLLOWUP_V1',      TRUE, NOW())
 ON CONFLICT DO NOTHING;
 
 
@@ -1234,7 +1324,7 @@ ON CONFLICT DO NOTHING;
 --     via authenticated JWT. Service_role only. Node.js strip layer: defence in depth.
 -- [✓] oauth_access_token + oauth_refresh_token: in users table, RLS allows row,
 --     Express strips columns before every response. Dual-layer protection.
--- [✓] No .env references. All secrets via Doppler (app.server2_url etc.).
+-- [✓] Doppler-independent initialization. All secrets via runtime environment (app.server2_url etc.).
 -- [✓] No hardcoded credentials, API keys, or secrets anywhere in this file.
 --
 -- LINKEDIN KILL SWITCH
