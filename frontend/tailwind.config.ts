@@ -20,6 +20,10 @@ const config: Config = {
           'blue-glow': 'rgba(59,130,246,0.15)',
           violet: '#8b5cf6',
           'violet-glow': 'rgba(139,92,246,0.12)',
+          green: '#22c55e',
+          'green-glow': 'rgba(34,197,94,0.12)',
+          orange: '#f97316',
+          'orange-glow': 'rgba(249,115,22,0.12)',
         },
         content: {
           primary: '#f1f5f9',
@@ -34,6 +38,8 @@ const config: Config = {
           'radial-gradient(ellipse at top left, rgba(59,130,246,0.08), transparent 60%)',
         'violet-glow':
           'radial-gradient(ellipse at bottom right, rgba(139,92,246,0.1), transparent 60%)',
+        'green-glow':
+          'radial-gradient(ellipse at center, rgba(34,197,94,0.05), transparent 70%)',
       },
       boxShadow: {
         glass:
@@ -43,13 +49,16 @@ const config: Config = {
         'glow-blue':
           '0 0 20px rgba(59,130,246,0.3), 0 0 60px rgba(59,130,246,0.1)',
         'glow-sm': '0 0 8px rgba(59,130,246,0.2)',
-        'glow-green': '0 0 8px rgba(34,197,94,0.25)',
+        'glow-green': '0 0 20px rgba(34,197,94,0.2), 0 0 40px rgba(34,197,94,0.05)',
+        'glow-orange': '0 0 20px rgba(249,115,22,0.2), 0 0 40px rgba(249,115,22,0.05)',
       },
       backdropBlur: {
         glass: '12px',
+        swarm: '4px',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
+        sans: ['var(--font-fira-sans)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-fira-code)', 'monospace'],
       },
       keyframes: {
         fadeUp: {

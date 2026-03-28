@@ -35,15 +35,15 @@ export function GlowButton({
         'transition-all duration-300 select-none',
         sizes[size],
         variant === 'primary' && [
-            'bg-[#3b82f6] text-white',
-            'shadow-[0_0_20px_rgba(59,130,246,0.3),0_0_60px_rgba(59,130,246,0.1)]',
-            'hover:shadow-[0_0_30px_rgba(59,130,246,0.5),0_0_80px_rgba(59,130,246,0.15)]',
+            'bg-accent-blue text-white',
+            'shadow-glow-blue',
+            'hover:shadow-glow-blue hover:brightness-110',
             'disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none',
         ],
         variant === 'ghost' && [
-            'bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)]',
-            'text-[#f1f5f9] backdrop-blur-[12px]',
-            'hover:bg-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.16)]',
+            'bg-glass border border-glass-border',
+            'text-content-primary backdrop-blur-glass',
+            'hover:bg-glass-hover hover:border-white/20',
         ],
         className
     )

@@ -6,6 +6,8 @@
   --bg-base: #050505;
   --accent: #3b82f6;
   --accent-glow: rgba(59, 130, 246, 0.15);
+  --font-fira-sans: 'Fira Sans', sans-serif;
+  --font-fira-code: 'Fira Code', monospace;
 }
 
 html {
@@ -15,6 +17,7 @@ html {
 body {
   background-color: var(--bg-base);
   color: #f1f5f9;
+  font-family: var(--font-fira-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;

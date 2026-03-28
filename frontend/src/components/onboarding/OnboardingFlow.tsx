@@ -1,109 +1,260 @@
 'use client'
-import { useState } from 'react'
+
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { GlassCard } from '@/components/ui/GlassCard'
-import { GlowButton } from '@/components/ui/GlowButton'
-import { ResumeUpload } from './ResumeUpload'
-import { PersonaDisplay } from './PersonaDisplay'
-import { WhatsAppConnect } from './WhatsAppConnect'
+import { motion, AnimatePresence } from 'framer-motion'
 import { GridBackground } from '@/components/ui/GridBackground'
 import { RadialGlow } from '@/components/ui/RadialGlow'
-import { Search, Zap, Target } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { 
+  CheckCircle2, 
+  ChevronRight, 
+  ChevronLeft, 
+  Search, 
+  ShieldCheck, 
+  Zap, 
+  Sparkles,
+  UserCircle
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-type Step = 'welcome' | 'resume' | 'persona' | 'whatsapp'
+// Swarm-Native Step Components
+import { PersonaDisplay } from './PersonaDisplay' // Step 1: Saarthi
+import { ResumeUpload } from './ResumeUpload'     // Step 2: Pravesh
+import { Nishana } from './Nishana'               // Step 3: Nishana
+import { Identity } from './Identity'             // Step 4: Identity
+import { Prerna } from './Prerna'                 // Step 5: Prerna
+import { Sankhya } from './Sankhya'               // Step 6: Sankhya
+import { TheVault } from './TheVault'             // Step 7: The Vault
+
+type StepId = 
+  | 'welcome' 
+  | 'persona'   
+  | 'resume'    
+  | 'roles'     
+  | 'identity'  
+  | 'prefs'     
+  | 'verify'    
+  | 'vault'     
+  | 'complete'
+
+const STEPS: StepId[] = [
+  'welcome', 
+  'persona', 
+  'resume', 
+  'roles', 
+  'identity', 
+  'prefs', 
+  'verify', 
+  'vault', 
+  'complete'
+]
 
 export function OnboardingFlow() {
-    const [step, setStep] = useState<Step>('welcome')
-    const [personaOptions, setPersonaOptions] = useState<string[]>([])
+    const [currentStep, setCurrentStep] = useState<StepId>('welcome')
+    const [formData, setFormData] = useState({
+      persona: 'Professional',
+      roles: [] as string[],
+      identity: 'expert',
+      prefs: { workMode: 'remote', salary: 12, locations: ['Bengaluru'] },
+      resumeUploaded: false
+    })
+    
     const [detectedPersona, setDetectedPersona] = useState<string | null>(null)
     const router = useRouter()
 
+    const stepIndex = STEPS.indexOf(currentStep)
+    const progress = ((stepIndex) / (STEPS.length - 2)) * 100 
+
+    const next = () => {
+      const idx = STEPS.indexOf(currentStep)
+      if (idx < STEPS.length - 1) setCurrentStep(STEPS[idx + 1])
+    }
+
+    const back = () => {
+      const idx = STEPS.indexOf(currentStep)
+      if (idx > 0) setCurrentStep(STEPS[idx - 1])
+    }
+
+    const updateData = (key: string, value: any) => {
+      setFormData(prev => ({ ...prev, [key]: value }))
+      next()
+    }
+
     return (
-        <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-4 relative">
+        <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-4 relative overflow-hidden">
             <GridBackground />
             <RadialGlow color="blue" position="top" />
+            
+            <div className="absolute top-1/4 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-violet-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="relative z-10 w-full max-w-2xl">
-                {/* Step indicator */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    {(['welcome', 'resume', 'persona', 'whatsapp'] as Step[]).map((s, i) => (
-                        <div
-                            key={s}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${s === step
-                                    ? 'w-8 bg-[#3b82f6]'
-                                    : i < (['welcome', 'resume', 'persona', 'whatsapp'] as Step[]).indexOf(step)
-                                        ? 'w-4 bg-[#3b82f6]/50'
-                                        : 'w-4 bg-[rgba(255,255,255,0.12)]'
-                                }`}
-                        />
-                    ))}
-                </div>
-
-                {step === 'welcome' && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 24 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
+            <div className="relative z-10 w-full max-w-3xl py-12">
+                <AnimatePresence>
+                  {currentStep !== 'welcome' && currentStep !== 'complete' && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className="mb-12 space-y-4"
                     >
-                        <GlassCard className="p-10 text-center">
-                            <h1 className="text-4xl font-extrabold text-[#f1f5f9] mb-4">
-                                {"Let's build your AI job engine"}
+                        <div className="flex items-center justify-between px-2">
+                           <div className="flex items-center gap-3">
+                              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">Aero-Swarm Sync</span>
+                              <div className="h-4 w-px bg-white/10" />
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle">
+                                Step {stepIndex} of 7: {currentStep.toUpperCase()}
+                              </span>
+                           </div>
+                           <div className="flex items-center gap-2">
+                              {currentStep !== 'persona' && (
+                                <button onClick={back} className="p-2 rounded-lg hover:bg-white/5 text-content-subtle transition-colors">
+                                  <ChevronLeft className="w-4 h-4" />
+                                </button>
+                              )}
+                           </div>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/[0.03] rounded-full relative overflow-hidden border border-white/5">
+                            <motion.div 
+                              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-glow-blue"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${progress}%` }}
+                              transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                            />
+                        </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="relative min-h-[500px]">
+                  <AnimatePresence mode="wait">
+                    {currentStep === 'welcome' && (
+                        <motion.div
+                            key="welcome"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="text-center space-y-8"
+                        >
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 mb-4">
+                                <Sparkles className="w-4 h-4 text-blue-400" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Initialize Swarm Protocol</span>
+                            </div>
+                            
+                            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white uppercase leading-[0.9]">
+                                Your Talent,<br /><span className="text-blue-500">Our Intelligence.</span>
                             </h1>
-                            <p className="text-[#64748b] mb-8 text-lg">
-                                Talvix works while you rest. Upload your resume and we handle the rest.
+                            
+                            <p className="text-content-muted text-sm md:text-base max-w-xl mx-auto font-mono leading-relaxed mt-6">
+                                Experience the Aero-V3 Agent Swarm. 15 agents working 24/7 to parse, match, and deploy your career to top global citadels.
                             </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-12">
                                 {[
-                                    { icon: Search, label: 'Find', desc: '150K+ jobs nightly' },
-                                    { icon: Target, label: 'Score', desc: 'AI fit analysis' },
-                                    { icon: Zap, label: 'Apply', desc: 'Auto while you sleep' },
-                                ].map(({ icon: Icon, label, desc }) => (
-                                    <GlassCard key={label} className="p-4 text-center">
-                                        <Icon className="w-6 h-6 text-[#3b82f6] mx-auto mb-2" />
-                                        <p className="font-semibold text-[#f1f5f9] text-sm">{label}</p>
-                                        <p className="text-[#64748b] text-xs mt-1">{desc}</p>
-                                    </GlassCard>
+                                    { icon: Search, label: 'Anveshan', desc: 'Global Job Scraper', color: 'blue' },
+                                    { icon: ShieldCheck, label: 'The Vault', desc: 'Secure Integration', color: 'green' },
+                                    { icon: Zap, label: 'Setu', desc: 'Auto-Apply Bridge', color: 'orange' },
+                                ].map((agent) => (
+                                    <div key={agent.label} className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
+                                        {/* @ts-ignore */}
+                                        <agent.icon className={cn("w-6 h-6 mx-auto mb-4 opacity-50 group-hover:opacity-100 transition-opacity", `text-${agent.color}-400`)} />
+                                        <p className="font-black text-white text-[10px] uppercase tracking-widest">{agent.label}</p>
+                                        <p className="text-content-subtle text-[9px] mt-1 uppercase font-bold tracking-tighter">{agent.desc}</p>
+                                    </div>
                                 ))}
                             </div>
-                            <GlowButton
-                                variant="primary"
-                                size="lg"
-                                onClick={() => setStep('resume')}
+
+                            <div className="pt-12">
+                                <button
+                                    onClick={() => setCurrentStep('persona')}
+                                    className="px-12 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-[0.3em] text-xs shadow-glow-blue transition-all active:scale-95 group"
+                                >
+                                    <span className="flex items-center gap-3">
+                                      Initiate Onboarding
+                                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </span>
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {currentStep === 'persona' && (
+                        <motion.div key="persona" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                            <PersonaDisplay 
+                                detectedPersona={detectedPersona} 
+                                onComplete={() => updateData('persona', formData.persona)} 
+                            />
+                        </motion.div>
+                    )}
+
+                    {currentStep === 'resume' && (
+                        <motion.div key="resume" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                            <ResumeUpload
+                                onComplete={(options) => {
+                                    setDetectedPersona(options[0] ?? 'professional')
+                                    updateData('resumeUploaded', true)
+                                }}
+                            />
+                        </motion.div>
+                    )}
+
+                    {currentStep === 'roles' && (
+                      <motion.div key="roles" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                        <Nishana onComplete={(roles) => updateData('roles', roles)} />
+                      </motion.div>
+                    )}
+
+                    {currentStep === 'identity' && (
+                      <motion.div key="identity" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                        <Identity 
+                          detectedPersona={detectedPersona} 
+                          onComplete={(id) => updateData('identity', id)} 
+                        />
+                      </motion.div>
+                    )}
+
+                    {currentStep === 'prefs' && (
+                      <motion.div key="prefs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                        <Prerna onComplete={(prefs) => updateData('prefs', prefs)} />
+                      </motion.div>
+                    )}
+
+                    {currentStep === 'verify' && (
+                      <motion.div key="verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                        <Sankhya data={formData} onComplete={next} />
+                      </motion.div>
+                    )}
+
+                    {currentStep === 'vault' && (
+                      <motion.div key="vault" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                        <TheVault onComplete={next} />
+                      </motion.div>
+                    )}
+
+                    {currentStep === 'complete' && (
+                        <motion.div
+                            key="complete"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center"
+                        >
+                            <div className="w-24 h-24 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mx-auto mb-8 shadow-glow-blue">
+                                <CheckCircle2 className="w-12 h-12 text-blue-500" />
+                            </div>
+                            <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase mb-4">Swarm Connection Active</h2>
+                            <p className="text-content-muted text-sm font-mono max-w-md mx-auto mb-12">
+                                Your profile is now synced with the 15-agent swarm. Anveshan has begun scanning 150K+ daily jobs for your {formData.persona} persona.
+                            </p>
+                            <button
+                                onClick={() => router.push('/dashboard')}
+                                className="px-12 py-4 rounded-2xl bg-white text-black font-black uppercase tracking-[0.3em] text-xs hover:bg-blue-50 transition-all shadow-xl"
                             >
-                                Get Started
-                            </GlowButton>
-                        </GlassCard>
-                    </motion.div>
-                )}
-
-                {step === 'resume' && (
-                    <ResumeUpload
-                        onComplete={(options) => {
-                            setPersonaOptions(options)
-                            setDetectedPersona(options[0] ?? 'professional')
-                            setStep('persona')
-                        }}
-                    />
-                )}
-
-                {step === 'persona' && (
-                    <PersonaDisplay
-                        detectedPersona={detectedPersona}
-                        onComplete={() => setStep('whatsapp')}
-                    />
-                )}
-
-                {step === 'whatsapp' && (
-                    <WhatsAppConnect
-                        onComplete={() => router.push('/dashboard')}
-                        onSkip={() => router.push('/dashboard')}
-                    />
-                )}
+                                Enter Command Center
+                            </button>
+                        </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
             </div>
-
-            {/* Show unused variable (personaOptions) */}
-            {personaOptions.length > 0 && <span className="sr-only">{personaOptions.length} persona options</span>}
         </div>
     )
 }

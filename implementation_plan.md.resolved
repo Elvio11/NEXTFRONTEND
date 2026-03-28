@@ -1,0 +1,431 @@
+# Talvix Frontend — Full Implementation Plan
+
+## Background
+
+The backend (Servers 1/2/3 + Supabase) is production-ready. This plan covers building the **Talvix Next.js 15 frontend** entirely from scratch with a **futuristic glassmorphism dark UI** that has a strong wow factor — inspired by aiapply.co but differentiated with an "Agent Heartbeat" live visualization, a WhatsApp-native architecture, and India-first pricing copy.
+
+**Current state of `frontend/`:**
+- Next.js 15.5.12 (React 18), Tailwind 3.4, Framer Motion, Zustand 5, React Query 5, Radix UI, Three.js, Recharts, Lucide
+- 8 base UI primitives already built (`GlassCard`, `GlowButton`, `AnimatedText`, etc.)
+- Landing page has a full layout (hero → features → pricing)
+- Dashboard routes exist but are stubs (only [page.tsx](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/%28public%29/page.tsx) files, ~500 bytes each)
+- No Zustand stores wired, no React Query hooks, no API client
+
+**Design System (locked):**
+- Background: `#050505` / `#0d0d0d` / `#141414`
+- Accent: Blue `#3b82f6` + Violet `#8b5cf6`
+- Typography: Geist Sans (already installed via `geist` package)
+- Style: Glassmorphism + subtle grid pattern + radial glows
+- Animation: Framer Motion staggered reveals + Three.js orb on hero
+
+---
+
+## Design Language — "Talvix Aero"
+
+| Token | Value | Usage |
+|---|---|---|
+| bg-base | `#050505` | Page background |
+| bg-surface | `#0d0d0d` | Cards, sections |
+| bg-raised | `#141414` | Modals, popovers |
+| glass | `rgba(255,255,255,0.04)` | Glass cards |
+| glass-border | `rgba(255,255,255,0.08)` | All borders |
+| accent-blue | `#3b82f6` | Primary CTAs, data indicators |
+| accent-violet | `#8b5cf6` | Secondary accent, hover glow |
+| accent-emerald | `#10b981` | Success states, WhatsApp elements |
+| content-primary | `#f1f5f9` | Headings, body |
+| content-muted | `#64748b` | Subtext, labels |
+| content-subtle | `#334155` | Disabled, footer |
+
+**Typography:** Geist Sans — `font-extrabold` for hero/H1, `font-bold` for H2-H3, `font-medium` for labels, `font-normal` for body.
+
+**Animation principles:**
+- Stagger children 0.08–0.12s on enter
+- Scroll reveal: `opacity 0→1` + `translateY 24→0px`, 0.5s ease
+- Agent heartbeat: `glowPulse` 2.5s infinite + green dot
+- Hover: `bg-glass-hover` + `border-blue-500/20` transition 200ms
+
+---
+
+## Architecture — Page & Route Map
+
+```
+/                     → Landing Page (Public)
+/login                → Google OAuth Entry
+/onboarding           → 7-step wizard (protected, incomplete profile)
+/dashboard            → Dashboard Home (protected)
+/jobs                 → Job Feed (protected)
+/applications         → Application Tracker (protected)
+/skill-gap            → Growth Hub (protected)
+/coach                → Daily Coach / WhatsApp (protected)
+/settings             → Settings (protected)
+```
+
+---
+
+## Phase 0 — Design System Hardening
+
+### [MODIFY] [tailwind.config.ts](file:///C:/Users/DELL/Antigravity/Talvix/frontend/tailwind.config.ts)
+- Add `emerald` accent, `z-index` scale (10→90), `content-*` typography tokens, `border-glass` shorthand, full `spacing` extension
+- Add new keyframes: `shimmer`, `slideUp`, `scaleIn`, `spinSlow`, `heartbeat`
+
+### [MODIFY] [globals.css](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/globals.css)
+- CSS custom properties matching Tailwind tokens
+- Smooth scroll behaviour, custom scrollbar (thin, dark)
+- Selection highlight in blue tint
+- `@layer base` resets for headings, links
+
+### [NEW] [styles/animations.css](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/styles/animations.css)
+- Reusable CSS keyframes imported in globals
+
+---
+
+## Phase 1 — Shared UI Component Library
+
+All components live in `src/components/ui/`. Built with Radix UI primitives + Tailwind + CVA for variants.
+
+### Core Primitives (Extend/New)
+
+| Component | Status | Notes |
+|---|---|---|
+| `Button` | [NEW] | Replaces `GlowButton`. Variants: primary/ghost/outline/destructive. Loading spinner. |
+| `Badge` | [NEW] | Tier chips (Free/Student/Pro), status pills (Applied/Pending) |
+| `Skeleton` | [NEW] | Used in every data loading state |
+| `Toast` | [NEW] | Via Radix `Toast`. Success/error/info. |
+| `Modal` | [NEW] | Radix `Dialog`. Used for job detail, upgrade prompt |
+| `Sheet` | [NEW] | Slide-over from right. Job detail on mobile. |
+| `Tabs` | [NEW] | Radix `Tabs`. Dashboard section switching. |
+| `Progress` | EXTEND | Animate fit score bars. Add `glow` prop. |
+| `Avatar` | [NEW] | Radix `Avatar`. With persona initials fallback. |
+| `Tooltip` | [NEW] | Radix `Tooltip`. Hover info on score dimensions. |
+| `Kbd` | [NEW] | Keyboard shortcut display. Used in command palette. |
+
+### Dashboard-Specific
+
+| Component | Description |
+|---|---|
+| `StatCard` | Metric + trend arrow + sparkline. Used on dashboard home. |
+| `AgentStatusPill` | Green/orange/red dot + agent name + last-run time. Polling. |
+| `ScoreMeter` | SVG circular dial, 0–100, animated fill on mount. |
+| `JobCard` | Job title + company + fit score badge + platform logo + CTA. |
+| `ApplicationRow` | Table row: job name, platform, status chip, date. Realtime-aware. |
+| `SkillGapBar` | Horizontal bar with label + gap percentage + "Add to plan" button. |
+| `PersonaCard` | Onboarding step 4. AI persona name + trait pills + select ring. |
+| `PlatformTile` | Onboarding/settings Vault. LinkedIn/Indeed session status + connect CTA. |
+
+### Layout Shell
+
+| Component | Description |
+|---|---|
+| `Navbar` | Floating glassmorphism nav. Logo left. Links centre (desktop). Avatar+tier right. Transparent→blurred on scroll. |
+| `Sidebar` | Dashboard left rail. Icons + labels. Collapses to icon-only on mobile. Active route glow. |
+| `DashboardShell` | `Sidebar + main` wrapper. Handles responsive layout. |
+| `OnboardingShell` | Step progress bar + back/next. Wraps all 7 onboarding steps. |
+| `PermissionGate` | Renders blurred/locked feature UI for free users. Upgrade CTA overlay. |
+
+---
+
+## Phase 2 — Public / Marketing Site
+
+### [MODIFY] [Landing Page](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(public)/page.tsx)
+Complete rebuild with 8 sections:
+
+#### Section 1 — Hero
+- Full-viewport, centered
+- Three.js orb (`ThreeDeeOrb`) in background (already built) — upgrade: add blue+violet particle shader
+- Animated headline: `"Your AI that [Applies / Tailors / Scores] while you sleep"`
+- Two CTAs: `Start Free` (primary) + `See How It Works` (ghost, smooth-scrolls)
+- Floating glass cards: "Optimised Resume ready ✓" + "Applying to 8 jobs tonight…" (mimics aiapply.co hero mockups)
+- Social proof pill: `★★★★★ Trusted by 2,000+ · ₹0 to start`
+- Grid background + radial blue glow
+
+#### Section 2 — Stats Ticker
+- Marquee: `150,000+ Live Jobs · 15 AI Agents · Auto-Apply · ₹0/msg WhatsApp · Self-Learning · India-first`
+
+#### Section 3 — Feature Bento Grid
+- Headline: `"Everything your job search needs. Automated."`
+- 2×3 bento: Resume Intel, Fit Scorer (150K+), Auto-Apply, WhatsApp Coach, Skill Gap, Career Score
+
+#### Section 4 — Agent Heartbeat (NEW — wow factor)
+- Horizontal scrollable row of 15 agent status cards
+- Each card: Agent name + icon + "last ran X mins ago" + pulsing green dot
+- Headline: `"15 agents working for you right now"`
+
+#### Section 5 — How It Works (4 Steps)
+- Animated vertical timeline with numbered circles and connector lines
+- Steps: Upload → AI Scores → Review → Wake to Results
+- Framer Motion: stagger + line draw animation
+
+#### Section 6 — Pricing (3 Tiers)
+- Free (₹0) / Student (₹99+GST) / Professional (₹399+GST)
+- Feature matrix rows with `✓` and `—`
+- Professional card: glowing blue border + "Most Popular" badge
+- Annual toggle: show "Coming Soon"
+
+#### Section 7 — Social Proof
+- Testimonial ticker (marquee, 2 rows, opposite directions)
+- Quote cards: name + persona + star rating
+
+#### Section 8 — Final CTA + Footer
+- `"Your next job is already in our database"` + Start Free button
+- Footer: links (Privacy, Terms, Blog), WhatsApp QR, Twitter/LinkedIn
+
+### [MODIFY] [Login Page](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(public)/login/page.tsx)
+- Centered glass card on dark background
+- `Sign in with Google` button (Lucide `Globe` icon)
+- Small print: "Talvix uses Google OAuth. We never see your password."
+- Redirects back to `/onboarding` or `/dashboard` based on profile completeness
+
+### [NEW] Onboarding Flow
+- **[MODIFY]** [src/app/onboarding/page.tsx](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/onboarding/page.tsx) — wraps `OnboardingShell`; routes between steps via `?step=N` param
+- 7 steps:
+  1. **Persona** — 6 cards (Student / Early Career / Professional / Career Switcher / Returning / Freelancer). Framer Motion card flip on select.
+  2. **Resume Upload** — Drag-drop zone with 6-layer security badge. Upload progress bar. Green tick on parse complete.
+  3. **Target Roles** — Multi-select chip input. Server fetches `user_target_roles` suggestions. Max 5.
+  4. **AI Persona** — 3 `PersonaCard` options generated by Agent 3 (fetched from Server 2). Select one.
+  5. **Preferences** — City multi-select, Work mode (Remote/Hybrid/On-site), Salary range slider.
+  6. **Profile Verification** — Summary card of all inputs. Edit links per section.
+  7. **Vault** — `PlatformTile` for LinkedIn + Indeed. "Skip for now" option. Explains Tier 1 auto-apply.
+
+---
+
+## Phase 3 — Dashboard Pages
+
+### [MODIFY] [Dashboard Layout](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/layout.tsx)
+- Renders `DashboardShell` (Sidebar + Topbar + children)
+- Server-side auth check redirects unauthenticated users to `/login`
+
+### [MODIFY] [/dashboard](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/dashboard/page.tsx) — Home
+```
+Grid layout:
+┌──────────────────────┬────────────┐
+│  Career Score Donut  │ Agent       │
+│  (4 dimensions)      │ Heartbeat   │
+├────────────┬─────────┤ (live 15)   │
+│ Stat Cards │ Stat    │             │
+│ (Applied   │ Cards   │             │
+│  Today /   │(Month / ├────────────┤
+│  Matches)  │ Streak) │ WA Status   │
+├────────────┴─────────┴────────────┤
+│  Top 3 Job Match Cards             │
+└────────────────────────────────────┘
+```
+- Agent heartbeat: polls `GET /api/agents/status` every 30s via `useAgentStatus`
+- Career score: `useCareerScore` → Recharts `RadarChart`
+- Stat cards: `useApplicationStats`
+- Job cards: `useJobs({ limit: 3 })` — top 3 by `fit_score`
+
+### [MODIFY] [/jobs](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/jobs/page.tsx) — Job Feed
+- **Filter toolbar**: Score min slider, Remote toggle, Seniority chip, Platform dropdown
+- **Job list**: `JobCard` with fit score, role, company, location, apply CTA
+- **Apply CTA logic**:
+  - Tier 1 (Indeed/LinkedIn Easy Apply) → triggers `POST /api/apply`
+  - Tier 2 → opens external URL + "Copy Cover Letter" toast
+- **Job detail**: `Sheet` slide-over with JD text, fit reasons, skill gaps, tailored resume download
+
+### [MODIFY] [/applications](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/applications/page.tsx) — Tracker
+- **Live status table** using `useApplications` + Supabase Realtime subscription
+- Columns: Job Title, Company, Platform, Status (chip), Applied At, Actions
+- Status chips: `Queued` / `Applying` / `Applied` / `Callback` / `Rejected` / `Ghosted`
+- Realtime: `supabase.channel('job_applications')` — INSERT/UPDATE events update React Query cache
+- Empty state: "Your applications will appear here. The AI applies nightly (8PM–6AM)."
+- Apply cap indicator: `4/10 used today` progress bar
+
+### [MODIFY] [/skill-gap](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/skill-gap/page.tsx) — Growth Hub
+- **Hero**: Career score breakdown (4 `StatCard` — Skills/Experience/Demand/Salary)
+- **Radar chart**: Your skills vs market demand (Recharts `RadarChart`, 6 axes)
+- **Gap list**: `SkillGapBar` list, sorted by ROI. Each row: skill name, gap %, "Add to Learning Plan" button
+- **Salary band**: "You are in the Xth percentile for [role] in [city]"
+- Permission gate: free users see blurred gap list + upgrade CTA
+
+### [MODIFY] [/coach](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/coach/page.tsx) — Daily Guru
+- **WhatsApp connect panel**: QR code from `GET /api/whatsapp/qr`. Status: Connected / Disconnected / Scanning
+- **Notification prefs**: Quiet hours start/end time picker, toggles for coach messages / application alerts
+- **Message log**: Last 7 days of WA messages sent by the coach (from `notifications` table)
+
+### [MODIFY] [/settings](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/(dashboard)/settings/page.tsx)
+- **Profile**: Name, photo upload, target roles editor
+- **Platform Vault**: `PlatformTile` for LinkedIn + Indeed session status
+- **Plan**: Tier badge. Upgrade CTA for free users. Cancel button for paid.
+- **Apply config**: `daily_apply_limit` slider (5–25)
+- **Danger zone**: Delete account (confirm modal)
+
+---
+
+## Phase 4 — Backend Connectivity Layer
+
+### [NEW] [lib/api.ts](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/lib/api.ts)
+```ts
+// Axios instance → Server 1 Gateway (http://localhost:8080 in dev, env var in prod)
+// Interceptor: attach JWT from session cookie
+// Interceptor: on 401, attempt refresh via Supabase, retry once
+```
+
+### [NEW] [lib/supabase.ts](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/lib/supabase.ts)
+```ts
+// Browser client: createBrowserClient(url, anonKey) — SSR-safe from @supabase/ssr
+// Server client: createServerClient() — for Server Components and API routes
+```
+
+### [MODIFY] [stores/authStore.ts](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/stores/authStore.ts)
+```ts
+// user: User | null
+// session: Session | null
+// profile: UserProfile (from users table)
+// tier: 'free' | 'student' | 'professional'
+// setUser / clearUser / setProfile
+```
+
+### [NEW] [stores/dashboardStore.ts](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/stores/dashboardStore.ts)
+```ts
+// agentStatuses: Record<agentId, AgentStatus>
+// applyQueueCount: number
+// todayApplyCount: number
+// dashboardReady: boolean
+```
+
+### React Query Hooks
+
+| Hook | Endpoint | Notes |
+|---|---|---|
+| `useUser` | `GET /api/auth/me` (Supabase) | User + profile |
+| `useJobs` | `GET /api/dashboard` (Server 1) | Paginated, filterable |
+| `useApplications` | Supabase direct query | + Realtime subscription |
+| `useAgentStatus` | `GET /api/agents/status` (Server 1) | Poll 30s |
+| `useCareerScore` | `GET /api/agents/career-intel` (Server 1) | Cached 1h |
+| `useSkillGap` | `GET /api/agents/skill-gap` (Server 1) | Cached 1h |
+| `useApplyCaps` | Derived from `useUser` | `daily_apply_count / daily_apply_limit` |
+| `useWhatsAppStatus` | `GET /api/whatsapp/qr` (Server 1) | Poll 5s during onboarding |
+
+---
+
+## Phase 5 — Next.js API Route Bridges
+
+### [MODIFY] [/api/auth/callback](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/api/auth/callback/route.ts)
+- Handles Supabase OAuth code exchange → sets session cookie → redirects to `/onboarding` or `/dashboard`
+
+### [NEW] [/api/resume/upload](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/api/resume/upload/route.ts)
+- Proxies multipart file upload to `Server 1 POST /api/resume/upload`
+- Attaches `Authorization: Bearer <jwt>` and `X-Agent-Secret`
+- Streams response back (progress events)
+
+### [NEW] [/api/apply](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/app/api/apply/route.ts)
+- `POST` with `{ job_id }` → proxies to `Server 1 POST /api/apply`
+- Returns `{ status, message, queued_at }`
+
+---
+
+## Phase 6 — Permission Gate Implementation
+
+The `PermissionGate` component checks `authStore.tier`:
+- `free` → renders blurred children + "Upgrade to Student/Pro" overlay
+- `student` → renders children (some gated features still blur for Pro-only)
+- `professional` → renders all children
+
+**Locked features by tier:**
+
+| Feature | Free | Student | Pro |
+|---|---|---|---|
+| Job feed top 3 | ✓ | Top 10 | Top 25 |
+| Fit reasons / skill gaps | Blurred | ✓ | ✓ |
+| Auto-apply | ✗ | ✗ | ✓ |
+| Daily coach (WhatsApp) | ✗ | ✓ | ✓ |
+| LinkedIn networking | ✗ | ✗ | ✓ |
+| Follow-up reminders | ✗ | ✗ | ✓ |
+
+> [!IMPORTANT]
+> The `PermissionGate` must NEVER hide locked features — it must always **blur + show upgrade CTA**. This is per `system.md` ui_qa rule: "locked feature hidden not blurred → BLOCKED".
+
+---
+
+## Wow-Factor Elements
+
+### 1. Three.js Orb (Hero)
+- Existing [ThreeDeeOrb.tsx](file:///C:/Users/DELL/Antigravity/Talvix/frontend/src/components/ui/ThreeDeeOrb.tsx) — upgrade: add blue+violet particle points orbiting a core sphere
+- Subtle mouse-tracking tilt via `useMousePosition`
+
+### 2. Agent Heartbeat Panel
+- 15 cards in a grid, each pulsing when the agent ran in last 5 mins
+- Color: green (active <5 min), orange (5–30 min), red (>30 min or failed)
+- Data from `useAgentStatus` polling `GET /api/agents/status`
+
+### 3. Live Apply Counter
+- On Dashboard home: animated count-up showing `todayApplyCount` increasing in real time via Supabase Realtime
+- "The AI applied to 3 jobs tonight" toast notification on login if jobs were applied overnight
+
+### 4. Floating Mockup Cards (Landing Hero)
+- Two glass cards floating around the orb (Framer Motion `float` animation)
+- Card 1: `"Resume Tailored · Senior Product Manager ✓"` with score `87/100`
+- Card 2: `"Auto-Applying · Indeed Easy Apply · 6 PM"` with animated dots
+
+### 5. Onboarding Persona Flip
+- Step 1 persona cards: hover triggers `rotateY(6deg)` + glow pulse
+- Selected card: full blue border + checkmark overlay
+
+---
+
+## Backend-to-Frontend API Contract Summary
+
+| Frontend Call | Server 1 Endpoint | Auth Required |
+|---|---|---|
+| Resume upload | `POST /api/resume/upload` | JWT |
+| Job feed | `GET /api/dashboard` | JWT |
+| Apply to job | `POST /api/apply` (add this) | JWT |
+| WhatsApp QR | `GET /api/whatsapp/qr` | JWT |
+| Agent status | `GET /api/agents/status` (NEW) | JWT + Agent-Secret |
+| Career intel | `GET /api/agents/career-intel` (proxy) | JWT |
+| Skill gap | `GET /api/agents/skill-gap` (proxy) | JWT |
+
+> [!IMPORTANT]
+> `GET /api/agents/status` endpoint needs to be ADDED to Server 1. It queries the `agent_logs` table for the last-run timestamp and status of each agent. This is a new endpoint needed for the Agent Heartbeat panel.
+
+---
+
+## Verification Plan
+
+### Automated — TypeScript Typecheck
+```bash
+cd frontend && npm run typecheck
+```
+Expect: 0 errors.
+
+### Automated — ESLint
+```bash
+cd frontend && npm run lint
+```
+Expect: 0 errors, 0 warnings.
+
+### Visual QA — Browser (Manual)
+```bash
+cd frontend && npm run dev
+# Open http://localhost:3000
+```
+Check each breakpoint: 375px (mobile), 768px (tablet), 1280px (desktop), 1440px (wide).
+
+**Pages to check:**
+1. `/` — Landing: all 8 sections visible, Three.js orb loads, marquee runs, pricing shows 3 tiers
+2. `/login` — Google OAuth button renders, no console errors
+3. `/onboarding?step=1` through `?step=7` — each step renders correctly
+4. `/dashboard` — agent heartbeat pills visible, career score chart loads
+5. `/jobs` — job cards render with fit scores, filter bar works
+6. `/applications` — table visible, status chips coloured
+7. `/skill-gap` — radar chart renders, skill bars visible
+8. `/coach` — WhatsApp QR section visible
+9. `/settings` — all sections visible
+
+### Realtime Test
+1. Open `/applications` in Tab A
+2. Insert a test row into `job_applications` table via Supabase dashboard
+3. Verify Tab A updates without refresh within 2 seconds
+
+### Permission Gate Test
+1. Log in as a free user (ensure `tier = 'free'` in DB)
+2. Navigate to `/jobs` — verify job feed shows only 3 cards, rest blurred
+3. Navigate to `/skill-gap` — verify skill gap list is blurred with upgrade CTA
+4. Verify no "hidden" locked features (all must be blurred, not absent)
+
+### Lighthouse
+```bash
+# After deploying or using next build + next start
+npx lighthouse http://localhost:3000 --only-categories=performance,accessibility --output=json
+```
+Targets: Performance ≥ 85, Accessibility ≥ 90.

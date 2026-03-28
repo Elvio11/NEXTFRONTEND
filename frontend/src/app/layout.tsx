@@ -1,13 +1,17 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Fira_Sans, Fira_Code } from 'next/font/google'
 import '@/styles/globals.css'
 import { Providers } from '@/components/providers/Providers'
 
-const inter = Inter({
+const firaSans = Fira_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-inter',
-  display: 'swap',
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-fira-sans',
+})
+
+const firaCode = Fira_Code({
+  subsets: ['latin'],
+  variable: '--font-fira-code',
 })
 
 export const metadata: Metadata = {
@@ -22,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable}>
-      <body className="bg-[#050505] text-[#f1f5f9] font-sans" suppressHydrationWarning>
+    <html lang="en" className={`${firaSans.variable} ${firaCode.variable}`}>
+      <body className="bg-[#050505] text-[#f1f5f9] font-sans antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

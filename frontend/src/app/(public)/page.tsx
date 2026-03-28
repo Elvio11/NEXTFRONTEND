@@ -1,316 +1,285 @@
 'use client'
-export const dynamic = 'force-dynamic'
-import { GridBackground } from '@/components/ui/GridBackground'
-import { RadialGlow } from '@/components/ui/RadialGlow'
-import { AnimatedText } from '@/components/ui/AnimatedText'
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import { TheSwarmBrain } from '@/components/ui/TheSwarmBrain'
+import { MNCWall } from '@/components/ui/MNCWall'
+import { AgentHeartbeatGrid } from '@/components/ui/AgentHeartbeatGrid'
+import { TelegramConnectWidget } from '@/components/ui/TelegramConnectWidget'
 import { GlowButton } from '@/components/ui/GlowButton'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { BentoGrid } from '@/components/ui/BentoGrid'
 import { ScrollReveal } from '@/components/ui/ScrollReveal'
 import {
-    FileSearch,
-    Zap,
-    MessageCircle,
-    Brain,
-    TrendingUp,
-    BarChart3,
-    Search,
-    Check,
+  FileText,
+  Zap,
+  BarChart3,
+  ArrowRight,
+  Fingerprint,
 } from 'lucide-react'
-import { motion } from 'framer-motion'
-
-const words = ['Applies', 'Tailors', 'Scores', 'Negotiates']
-
-const statItems = [
-    '150,000+ Live Jobs',
-    '15 AI Agents',
-    'Auto-Apply · Indeed + LinkedIn',
-    '₹0/msg WhatsApp Coaching',
-    '10 Applications/Day',
-    'Self-Learning System',
-]
+import { AgentAvatar } from '@/components/ui/AgentAvatar'
 
 export default function LandingPage() {
-    return (
-        <main className="bg-[#050505] min-h-screen text-[#f1f5f9] overflow-x-hidden">
+  return (
+    <main className="bg-bg-base min-h-screen text-content-primary overflow-x-hidden font-sans">
+      
+      {/* Section 1 — Hero: The Swarm Brain */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center pt-24 pb-12 px-6 overflow-hidden">
+        {/* Background Glows */}
+        <div className="absolute top-0 inset-x-0 h-screen bg-hero-glow pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[1000px] aspect-square bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-            {/* Section 1 — Hero */}
-            <section className="relative min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-6 text-center">
-                <GridBackground />
-                <RadialGlow color="blue" position="top" />
+        <div className="relative z-10 w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <motion.div
+            initial={{ opacity: 0, x: -40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="text-center lg:text-left space-y-8"
+          >
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold tracking-widest uppercase">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </span>
+              Swarm-Native Job Intelligence
+            </div>
 
-                <motion.div
-                    className="relative z-10 max-w-4xl mx-auto"
-                    initial="hidden"
-                    animate="visible"
-                    variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-                >
-                    {/* Eyebrow pill */}
-                    <motion.div
-                        variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
-                    >
-                        <span className="inline-block text-sm px-4 py-1.5 rounded-full bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[#64748b] mb-6">
-                            ✦&nbsp; {"India's First AI Job Automation Platform"}
-                        </span>
-                    </motion.div>
+            <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight text-white">
+              Hire the <span className="text-blue-500">Swarm</span>.
+              <br />
+              Secure your <span className="text-violet-500">Future</span>.
+            </h1>
 
-                    {/* H1 */}
-                    <motion.h1
-                        className="text-5xl md:text-7xl font-extrabold leading-tight text-[#f1f5f9] mb-6"
-                        variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
-                    >
-                        Your AI that{' '}
-                        <AnimatedText words={words} className="min-w-[4ch] inline-block" />
-                        <br />
-                        while you sleep
-                    </motion.h1>
+            <p className="text-lg md:text-xl text-content-muted max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              Talvix deploys 15 specialized AI agents to find, score, and apply to 
+              premium jobs from the Indian market while you sleep.
+            </p>
 
-                    {/* Subhead */}
-                    <motion.p
-                        className="text-lg md:text-xl text-[#64748b] max-w-2xl mx-auto mb-10"
-                        variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
-                    >
-                        Talvix scrapes 150,000+ jobs nightly, scores every one against your
-                        profile, and auto-applies to the best — all before you wake up.
-                    </motion.p>
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4">
+              <GlowButton variant="primary" size="lg" href="/login" className="px-10 h-14 text-base">
+                Join the Swarm
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </GlowButton>
+              <GlowButton variant="ghost" size="lg" href="#how" className="h-14 text-base border-white/5 bg-white/5">
+                Explore the Network
+              </GlowButton>
+            </div>
 
-                    {/* CTAs */}
-                    <motion.div
-                        className="flex flex-wrap gap-4 justify-center mb-8"
-                        variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
-                    >
-                        <GlowButton variant="primary" size="lg" href="/login">
-                            Start Free — No Card Needed
-                        </GlowButton>
-                        <GlowButton variant="ghost" size="lg" href="#how">
-                            See How It Works ↓
-                        </GlowButton>
-                    </motion.div>
+            <div className="flex items-center justify-center lg:justify-start gap-8 pt-4">
+              <div key="stat-jobs">
+                <p className="text-2xl font-bold text-white">150K+</p>
+                <p className="text-[10px] uppercase tracking-widest text-content-muted font-bold">Live Jobs</p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div key="stat-agents">
+                <p className="text-2xl font-bold text-white">15</p>
+                <p className="text-[10px] uppercase tracking-widest text-content-muted font-bold">AI Agents</p>
+              </div>
+              <div className="w-px h-8 bg-white/10" />
+              <div key="stat-wa">
+                <p className="text-2xl font-bold text-white">₹0</p>
+                <p className="text-[10px] uppercase tracking-widest text-content-muted font-bold">WA Coaching</p>
+              </div>
+            </div>
+          </motion.div>
 
-                    {/* Social proof */}
-                    <motion.div
-                        variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6 } } }}
-                    >
-                        <span className="inline-block text-sm px-5 py-2 rounded-full bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[#64748b]">
-                            ★★★★★&nbsp; Trusted by 2,000+ job seekers&nbsp;·&nbsp;₹0 to start&nbsp;·&nbsp;Cancel anytime
-                        </span>
-                    </motion.div>
-                </motion.div>
-            </section>
+          {/* Swarm Visualization Right Side */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
+            className="relative"
+          >
+            <TheSwarmBrain />
+          </motion.div>
+        </div>
+      </section>
 
-            {/* Section 2 — Stats Ticker */}
-            <section className="bg-[#0d0d0d] border-y border-[rgba(255,255,255,0.08)] py-4 overflow-hidden">
-                <div className="flex animate-marquee whitespace-nowrap">
-                    {[...statItems, ...statItems].map((item, i) => (
-                        <span
-                            key={i}
-                            className="inline-block mx-8 text-sm text-[#64748b] flex-shrink-0"
-                        >
-                            {item}
-                            <span className="mx-8 text-[rgba(255,255,255,0.12)]">·</span>
-                        </span>
-                    ))}
-                </div>
-            </section>
+      {/* Section 2 — The Success Wall */}
+      <section className="border-y border-white/5">
+        <MNCWall />
+      </section>
 
-            {/* Section 3 — Bento Feature Grid */}
-            <section id="features" className="max-w-7xl mx-auto px-6 py-20">
-                <ScrollReveal className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-[#f1f5f9] mb-4">
-                        Everything your job search needs. Automated.
-                    </h2>
-                    <p className="text-[#64748b] text-lg">
-                        15 specialised AI agents. Working 24/7 so you don&apos;t have to.
-                    </p>
-                </ScrollReveal>
+      {/* Section 3 — The Agent Registry */}
+      <section id="features" className="max-w-7xl mx-auto px-6 py-24">
+        <ScrollReveal className="text-center mb-16 space-y-4">
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight">
+            Meet the Swarm
+          </h2>
+          <p className="text-content-muted text-lg max-w-2xl mx-auto">
+            15 specialised Sanskrit-named agents, each a master of one specific part 
+            of your professional journey.
+          </p>
+        </ScrollReveal>
 
-                <ScrollReveal delay={0.1}>
-                    <BentoGrid>
-                        <div className="md:col-span-4">
-                            <GlassCard glow="blue" className="p-8 h-full">
-                                <FileSearch className="w-7 h-7 text-[#3b82f6] mb-4" />
-                                <h3 className="text-2xl font-bold text-[#f1f5f9] mb-3">
-                                    Knows your resume better than you do
-                                </h3>
-                                <p className="text-[#64748b] mb-6">
-                                    Parses every word. Generates 3 career persona variants. Finds
-                                    your strongest market angle for every role.
-                                </p>
-                                <div className="space-y-2">
-                                    {[1, 2, 3].map((i) => (
-                                        <div
-                                            key={i}
-                                            className="h-1 bg-[rgba(59,130,246,0.4)] rounded-full animate-pulse"
-                                            style={{ width: `${60 + i * 10}%`, animationDelay: `${i * 0.3}s` }}
-                                        />
-                                    ))}
-                                </div>
-                            </GlassCard>
-                        </div>
+        <ScrollReveal delay={0.1}>
+          <AgentHeartbeatGrid />
+        </ScrollReveal>
 
-                        <div className="md:col-span-2">
-                            <GlassCard glow="violet" className="p-8 h-full">
-                                <p className="text-5xl font-extrabold text-[#f1f5f9] mb-2">150K+</p>
-                                <p className="text-[#64748b]">jobs scored against your profile every night</p>
-                                <p className="text-sm text-[#334155] mt-3">
-                                    Only scores ≥ 40 reach you. Signal not noise.
-                                </p>
-                            </GlassCard>
-                        </div>
-
-                        <div className="md:col-span-2">
-                            <GlassCard className="p-6 h-full">
-                                <Zap className="w-6 h-6 text-[#3b82f6] mb-3" />
-                                <h3 className="text-lg font-bold text-[#f1f5f9] mb-2">Applies while you sleep</h3>
-                                <p className="text-[#64748b] text-sm">
-                                    Indeed Easy Apply + LinkedIn Easy Apply. 8PM–6AM window. 10 per day.
-                                </p>
-                            </GlassCard>
-                        </div>
-
-                        <div className="md:col-span-2">
-                            <GlassCard className="p-6 h-full">
-                                <MessageCircle className="w-6 h-6 text-green-400 mb-3" />
-                                <h3 className="text-lg font-bold text-[#f1f5f9] mb-2">₹0 per message. Forever.</h3>
-                                <p className="text-[#64748b] text-sm mb-3">
-                                    Baileys-powered. No Meta API costs. Daily coaching + application alerts.
-                                </p>
-                                <span className="inline-block text-xs px-3 py-1 rounded-full bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] text-[#64748b]">
-                                    ₹0/msg vs ₹1.10/msg competitors
-                                </span>
-                            </GlassCard>
-                        </div>
-
-                        <div className="md:col-span-2">
-                            <GlassCard glow="violet" className="p-6 h-full">
-                                <Brain className="w-6 h-6 text-[#8b5cf6] mb-3" />
-                                <h3 className="text-lg font-bold text-[#f1f5f9] mb-2">Gets smarter with every result</h3>
-                                <p className="text-[#64748b] text-sm">
-                                    3-layer learning: real-time signals, daily micro-adjustments, weekly calibration.
-                                </p>
-                            </GlassCard>
-                        </div>
-
-                        <div className="md:col-span-3">
-                            <GlassCard className="p-6 h-full">
-                                <TrendingUp className="w-6 h-6 text-[#3b82f6] mb-3" />
-                                <h3 className="text-lg font-bold text-[#f1f5f9] mb-2">Know exactly what to learn next</h3>
-                                <p className="text-[#64748b] text-sm">
-                                    ROI-ranked skill gaps specific to your target roles and market salary data.
-                                </p>
-                            </GlassCard>
-                        </div>
-
-                        <div className="md:col-span-3">
-                            <GlassCard glow="blue" className="p-6 h-full">
-                                <BarChart3 className="w-6 h-6 text-[#3b82f6] mb-3" />
-                                <h3 className="text-lg font-bold text-[#f1f5f9] mb-2">Your 4-dimension career score</h3>
-                                <p className="text-[#64748b] text-sm">
-                                    Skills 30% · Experience 25% · Market Demand 25% · Salary Position 20%
-                                </p>
-                            </GlassCard>
-                        </div>
-                    </BentoGrid>
-                </ScrollReveal>
-            </section>
-
-            {/* Section 4 — How It Works */}
-            <section id="how" className="max-w-3xl mx-auto px-6 py-20">
-                <ScrollReveal className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-[#f1f5f9] mb-4">
-                        From upload to auto-applied. 4 steps.
-                    </h2>
-                </ScrollReveal>
-
-                <div className="space-y-4">
-                    {[
-                        { n: 1, title: 'Upload resume', desc: 'PDF or DOCX. Agent 3 parses and builds your profile.', icon: FileSearch },
-                        { n: 2, title: 'AI scores jobs', desc: '150K+ jobs ranked overnight. Best matches surface.', icon: Search },
-                        { n: 3, title: 'You review', desc: 'See every job. Control the apply list. Approve in one click.', icon: Check },
-                        { n: 4, title: 'Wake up to results', desc: 'Applied to the best. WhatsApp confirms each one.', icon: MessageCircle },
-                    ].map(({ n, title, desc, icon: Icon }) => (
-                        <ScrollReveal key={n} delay={n * 0.1}>
-                            <GlassCard className="p-6 flex items-start gap-4">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white bg-[#3b82f6] flex-shrink-0">
-                                    {n}
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="font-bold text-[#f1f5f9] mb-1">{title}</h3>
-                                    <p className="text-[#64748b] text-sm">{desc}</p>
-                                </div>
-                                <Icon className="w-5 h-5 text-[#3b82f6] flex-shrink-0 mt-0.5" />
-                            </GlassCard>
-                        </ScrollReveal>
-                    ))}
-                </div>
-            </section>
-
-            {/* Section 5 — Pricing */}
-            <section id="pricing" className="max-w-3xl mx-auto px-6 py-20">
-                <ScrollReveal className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-[#f1f5f9] mb-4">Simple pricing.</h2>
-                </ScrollReveal>
-
-                <ScrollReveal delay={0.1}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <GlassCard className="p-8">
-                            <p className="text-xs text-[#64748b] uppercase font-semibold tracking-wider mb-2">Free Forever</p>
-                            <p className="text-5xl font-extrabold text-[#f1f5f9] mb-1">₹0</p>
-                            <ul className="space-y-2 my-6">
-                                {['Job feed', 'Career score', 'Skill gap', 'WhatsApp coaching'].map((f) => (
-                                    <li key={f} className="flex items-center gap-2 text-sm text-[#64748b]">
-                                        <Check className="w-4 h-4 text-[#3b82f6]" />
-                                        {f}
-                                    </li>
-                                ))}
-                            </ul>
-                            <GlowButton variant="ghost" size="md" href="/login" className="w-full">Start Free</GlowButton>
-                        </GlassCard>
-
-                        <GlassCard glow="blue" className="p-8 border border-[rgba(59,130,246,0.3)]">
-                            <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs text-[#64748b] uppercase font-semibold tracking-wider">Pro</p>
-                                <span className="text-xs px-2 py-0.5 rounded-full bg-[rgba(59,130,246,0.15)] text-[#3b82f6] border border-[rgba(59,130,246,0.3)]">
-                                    Most popular
-                                </span>
-                            </div>
-                            <p className="text-5xl font-extrabold text-[#f1f5f9] mb-1">
-                                ₹499 <span className="text-xl font-normal text-[#64748b]">/month</span>
-                            </p>
-                            <ul className="space-y-2 my-6">
-                                {['All Free features', 'Auto-apply (10/day)', 'Full fit analysis', 'Resume tailoring', 'Cover letters', 'Dream company boost'].map((f) => (
-                                    <li key={f} className="flex items-center gap-2 text-sm text-[#64748b]">
-                                        <Check className="w-4 h-4 text-[#3b82f6]" />
-                                        {f}
-                                    </li>
-                                ))}
-                            </ul>
-                            <GlowButton variant="primary" size="md" href="/login" className="w-full">Upgrade to Pro</GlowButton>
-                        </GlassCard>
+        <div className="mt-20">
+          <BentoGrid>
+            <div className="md:col-span-4">
+              <GlassCard glow="blue" className="p-8 h-full">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="mb-4">
+                      <AgentAvatar
+                        icon={Fingerprint}
+                        color="#60a5fa"
+                        name="Parichay"
+                        className="w-14 h-14"
+                      />
                     </div>
-                </ScrollReveal>
-            </section>
+                    <h3 className="text-2xl font-bold text-white mb-3">
+                      Parichay: Identifying Your Potential
+                    </h3>
+                    <p className="text-content-muted mb-6 leading-relaxed">
+                      Our Resume Intelligence agent parses your experience with deeper semantic 
+                      understanding than any traditional ATS. It doesn't just read keywords; it builds 
+                      your professional identity.
+                    </p>
+                  </div>
+                  <div className="hidden lg:block w-48 h-48 bg-blue-500/5 rounded-full blur-2xl -mr-12" />
+                </div>
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-1 flex-grow bg-blue-500/20 rounded-full overflow-hidden"
+                    >
+                      <motion.div
+                        className="h-full bg-blue-500"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: '100%' }}
+                        transition={{ duration: 1, delay: i * 0.2 }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+            </div>
 
-            {/* Section 6 — CTA Band */}
-            <section className="relative px-6 py-24 overflow-hidden">
-                <RadialGlow color="blue" position="centre" className="opacity-20" />
-                <ScrollReveal className="relative z-10 text-center max-w-2xl mx-auto">
-                    <h2 className="text-4xl font-bold text-[#f1f5f9] mb-4">
-                        Your next job is already in our database.
-                    </h2>
-                    <p className="text-[#64748b] mb-8 text-lg">Start free. No card. No catch.</p>
-                    <GlowButton variant="primary" size="lg" href="/login">
-                        Create your free account
-                    </GlowButton>
-                </ScrollReveal>
-            </section>
+            <div className="md:col-span-2">
+              <GlassCard glow="violet" className="p-8 h-full flex flex-col justify-center">
+                <p className="text-5xl font-extrabold text-white mb-2 tracking-tighter">150K+</p>
+                <p className="text-content-muted font-medium">jobs scored nightly by Sankhya</p>
+                <div className="mt-4 p-2 rounded-lg bg-white/5 border border-white/10 text-xs text-content-muted italic">
+                  "Only scores ≥ 40 reach your desk. Pure signal, zero noise."
+                </div>
+              </GlassCard>
+            </div>
 
-            {/* Footer */}
-            <footer className="border-t border-[rgba(255,255,255,0.08)] px-6 py-8 text-center">
-                <p className="text-[#334155] text-sm">
-                    © 2025 Talvix · Made in India for Indian job seekers
+            <div className="md:col-span-3">
+              <GlassCard className="p-8 h-full">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="mb-4">
+                    <AgentAvatar
+                      icon={Zap}
+                      color="#f97316"
+                      name="Setu"
+                      className="w-12 h-12"
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Setu: The Application Bridge</h3>
+                </div>
+                <p className="text-content-muted text-sm leading-relaxed mb-6">
+                  Seamlessly applying through Indeed and LinkedIn Easy Apply. Setu handles 
+                  the mechanics of submission during high-stability windows (8PM – 6AM).
                 </p>
-            </footer>
-        </main>
-    )
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-green-500">Execution Live</span>
+                </div>
+              </GlassCard>
+            </div>
+
+            <div className="md:col-span-3">
+              <GlassCard glow="violet" className="p-8 h-full">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="mb-4">
+                    <AgentAvatar
+                      icon={BarChart3}
+                      color="#8b5cf6"
+                      name="Niti"
+                      className="w-12 h-12"
+                    />
+                  </div>
+                  <h3 className="text-xl font-bold text-white">Niti: Career Intelligence</h3>
+                </div>
+                <p className="text-content-muted text-sm leading-relaxed mb-6">
+                  Salary benchmarking and market demand analysis for the Indian tech ecosystem. 
+                  Know your worth before the first interview.
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[40, 70, 90].map((_, i) => (
+                    <div key={i} className="h-8 bg-violet-500/10 rounded border border-violet-500/20 flex items-center justify-center">
+                      <div className="h-1 w-full max-w-[60%] bg-violet-500/40 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </GlassCard>
+            </div>
+          </BentoGrid>
+        </div>
+      </section>
+
+      {/* Section 4 — The Primary Channel */}
+      <section className="max-w-5xl mx-auto px-6 py-12">
+        <TelegramConnectWidget />
+      </section>
+
+      {/* Section 5 — CTA Band */}
+      <section className="relative px-6 py-32 overflow-hidden border-t border-white/5">
+        <div className="absolute inset-0 bg-hero-glow opacity-30 pointer-events-none" />
+        <ScrollReveal className="relative z-10 text-center max-w-3xl mx-auto space-y-8">
+          <h2 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight leading-tight">
+            The Swarm is ready. <br /><span className="text-blue-500">Are you?</span>
+          </h2>
+          <p className="text-content-muted text-xl max-w-xl mx-auto">
+            Join the elite circle of job seekers using agentic swarms to dominate 
+            the placement season.
+          </p>
+          <GlowButton variant="primary" size="lg" href="/login" className="px-12 h-16 text-lg font-bold shadow-glow-blue">
+            Create Free Account
+          </GlowButton>
+          <p className="text-sm text-content-subtle">
+            ₹0 to start · No credit card · India-first ecosystem
+          </p>
+        </ScrollReveal>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 bg-white/[0.01] px-6 py-12">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="col-span-2 space-y-4">
+            <h2 className="text-2xl font-black italic tracking-tighter text-white">TALVIX</h2>
+            <p className="text-sm text-content-muted max-w-sm">
+              The world&apos;s first student-focused agent swarm for job placement automation. 
+              Built with precision in India, for the global workforce.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white">The Swarm</h4>
+            <ul className="space-y-2 text-sm text-content-muted">
+              <li>Saarthi</li>
+              <li>Parichay</li>
+              <li>Anveshan</li>
+              <li>Setu</li>
+            </ul>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-white">Trust</h4>
+            <ul className="space-y-2 text-sm text-content-muted">
+              <li>MNC Placements</li>
+              <li>Privacy Vault</li>
+              <li>Security Audit</li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/5 text-center text-[10px] text-content-subtle uppercase tracking-[0.2em]">
+          © 2026 Talvix Technologies Private Limited · Swarm-Operating System v3.5
+        </div>
+      </footer>
+    </main>
+  )
 }

@@ -1,15 +1,16 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Some features are canary only or renamed in 15.5.x
+  },
   images: {
     unoptimized: true,
+    formats: ['image/avif', 'image/webp'],
   },
   eslint: {
-    // ESLint v8 is incompatible with Next.js 15 flat config format
-    // TODO: upgrade to eslint v9 in Phase 5.2
     ignoreDuringBuilds: true,
   },
 }
 
 export default nextConfig
-
