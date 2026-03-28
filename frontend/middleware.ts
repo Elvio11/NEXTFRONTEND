@@ -74,7 +74,10 @@ export async function middleware(request: NextRequest) {
             .eq('id', user.id)
             .single()
 
-        if (profile && !profile.onboarding_complete) {
+        // Redirect to onboarding if:
+        // 1. No users row yet (new Google OAuth user — profile is null)
+        // 2. Row exists but onboarding_complete is false
+        if (!profile || !profile.onboarding_complete) {
             const url = request.nextUrl.clone()
             url.pathname = '/onboarding'
             return withCookies(NextResponse.redirect(url))
