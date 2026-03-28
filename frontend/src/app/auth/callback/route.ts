@@ -9,6 +9,10 @@ export async function GET(request: Request) {
 
   if (code) {
     const cookieStore = await cookies()
+
+    // Track every cookie written during the exchange so we can forward them
+    const cookiesToForward: Array<{ name: string; value: string; options?: Record<string, unknown> }> = []
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,10 +21,12 @@ export async function GET(request: Request) {
           getAll: () => cookieStore.getAll(),
           setAll: (cookiesToSet) => {
             cookiesToSet.forEach(({ name, value, options }) => {
+              cookiesToForward.push({ name, value, options })
               try {
-                cookieStore.set(name, value, options)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                cookieStore.set(name, value, options as any)
               } catch {
-                // In middleware or server components, ignore set failures
+                // ignore — Route Handler, not a Server Component
               }
             })
           },
@@ -30,15 +36,14 @@ export async function GET(request: Request) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      // After exchange, create the redirect and copy ALL set cookies onto it
       const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin
-      const redirectUrl = `${siteUrl}${next}`
-      const response = NextResponse.redirect(redirectUrl)
+      const response = NextResponse.redirect(`${siteUrl}${next}`)
 
-      // Copy cookies set during the exchange onto the redirect response
-      // so the browser stores the session before hitting the protected route
-      cookieStore.getAll().forEach(({ name, value }) => {
-        response.cookies.set(name, value)
+      // Forward all session cookies written during the exchange onto the
+      // redirect response so the browser stores them BEFORE hitting the middleware
+      cookiesToForward.forEach(({ name, value, options }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        response.cookies.set(name, value, options as any)
       })
 
       return response
