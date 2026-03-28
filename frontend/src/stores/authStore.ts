@@ -11,9 +11,11 @@ interface AuthState {
     session: Session | null
     profile: TalvixUser | null
     permissionState: PermissionState | null
+    initialized: boolean
     setUser: (user: User | null) => void
     setSession: (session: Session | null) => void
     setProfile: (profile: TalvixUser | null) => void
+    setInitialized: (initialized: boolean) => void
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -21,6 +23,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     session: null,
     profile: null,
     permissionState: null,
+    initialized: false,
     setUser: (user) => set({ user }),
     setSession: (session) => set({ session }),
     setProfile: (profile) =>
@@ -33,4 +36,5 @@ export const useAuthStore = create<AuthState>((set) => ({
                 )
                 : null,
         }),
+    setInitialized: (initialized) => set({ initialized }),
 }))

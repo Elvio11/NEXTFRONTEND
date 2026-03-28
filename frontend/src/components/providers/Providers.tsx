@@ -24,7 +24,7 @@ function getQueryClient() {
 
 export function Providers({ children }: { children: ReactNode }) {
     const queryClient = getQueryClient()
-    const { setUser, setSession } = useAuthStore()
+    const { setUser, setSession, setInitialized } = useAuthStore()
 
     useEffect(() => {
         // Only initialise Supabase on client — avoids build-time env-var lookup
@@ -37,6 +37,9 @@ export function Providers({ children }: { children: ReactNode }) {
                 setUser(data.session?.user ?? null)
             })
             .catch(() => {/* silently ignore failed initial session fetch */ })
+            .finally(() => {
+                setInitialized(true)
+            })
 
         const {
             data: { subscription },
@@ -44,6 +47,7 @@ export function Providers({ children }: { children: ReactNode }) {
             (_event: string, session: Session | null) => {
                 setSession(session)
                 setUser(session?.user ?? null)
+                setInitialized(true)
             }
         )
 
