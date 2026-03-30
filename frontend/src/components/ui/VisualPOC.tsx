@@ -5,7 +5,7 @@ import {
   Zap, Trophy, FileText, Search, Send, 
   Sparkles, TrendingUp, 
   FileJson, Mail, ShieldCheck, Calendar, Settings, 
-  Activity, Database, Network, Cpu, CheckCircle2, User,
+  Activity, CheckCircle2,
   Briefcase
 } from 'lucide-react'
 import { NeuralSwarm } from './CustomIcons'
@@ -264,7 +264,7 @@ export const VisualPOC = () => {
              </div>
 
              {/* 15 Orbiting Agents with Workflow Highlight */}
-             {AGENTS.map((agent, i) => {
+             {AGENTS.map((agent) => {
                const isActive = STAGES[currentStage].agent === agent.id
                
                return (
