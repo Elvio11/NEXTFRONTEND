@@ -5,6 +5,7 @@ import { DreamCompanies } from '@/components/settings/DreamCompanies'
 import { BlacklistManager } from '@/components/settings/BlacklistManager'
 import { GlassCard } from '@/components/ui/GlassCard'
 import { ShieldCheck, Command, Lock, Smartphone, Globe, Cloud } from 'lucide-react'
+import { TelegramConnectWidget } from '@/components/ui/TelegramConnectWidget'
 import { cn } from '@/lib/utils'
 import { useDashboardStore } from '@/stores/dashboardStore'
 
@@ -85,6 +86,9 @@ export default function SettingsPage() {
                 </div>
               </div>
            </GlassCard>
+
+           {/* Moved Telegram Connect Widget here */}
+           <TelegramConnectWidget />
         </div>
 
         {/* Right Column: Company Preferences */}

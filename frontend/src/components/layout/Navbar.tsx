@@ -2,16 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ShieldCheck, Search, Bell, Menu } from 'lucide-react'
+import { Search, Bell, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { StudentModeToggle } from '@/components/ui/StudentModeToggle'
+import { Logo } from '@/components/ui/Logo'
 import { useAuthStore } from '@/stores/authStore'
-import { useDashboardStore } from '@/stores/dashboardStore'
 
 export function Navbar() {
     const pathname = usePathname()
     const { profile } = useAuthStore()
-    const { studentMode } = useDashboardStore()
     const isPublic = !pathname.startsWith('/dashboard') && !pathname.startsWith('/jobs') && !pathname.startsWith('/applications')
 
     return (
@@ -21,15 +20,8 @@ export function Navbar() {
         )}>
             <div className="flex-1 flex items-center justify-between max-w-7xl mx-auto w-full">
                 {/* Brand */}
-                <Link href="/" className="flex items-center gap-3 group">
-                   <div className={cn(
-                     "p-2 rounded-xl border transition-all duration-500 shadow-glow-blue/10",
-                     studentMode 
-                      ? "bg-violet-500/10 border-violet-500/30 text-violet-400 group-hover:shadow-glow-violet/20" 
-                      : "bg-blue-500/10 border-blue-500/30 text-blue-400 group-hover:shadow-glow-blue/20"
-                   )}>
-                      <ShieldCheck className="w-5 h-5" />
-                   </div>
+                <Link href="/" className="flex items-center group">
+                   <Logo size="sm" iconOnly variant="dark" />
                    <div className="flex flex-col">
                       <span className="text-sm font-black italic tracking-tighter text-white uppercase group-hover:text-blue-400 transition-colors">Talvix</span>
                       <span className="text-[8px] font-black uppercase tracking-widest text-content-subtle">Aero-V3 Swarm</span>

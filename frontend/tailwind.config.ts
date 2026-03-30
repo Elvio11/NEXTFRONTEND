@@ -6,14 +6,14 @@ const config: Config = {
     extend: {
       colors: {
         bg: {
-          base: '#050505',
-          surface: '#0d0d0d',
-          raised: '#141414',
+          base: '#f1f7fe',
+          surface: '#ffffff',
+          raised: '#f8fafc',
         },
         glass: {
-          DEFAULT: 'rgba(255,255,255,0.04)',
-          hover: 'rgba(255,255,255,0.07)',
-          border: 'rgba(255,255,255,0.08)',
+          DEFAULT: 'rgba(255,255,255,0.8)',
+          hover: 'rgba(255,255,255,0.95)',
+          border: 'rgba(0,0,0,0.1)',
         },
         accent: {
           blue: '#3b82f6',
@@ -26,35 +26,35 @@ const config: Config = {
           'orange-glow': 'rgba(249,115,22,0.12)',
         },
         content: {
-          primary: '#f1f5f9',
-          muted: '#64748b',
-          subtle: '#334155',
+          primary: '#0f172a',
+          muted: '#475569',
+          subtle: '#64748b',
         },
       },
       backgroundImage: {
         'hero-glow':
-          'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59,130,246,0.15), transparent)',
+          'radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59,130,246,0.1), transparent)',
         'card-glow':
-          'radial-gradient(ellipse at top left, rgba(59,130,246,0.08), transparent 60%)',
+          'radial-gradient(ellipse at top left, rgba(59,130,246,0.05), transparent 60%)',
         'violet-glow':
-          'radial-gradient(ellipse at bottom right, rgba(139,92,246,0.1), transparent 60%)',
+          'radial-gradient(ellipse at bottom right, rgba(139,92,246,0.08), transparent 60%)',
         'green-glow':
-          'radial-gradient(ellipse at center, rgba(34,197,94,0.05), transparent 70%)',
+          'radial-gradient(ellipse at center, rgba(34,197,94,0.03), transparent 70%)',
       },
       boxShadow: {
         glass:
-          '0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.05)',
+          '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)',
         'glass-lg':
-          '0 0 0 1px rgba(255,255,255,0.08), 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+          '0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)',
         'glow-blue':
-          '0 0 20px rgba(59,130,246,0.3), 0 0 60px rgba(59,130,246,0.1)',
-        'glow-sm': '0 0 8px rgba(59,130,246,0.2)',
-        'glow-green': '0 0 20px rgba(34,197,94,0.2), 0 0 40px rgba(34,197,94,0.05)',
-        'glow-orange': '0 0 20px rgba(249,115,22,0.2), 0 0 40px rgba(249,115,22,0.05)',
+          '0 0 20px rgba(59,130,246,0.15), 0 0 60px rgba(59,130,246,0.05)',
+        'glow-sm': '0 0 8px rgba(59,130,246,0.1)',
+        'glow-green': '0 0 20px rgba(34,197,94,0.1), 0 0 40px rgba(34,197,94,0.03)',
+        'glow-orange': '0 0 20px rgba(249,115,22,0.1), 0 0 40px rgba(249,115,22,0.03)',
       },
       backdropBlur: {
-        glass: '12px',
-        swarm: '4px',
+        glass: '16px',
+        swarm: '6px',
       },
       fontFamily: {
         sans: ['var(--font-fira-sans)', 'system-ui', 'sans-serif'],

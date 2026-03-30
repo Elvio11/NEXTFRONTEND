@@ -1,188 +1,146 @@
-import { useMemo, useRef, useEffect, useState } from 'react'
+'use client'
+
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import gsap from 'gsap'
-import {
-  Activity,
-  Shield,
-  Search,
-  Zap,
-  MessageSquare,
-  FileText,
-  Send,
-  RefreshCw,
-  BarChart3,
-  GraduationCap,
-  Briefcase,
-  Brain,
-  Code,
-  Target,
-  Fingerprint
-} from 'lucide-react'
 import { AgentAvatar } from './AgentAvatar'
+import { 
+  SaarthiIcon, PraveshIcon, ParichayIcon, KaushalIcon, NitiIcon, 
+  SankhyaIcon, ShuddhiIcon, GuruIcon, AnveshanIcon, ShilpakaarIcon, 
+  PrernaIcon, SetuIcon, VachaIcon, AnuvartanIcon, SamanvayIcon 
+} from './AgentIcons'
 
-interface AgentNode {
-  id: number
-  name: string
-  role: string
-  color: string
-  icon: any
-}
-
-const AGENTS: AgentNode[] = [
-  { id: 1, name: 'Saarthi', role: 'Guide', color: '#3b82f6', icon: GraduationCap },
-  { id: 2, name: 'Pravesh', role: 'Entry', color: '#3b82f6', icon: Shield },
-  { id: 3, name: 'Parichay', role: 'Intel', color: '#60a5fa', icon: Fingerprint },
-  { id: 4, name: 'Kaushal', role: 'Skills', color: '#8b5cf6', icon: Target },
-  { id: 5, name: 'Niti', role: 'Career', color: '#8b5cf6', icon: BarChart3 },
-  { id: 6, name: 'Sankhya', role: 'Scorer', color: '#3b82f6', icon: Code },
-  { id: 7, name: 'Shuddhi', role: 'Cleaner', color: '#60a5fa', icon: RefreshCw },
-  { id: 8, name: 'Guru', role: 'Coach', color: '#22c55e', icon: MessageSquare },
-  { id: 9, name: 'Anveshan', role: 'Scraper', color: '#3b82f6', icon: Search },
-  { id: 10, name: 'Shilpakaar', role: 'Tailor', color: '#3b82f6', icon: Briefcase },
-  { id: 11, name: 'Prerna', role: 'Writer', color: '#8b5cf6', icon: FileText },
-  { id: 12, name: 'Setu', role: 'Applier', color: '#f97316', icon: Zap },
-  { id: 13, name: 'Vacha', role: 'Forms', color: '#f97316', icon: Brain },
-  { id: 14, name: 'Anuvartan', role: 'FollowUp', color: '#3b82f6', icon: Send },
-  { id: 15, name: 'Samanvay', role: 'Sync', color: '#60a5fa', icon: Activity },
+const AGENTS = [
+  { id: 1, name: 'Saarthi', icon: SaarthiIcon, color: '#3b82f6', ring: 0 },
+  { id: 2, name: 'Pravesh', icon: PraveshIcon, color: '#3b82f6', ring: 0 },
+  { id: 3, name: 'Parichay', icon: ParichayIcon, color: '#60a5fa', ring: 0 },
+  { id: 4, name: 'Kaushal', icon: KaushalIcon, color: '#8b5cf6', ring: 0 },
+  { id: 5, name: 'Niti', icon: NitiIcon, color: '#8b5cf6', ring: 1 },
+  { id: 6, name: 'Sankhya', icon: SankhyaIcon, color: '#3b82f6', ring: 1 },
+  { id: 7, name: 'Shuddhi', icon: ShuddhiIcon, color: '#60a5fa', ring: 1 },
+  { id: 8, name: 'Guru', icon: GuruIcon, color: '#22c55e', ring: 1 },
+  { id: 9, name: 'Anveshan', icon: AnveshanIcon, color: '#3b82f6', ring: 1 },
+  { id: 10, name: 'Shilpakaar', icon: ShilpakaarIcon, color: '#3b82f6', ring: 2 },
+  { id: 11, name: 'Prerna', icon: PrernaIcon, color: '#8b5cf6', ring: 2 },
+  { id: 12, name: 'Setu', icon: SetuIcon, color: '#f97316', ring: 2 },
+  { id: 13, name: 'Vacha', icon: VachaIcon, color: '#f97316', ring: 2 },
+  { id: 14, name: 'Anuvartan', icon: AnuvartanIcon, color: '#3b82f6', ring: 2 },
+  { id: 15, name: 'Samanvay', icon: SamanvayIcon, color: '#60a5fa', ring: 2 },
 ]
 
-// Connections between related agents
-const CONNECTIONS = [
-  [3, 4], [4, 5], [5, 6], [6, 12], [9, 6], [10, 12], [11, 12], [12, 13], [12, 14], [8, 5], [1, 2], [2, 3], [15, 6]
+const RINGS = [
+  { radius: 110, duration: 25, direction: 1 },
+  { radius: 210, duration: 40, direction: -1 },
+  { radius: 310, duration: 60, direction: 1 },
 ]
 
 export const TheSwarmBrain = () => {
-  const containerRef = useRef<SVGSVGElement>(null)
-  const centerX = 400
-  const centerY = 400
-  const radius = 300
-
-  const nodes = useMemo(() => {
-    return AGENTS.map((agent, i) => {
-      const angle = (i / AGENTS.length) * Math.PI * 2
-      const x = Number((centerX + radius * Math.cos(angle)).toFixed(3))
-      const y = Number((centerY + radius * Math.sin(angle)).toFixed(3))
-      return { ...agent, x, y }
-    })
-  }, [])
-
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
-    if (!containerRef.current) return
-
-    // Pulse animation for connections
-    gsap.to('.connection-path', {
-      strokeDashoffset: 0,
-      duration: 3,
-      repeat: -1,
-      ease: 'linear',
-      stagger: 0.2,
-    })
   }, [])
 
   if (!mounted) return null
 
   return (
-    <div className="relative w-full aspect-square max-w-[800px] mx-auto overflow-visible select-none">
-      <svg
-        ref={containerRef}
-        viewBox="0 0 800 800"
-        className="w-full h-full overflow-visible"
-        style={{ filter: 'drop-shadow(0 0 20px rgba(59,130,246,0.1))' }}
-      >
-        <defs>
-          <linearGradient id="pathGradient" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="rgba(59,130,246,0.2)" />
-            <stop offset="50%" stopColor="rgba(59,130,246,0.6)" />
-            <stop offset="100%" stopColor="rgba(59,130,246,0.2)" />
-          </linearGradient>
-        </defs>
+    <div className="relative w-full aspect-square max-w-[800px] mx-auto overflow-visible select-none flex items-center justify-center">
+      
+      {/* Central Core */}
+      <div className="absolute z-50">
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            boxShadow: [
+              '0 0 40px rgba(59,130,246,0.3)',
+              '0 0 80px rgba(59,130,246,0.5)',
+              '0 0 40px rgba(59,130,246,0.3)'
+            ]
+          }}
+          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          className="w-24 h-24 rounded-full bg-slate-950 border border-blue-500/50 flex items-center justify-center overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-blue-500/10 blur-2xl animate-pulse" />
+          <div className="relative z-10 flex flex-col items-center">
+            <span className="text-[10px] font-mono font-black tracking-widest text-blue-400 uppercase">Talvix</span>
+            <span className="text-[12px] font-mono font-black tracking-widest text-white uppercase">Core</span>
+          </div>
+          
+          {/* Internal rotating elements */}
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
+            className="absolute inset-2 border-t-2 border-blue-400/30 rounded-full"
+          />
+          <motion.div
+            animate={{ rotate: -360 }}
+            transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+            className="absolute inset-4 border-b-2 border-blue-600/20 rounded-full"
+          />
+        </motion.div>
+      </div>
 
-        {/* Connection Paths */}
-        {CONNECTIONS.map(([startId, endId], i) => {
-          const start = nodes.find((n) => n.id === startId)
-          const end = nodes.find((n) => n.id === endId)
-          if (!start || !end) return null
-
-          return (
-            <motion.path
-              key={`path-${i}`}
-              d={`M ${start.x} ${start.y} Q ${centerX} ${centerY} ${end.x} ${end.y}`}
-              fill="none"
-              stroke="url(#pathGradient)"
-              strokeWidth="1"
-              strokeDasharray="4 8"
-              className="connection-path"
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: 1, opacity: 0.4 }}
-              transition={{ duration: 1.5, delay: i * 0.1 }}
-            />
-          )
-        })}
-
-        {/* Swarm Core */}
-        <motion.circle
-          cx={centerX}
-          cy={centerY}
-          r={20}
-          className="fill-accent-blue/20 stroke-accent-blue/40"
-          strokeWidth="1"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', damping: 10, stiffness: 100 }}
-        />
-        <circle cx={centerX} cy={centerY} r={5} className="fill-accent-blue animate-pulse" />
-
-        {/* Agent Nodes */}
-        {nodes.map((node, i) => (
-          <g key={node.id} className="cursor-pointer group">
-            {/* Connection target (invisible but large for easier hover) */}
-            <circle cx={node.x} cy={node.y} r={20} fill="transparent" />
+      {/* Orbital Rings */}
+      {RINGS.map((ring, idx) => (
+        <div key={idx} className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <motion.div
+            animate={{ rotate: ring.direction * 360 }}
+            transition={{ duration: ring.duration, repeat: Infinity, ease: 'linear' }}
+            style={{ width: ring.radius * 2, height: ring.radius * 2 }}
+            className="relative pointer-events-none"
+          >
+            {/* The actual ring line */}
+            <div className="absolute inset-0 rounded-full border border-slate-200 border-dashed opacity-20" />
             
-            <foreignObject
-              x={node.x - 20}
-              y={node.y - 20}
-              width="40"
-              height="40"
-              className="overflow-visible"
-            >
-              <AgentAvatar
-                icon={node.icon}
-                color={node.color}
-                name={node.name}
-                className="w-10 h-10"
-                glowIntensity="low"
-              />
-            </foreignObject>
+            {/* Agents on this ring */}
+            {AGENTS.filter(a => a.ring === idx).map((agent, i, arr) => {
+              const angle = (i / arr.length) * Math.PI * 2
+              const x = Math.cos(angle) * ring.radius
+              const y = Math.sin(angle) * ring.radius
+              
+              return (
+                <div 
+                  key={agent.id}
+                  className="absolute"
+                  style={{ 
+                    left: '50%', 
+                    top: '50%',
+                    transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`
+                  }}
+                >
+                  <motion.div
+                    animate={{ rotate: ring.direction * -360 }}
+                    transition={{ duration: ring.duration, repeat: Infinity, ease: 'linear' }}
+                    className="group relative flex items-center justify-center pointer-events-auto"
+                  >
+                    <AgentAvatar 
+                      icon={agent.icon}
+                      color={agent.color}
+                      name={agent.name}
+                      className="w-14 h-14"
+                      glowIntensity="medium"
+                    />
+                    
+                    {/* Floating Label */}
+                    <div className="absolute top-16 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap">
+                      <div className="bg-slate-950/90 backdrop-blur-md border border-slate-800 px-3 py-1 rounded-full shadow-2xl">
+                        <span className="text-[10px] font-mono font-black tracking-widest text-white uppercase">
+                          {agent.name}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+              )
+            })}
+          </motion.div>
+        </div>
+      ))}
 
-            {/* Labels */}
-            <motion.g
-              initial={{ opacity: 0, x: node.x > centerX ? 10 : -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1 + i * 0.05 }}
-            >
-              <text
-                x={node.x + (node.x > centerX ? 25 : -25)}
-                y={node.y - 12}
-                textAnchor={node.x > centerX ? 'start' : 'end'}
-                className="fill-white/90 text-[14px] font-mono font-bold tracking-tight"
-              >
-                {node.name}
-              </text>
-              <text
-                x={node.x + (node.x > centerX ? 25 : -25)}
-                y={node.y + 12}
-                textAnchor={node.x > centerX ? 'start' : 'end'}
-                className="fill-white/30 text-[10px] uppercase tracking-widest font-sans font-bold"
-              >
-                {node.role}
-              </text>
-            </motion.g>
-          </g>
-        ))}
-      </svg>
+      {/* Background Ambience */}
+      <div className="absolute inset-0 -z-10 pointer-events-none opacity-20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)]" />
+      </div>
+
     </div>
   )
 }

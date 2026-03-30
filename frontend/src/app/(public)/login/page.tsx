@@ -7,6 +7,7 @@ import { ShieldCheck, Chrome, Mail, Sparkles, UserCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useSearchParams } from 'next/navigation'
+import { Logo } from '@/components/ui/Logo'
 
 import { Suspense } from 'react'
 
@@ -25,7 +26,7 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen bg-bg-base flex items-center justify-center px-4 relative overflow-hidden">
       <GridBackground />
       <RadialGlow color="blue" position="top" />
       
@@ -40,11 +41,14 @@ function LoginContent() {
            transition={{ duration: 0.8 }}
            className="text-center mb-10"
         >
+          <div className="flex justify-center mb-8">
+             <Logo size="xl" variant="dark" />
+          </div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 mb-6 group hover:border-blue-500/40 transition-all cursor-default">
              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
              <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Secure Swarm Entry</span>
           </div>
-          <h1 className="text-4xl font-black italic tracking-tighter text-white uppercase leading-none">
+          <h1 className="text-4xl font-black italic tracking-tighter text-content-primary uppercase leading-none">
             Welcome to<br /><span className="text-blue-500">The Swarm.</span>
           </h1>
           <p className="text-[10px] font-bold text-content-subtle uppercase tracking-[0.2em] mt-4">
@@ -52,13 +56,13 @@ function LoginContent() {
           </p>
         </motion.div>
 
-        <GlassCard className="p-10 border-white/5 bg-white/[0.01] relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/[0.02] to-transparent pointer-events-none" />
+        <GlassCard className="p-10 border-slate-200 bg-white relative overflow-hidden group shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent pointer-events-none" />
           
           <div className="space-y-6">
             <button
               onClick={handleGoogleLogin}
-              className="w-full h-14 rounded-2xl bg-white text-black font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-blue-50 transition-all shadow-xl active:scale-[0.98] group"
+              className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-200 text-content-primary font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 hover:bg-blue-50 hover:border-blue-200 transition-all shadow-sm group"
             >
               <Chrome className="w-4 h-4" />
               <span>Connect with Google Artifact</span>
@@ -66,14 +70,14 @@ function LoginContent() {
             </button>
 
             <div className="relative flex items-center gap-4 py-2">
-              <div className="h-px flex-1 bg-white/5" />
+              <div className="h-px flex-1 bg-slate-100" />
               <span className="text-[8px] font-black uppercase tracking-[0.3em] text-content-muted">Identity Protocol</span>
-              <div className="h-px flex-1 bg-white/5" />
+              <div className="h-px flex-1 bg-slate-100" />
             </div>
 
             <button
               disabled
-              className="w-full h-14 rounded-2xl bg-white/[0.02] border border-white/10 text-content-subtle font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 cursor-not-allowed opacity-50"
+              className="w-full h-14 rounded-2xl bg-slate-50 border border-slate-200 text-content-subtle font-black uppercase tracking-widest text-[10px] flex items-center justify-center gap-3 cursor-not-allowed opacity-50"
             >
               <Mail className="w-4 h-4" />
               <span>Email Protocol (Coming Soon)</span>
@@ -84,7 +88,7 @@ function LoginContent() {
             <div className="flex items-center gap-3">
                <UserCircle className="w-4 h-4 text-blue-400" />
                <p className="text-[9px] font-bold text-content-muted uppercase tracking-tight leading-relaxed">
-                 Aero-V3 uses <span className="text-white">Supabase Auth</span> for AES-256 session encryption. Your talent artifacts remain secure within the swarm.
+                 Aero-V3 uses <span className="text-content-primary">Supabase Auth</span> for AES-256 session encryption. Your talent artifacts remain secure within the swarm.
                </p>
             </div>
           </div>
@@ -108,11 +112,11 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center px-4 relative overflow-hidden">
+      <div className="min-h-screen bg-bg-base flex items-center justify-center px-4 relative overflow-hidden">
         <GridBackground />
         <div className="animate-pulse flex flex-col items-center gap-8">
-           <div className="w-48 h-12 bg-white/5 rounded-full" />
-           <div className="w-80 h-96 bg-white/5 rounded-3xl" />
+           <div className="w-48 h-12 bg-slate-100 rounded-full" />
+           <div className="w-80 h-96 bg-slate-100 rounded-3xl" />
         </div>
       </div>
     }>

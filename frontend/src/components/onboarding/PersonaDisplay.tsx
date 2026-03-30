@@ -31,6 +31,7 @@ interface PersonaDisplayProps {
 
 export function PersonaDisplay({ detectedPersona, onComplete }: PersonaDisplayProps) {
     const [saving, setSaving] = useState(false)
+    const [errorMsg, setErrorMsg] = useState('')
 
     const { handleSubmit, control, watch } = useForm<FormData>({
         resolver: zodResolver(schema),
@@ -41,24 +42,26 @@ export function PersonaDisplay({ detectedPersona, onComplete }: PersonaDisplayPr
 
     const onSubmit = async (data: FormData) => {
         setSaving(true)
+        setErrorMsg('')
         try {
             await api.post('/api/onboarding/persona', { persona: data.persona })
             onComplete()
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error saving persona:', err)
+            setErrorMsg(err.response?.data?.error || 'Failed to save persona. Please try again.')
         } finally {
             setSaving(false)
         }
     }
 
     return (
-        <GlassCard className="p-8 max-w-2xl mx-auto border-white/5 bg-white/[0.01]">
+        <GlassCard className="p-8 max-w-2xl mx-auto border-slate-200 bg-white shadow-sm">
             <div className="flex items-center gap-4 mb-8">
               <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 shadow-glow-blue/5">
                 <UserCircle className="w-6 h-6 text-blue-400" />
               </div>
               <div>
-                <h2 className="text-xl font-black italic tracking-tighter text-white uppercase">Step 01: Saarthi Protocol</h2>
+                <h2 className="text-xl font-black italic tracking-tighter text-content-primary uppercase">Step 01: Saarthi Protocol</h2>
                 <p className="text-[10px] font-bold text-content-subtle uppercase tracking-widest mt-1">
                   Identify your career persona for swarm calibration
                 </p>
@@ -80,16 +83,16 @@ export function PersonaDisplay({ detectedPersona, onComplete }: PersonaDisplayPr
                                "flex flex-col items-start p-6 rounded-3xl border transition-all duration-300 relative overflow-hidden group",
                                selectedPersona === opt.value 
                                  ? "bg-blue-500/10 border-blue-500/30 ring-1 ring-blue-500/20" 
-                                 : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                 : "bg-white border-slate-200 hover:border-slate-300 shadow-sm hover:shadow"
                              )}
                            >
                               <div className={cn(
                                 "p-3 rounded-2xl mb-4 group-hover:scale-110 transition-transform",
-                                selectedPersona === opt.value ? "bg-blue-500 text-white" : "bg-white/5 text-content-subtle"
+                                selectedPersona === opt.value ? "bg-blue-500 text-white" : "bg-slate-100 text-content-subtle"
                               )}>
                                 <opt.icon className="w-5 h-5" />
                               </div>
-                              <p className="text-xs font-black uppercase tracking-widest text-white mb-1">{opt.label}</p>
+                              <p className="text-xs font-black uppercase tracking-widest text-content-primary mb-1">{opt.label}</p>
                               <p className="text-[10px] font-bold text-content-subtle uppercase tracking-tighter">{opt.desc}</p>
                               
                               {selectedPersona === opt.value && (
@@ -105,6 +108,11 @@ export function PersonaDisplay({ detectedPersona, onComplete }: PersonaDisplayPr
                 />
 
                 <div className="pt-4">
+                    {errorMsg && (
+                        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-xs text-center font-bold">
+                            {errorMsg}
+                        </div>
+                    )}
                     <button 
                         type="submit" 
                         disabled={saving} 
@@ -112,7 +120,7 @@ export function PersonaDisplay({ detectedPersona, onComplete }: PersonaDisplayPr
                     >
                         {saving ? 'Calibrating...' : 'Confirm Swarm Persona'}
                     </button>
-                    <p className="text-center text-[9px] font-bold text-content-subtle uppercase tracking-widest mt-4">
+                    <p className="text-center text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-4">
                       Sathi agent will customize your experience based on this selection
                     </p>
                 </div>

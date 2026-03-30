@@ -15,6 +15,7 @@ import {
   Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getSupabaseClient } from '@/lib/supabase/client'
 
 // Swarm-Native Step Components
 import { PersonaDisplay } from './PersonaDisplay' // Step 1: Saarthi
@@ -79,8 +80,29 @@ export function OnboardingFlow() {
       next()
     }
 
+    // Called when Sankhya (verification step) is confirmed
+    // Upserts the users table so middleware sees onboarding_complete=true
+    const completeOnboarding = async () => {
+      try {
+        const supabase = getSupabaseClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          await supabase.from('users').upsert({
+            id: user.id,
+            email: user.email,
+            persona: formData.persona,
+            onboarding_complete: true,
+          }, { onConflict: 'id' })
+        }
+      } catch (err) {
+        console.error('[OnboardingFlow] Failed to write onboarding_complete:', err)
+      } finally {
+        next() // advance to 'complete' screen regardless
+      }
+    }
+
     return (
-        <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4 relative overflow-hidden">
             <GridBackground />
             <RadialGlow color="blue" position="top" />
             
@@ -99,20 +121,20 @@ export function OnboardingFlow() {
                         <div className="flex items-center justify-between px-2">
                            <div className="flex items-center gap-3">
                               <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500">Aero-Swarm Sync</span>
-                              <div className="h-4 w-px bg-white/10" />
+                              <div className="h-4 w-px bg-slate-200" />
                               <span className="text-[10px] font-bold uppercase tracking-widest text-content-subtle">
                                 Step {stepIndex} of 7: {currentStep.toUpperCase()}
                               </span>
                            </div>
                            <div className="flex items-center gap-2">
                               {currentStep !== 'persona' && (
-                                <button onClick={back} className="p-2 rounded-lg hover:bg-white/5 text-content-subtle transition-colors">
+                                <button onClick={back} className="p-2 rounded-lg hover:bg-slate-100 text-content-subtle transition-colors">
                                   <ChevronLeft className="w-4 h-4" />
                                 </button>
                               )}
                            </div>
                         </div>
-                        <div className="h-1.5 w-full bg-white/[0.03] rounded-full relative overflow-hidden border border-white/5">
+                        <div className="h-1.5 w-full bg-slate-100 rounded-full relative overflow-hidden border border-slate-200">
                             <motion.div 
                               className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 to-blue-400 shadow-glow-blue"
                               initial={{ width: 0 }}
@@ -139,7 +161,7 @@ export function OnboardingFlow() {
                                 <span className="text-[10px] font-black uppercase tracking-widest text-blue-400">Initialize Swarm Protocol</span>
                             </div>
                             
-                            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white uppercase leading-[0.9]">
+                            <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-content-primary uppercase leading-[0.9]">
                                 Your Talent,<br /><span className="text-blue-500">Our Intelligence.</span>
                             </h1>
                             
@@ -153,10 +175,10 @@ export function OnboardingFlow() {
                                     { icon: ShieldCheck, label: 'The Vault', desc: 'Secure Integration', color: 'green' },
                                     { icon: Zap, label: 'Setu', desc: 'Auto-Apply Bridge', color: 'orange' },
                                 ].map((agent) => (
-                                    <div key={agent.label} className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 group hover:bg-white/[0.04] transition-all">
+                                    <div key={agent.label} className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm group hover:shadow-md transition-all">
                                         {/* @ts-ignore */}
                                         <agent.icon className={cn("w-6 h-6 mx-auto mb-4 opacity-50 group-hover:opacity-100 transition-opacity", `text-${agent.color}-400`)} />
-                                        <p className="font-black text-white text-[10px] uppercase tracking-widest">{agent.label}</p>
+                                        <p className="font-black text-content-primary text-[10px] uppercase tracking-widest">{agent.label}</p>
                                         <p className="text-content-subtle text-[9px] mt-1 uppercase font-bold tracking-tighter">{agent.desc}</p>
                                     </div>
                                 ))}
@@ -219,7 +241,7 @@ export function OnboardingFlow() {
 
                     {currentStep === 'verify' && (
                       <motion.div key="verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                        <Sankhya data={formData} onComplete={next} />
+                        <Sankhya data={formData} onComplete={completeOnboarding} />
                       </motion.div>
                     )}
 
@@ -239,13 +261,13 @@ export function OnboardingFlow() {
                             <div className="w-24 h-24 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mx-auto mb-8 shadow-glow-blue">
                                 <CheckCircle2 className="w-12 h-12 text-blue-500" />
                             </div>
-                            <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase mb-4">Swarm Connection Active</h2>
+                            <h2 className="text-3xl font-black italic tracking-tighter text-content-primary uppercase mb-4">Swarm Connection Active</h2>
                             <p className="text-content-muted text-sm font-mono max-w-md mx-auto mb-12">
                                 Your profile is now synced with the 15-agent swarm. Anveshan has begun scanning 150K+ daily jobs for your {formData.persona} persona.
                             </p>
                             <button
                                 onClick={() => router.push('/dashboard')}
-                                className="px-12 py-4 rounded-2xl bg-white text-black font-black uppercase tracking-[0.3em] text-xs hover:bg-blue-50 transition-all shadow-xl"
+                                className="px-12 py-4 rounded-2xl bg-content-primary text-bg-base font-black uppercase tracking-[0.3em] text-xs hover:bg-content-subtle transition-all shadow-xl"
                             >
                                 Enter Command Center
                             </button>

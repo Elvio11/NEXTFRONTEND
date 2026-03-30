@@ -1,9 +1,8 @@
-import { type LucideIcon } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 interface AgentAvatarProps {
-  icon: LucideIcon
+  icon: React.ComponentType<{ className?: string, style?: React.CSSProperties }>
   color: string
   name: string
   className?: string
@@ -18,9 +17,9 @@ export const AgentAvatar = ({
   glowIntensity = 'medium'
 }: AgentAvatarProps) => {
   const intensityMap = {
-    low: 'opacity-20 blur-lg',
-    medium: 'opacity-40 blur-xl',
-    high: 'opacity-60 blur-2xl'
+    low: 'opacity-10 blur-md',
+    medium: 'opacity-15 blur-lg',
+    high: 'opacity-20 blur-xl'
   }
 
   return (
@@ -28,7 +27,7 @@ export const AgentAvatar = ({
       {/* Outer Cybernetic Ring */}
       <motion.div
         title={name}
-        className="absolute inset-0 rounded-full border border-white/5"
+        className="absolute inset-0 rounded-full border border-slate-200"
         animate={{ rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
       >
@@ -39,7 +38,7 @@ export const AgentAvatar = ({
       </motion.div>
 
       {/* Main Glass Orb */}
-      <div className="relative w-full h-full rounded-full bg-white/[0.03] border border-white/10 backdrop-blur-md shadow-2xl flex items-center justify-center overflow-hidden group">
+      <div className="relative w-full h-full rounded-full bg-slate-950 border border-slate-800 shadow-xl flex items-center justify-center overflow-hidden group">
         
         {/* Internal Glow */}
         <div 
@@ -50,23 +49,20 @@ export const AgentAvatar = ({
           style={{ backgroundColor: color }}
         />
 
-        {/* Diagonal Glass Sheen */}
+        {/* Glossy Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
 
         {/* The Icon */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="relative z-10"
+          className="relative z-10 flex items-center justify-center w-full h-full"
         >
           <Icon 
-            className="w-1/2 h-1/2 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            style={{ color, filter: `drop-shadow(0 0 8px ${color}80)` }}
+            className="w-[75%] h-[75%]"
+            style={{ color, filter: `drop-shadow(0 0 15px ${color}90)` }}
           />
         </motion.div>
-
-        {/* Micro-sparkles or Noise */}
-        <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
       </div>
 
       {/* Static Outer Glow */}

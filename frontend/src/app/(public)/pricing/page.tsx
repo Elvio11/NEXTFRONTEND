@@ -31,14 +31,14 @@ const PLANS = [
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-[#050505] pt-24 pb-20 px-6">
+    <div className="min-h-screen bg-bg-base pt-24 pb-20 px-6">
       <div className="max-w-7xl mx-auto space-y-20">
         <header className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] font-black uppercase tracking-widest">
             Pricing Protocols
           </div>
-          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-white uppercase">
-            Fuel the <span className="text-blue-500">Swarm.</span>
+          <h1 className="text-5xl md:text-7xl font-black italic tracking-tighter text-content-primary uppercase">
+            Fuel the <span className="text-blue-600">Swarm.</span>
           </h1>
           <p className="text-content-muted text-lg max-w-2xl mx-auto">
             Choose the protocol that fits your career velocity. 
@@ -50,7 +50,7 @@ export default function PricingPage() {
             {PLANS.map((plan) => (
               <GlassCard 
                 key={plan.name}
-                className={`p-10 flex flex-col relative overflow-hidden ${plan.highlight ? 'border-blue-500/30' : 'border-white/5'}`}
+                className={`p-10 flex flex-col items-start relative overflow-hidden bg-white border ${plan.highlight ? 'border-blue-300 shadow-xl' : 'border-slate-200 shadow-sm'}`}
               >
                 {plan.highlight && (
                   <div className="absolute top-0 right-0 p-3 bg-blue-600 text-white text-[8px] font-black uppercase tracking-widest rounded-bl-xl shadow-glow-blue">
@@ -58,21 +58,21 @@ export default function PricingPage() {
                   </div>
                 )}
                 
-                <div className="mb-8">
-                  <h3 className="text-xl font-black italic tracking-tighter text-white uppercase mb-2">{plan.name}</h3>
+                <div className="mb-8 w-full">
+                  <h3 className="text-xl font-black italic tracking-tighter text-content-primary uppercase mb-2">{plan.name}</h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-white">{plan.price}</span>
+                    <span className="text-4xl font-black text-content-primary">{plan.price}</span>
                     <span className="text-content-muted text-[10px] font-bold uppercase tracking-widest">/ Month</span>
                   </div>
-                  <p className="text-xs text-content-subtle mt-4 leading-relaxed group-hover:text-white transition-colors">
+                  <p className="text-xs text-content-subtle mt-4 leading-relaxed group-hover:text-content-primary transition-colors">
                     {plan.description}
                   </p>
                 </div>
 
                 <div className="space-y-4 mb-10 flex-1">
                   {plan.features.map((feature) => (
-                    <div key={feature} className="flex items-start gap-3">
-                      <div className="p-0.5 mt-0.5 rounded-full bg-blue-500/10 text-blue-400">
+                    <div key={feature} className="flex items-start gap-3 w-full">
+                      <div className="p-0.5 mt-0.5 rounded-full bg-blue-100 text-blue-600">
                         <Check className="w-3 h-3" />
                       </div>
                       <span className="text-[11px] font-medium text-content-muted">{feature}</span>
@@ -91,7 +91,7 @@ export default function PricingPage() {
             ))}
         </div>
 
-        <div className="text-center p-12 rounded-3xl bg-blue-500/[0.02] border border-blue-500/10">
+        <div className="text-center p-12 rounded-3xl bg-slate-50 border border-slate-200">
            <ShieldCheck className="w-8 h-8 text-blue-500 mx-auto mb-4" />
            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-content-muted">
              All payments secured by Razorpay • AES-256 Protocol Encrypted
