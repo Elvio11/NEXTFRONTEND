@@ -1,0 +1,413 @@
+/* TALVIX AGENT ICONS - INDIVIDUAL SVG EXPORTS */
+
+/* 1. Saarthi (The Guide) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes saarthi-rotate {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            @keyframes saarthi-pulse {
+                0%, 100% { r: 6px; opacity: 1; }
+                50% { r: 8px; opacity: 0.8; }
+            }
+            .saarthi-ring { animation: saarthi-rotate 8s linear infinite; transform-origin: 50px 50px; }
+            .saarthi-core { animation: saarthi-pulse 2s ease-in-out infinite; }
+        </style>
+    </defs>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" stroke-width="1.5" opacity="0.4"/>
+    <g class="saarthi-ring">
+        <line x1="50" y1="12" x2="50" y2="30" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="77.3" y1="22.7" x2="63.6" y2="36.4" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="88" y1="50" x2="70" y2="50" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="77.3" y1="77.3" x2="63.6" y2="63.6" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="88" x2="50" y2="70" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22.7" y1="77.3" x2="36.4" y2="63.6" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="12" y1="50" x2="30" y2="50" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        <line x1="22.7" y1="22.7" x2="36.4" y2="36.4" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <circle cx="50" cy="50" r="20" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.5"/>
+    <circle cx="50" cy="50" r="6" fill="#3b82f6" class="saarthi-core"/>
+</svg>
+
+/* 2. Pravesh (The Gateway) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes pravesh-beam {
+                0% { x: 15; opacity: 0; }
+                50% { opacity: 1; }
+                100% { x: 85; opacity: 0; }
+            }
+            .pravesh-beam { animation: pravesh-beam 3s ease-in-out infinite; }
+        </style>
+        <linearGradient id="pravesh-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0" />
+            <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0" />
+        </linearGradient>
+    </defs>
+    <path d="M 35 25 L 25 25 L 25 75 L 35 75" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M 65 25 L 75 25 L 75 75 L 65 75" fill="none" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="35" y1="50" x2="65" y2="50" stroke="#3b82f6" stroke-width="1.5" opacity="0.4"/>
+    <rect x="15" y="47" width="70" height="6" rx="3" fill="url(#pravesh-grad)" class="pravesh-beam"/>
+</svg>
+
+/* 3. Parichay (The Identity) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes parichay-fill {
+                0%, 100% { stroke-dashoffset: 60; opacity: 1; }
+                50% { stroke-dashoffset: 0; opacity: 0.3; }
+            }
+            .parichay-line { 
+                animation: parichay-fill 3s ease-in-out infinite;
+                stroke-dasharray: 60;
+            }
+        </style>
+    </defs>
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.5"/>
+    <path d="M 30 30 Q 50 25 70 30" fill="none" stroke="#3b82f6" stroke-width="1.5" class="parichay-line" style="animation-delay: 0s"/>
+    <path d="M 28 40 Q 50 35 72 40" fill="none" stroke="#3b82f6" stroke-width="1.5" class="parichay-line" style="animation-delay: 0.3s"/>
+    <path d="M 28 50 Q 50 45 72 50" fill="none" stroke="#3b82f6" stroke-width="1.5" class="parichay-line" style="animation-delay: 0.6s"/>
+    <path d="M 30 60 Q 50 55 70 60" fill="none" stroke="#3b82f6" stroke-width="1.5" class="parichay-line" style="animation-delay: 0.9s"/>
+    <path d="M 35 70 Q 50 68 65 70" fill="none" stroke="#3b82f6" stroke-width="1.5" class="parichay-line" style="animation-delay: 1.2s"/>
+    <circle cx="50" cy="50" r="4" fill="#3b82f6" opacity="0.8"/>
+    <circle cx="50" cy="50" r="6" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+</svg>
+
+/* 4. Kaushal (The Skill-Master) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes kaushal-breathe {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.15); }
+            }
+            .kaushal-tri { animation: kaushal-breathe 2.5s ease-in-out infinite; transform-origin: 50px 50px; }
+        </style>
+    </defs>
+    <polygon points="50,20 65,40 35,40" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" class="kaushal-tri" style="animation-delay: 0s"/>
+    <polygon points="65,40 80,60 55,60" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linejoin="round" class="kaushal-tri" style="animation-delay: 0.4s"/>
+    <polygon points="50,80 65,60 35,60" fill="none" stroke="#f97316" stroke-width="2" stroke-linejoin="round" class="kaushal-tri" style="animation-delay: 0.8s"/>
+    <polygon points="35,40 20,60 45,60" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" class="kaushal-tri" style="animation-delay: 1.2s"/>
+    <circle cx="50" cy="50" r="3" fill="#3b82f6"/>
+</svg>
+
+/* 5. Niti (The Strategist) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes niti-bar1 {
+                0%, 100% { height: 30px; }
+                50% { height: 50px; }
+            }
+            @keyframes niti-bar2 {
+                0%, 100% { height: 20px; }
+                50% { height: 40px; }
+            }
+            @keyframes niti-bar3 {
+                0%, 100% { height: 40px; }
+                50% { height: 25px; }
+            }
+            .niti-bar1 { animation: niti-bar1 3s ease-in-out infinite; }
+            .niti-bar2 { animation: niti-bar2 3s ease-in-out infinite; animation-delay: 0.2s; }
+            .niti-bar3 { animation: niti-bar3 3s ease-in-out infinite; animation-delay: 0.4s; }
+        </style>
+    </defs>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#3b82f6" stroke-width="1.5" opacity="0.4"/>
+    <rect x="32" y="50" width="8" height="30" rx="2" fill="#3b82f6" class="niti-bar1" opacity="0.8"/>
+    <rect x="46" y="50" width="8" height="20" rx="2" fill="#8b5cf6" class="niti-bar2" opacity="0.8"/>
+    <rect x="60" y="50" width="8" height="40" rx="2" fill="#f97316" class="niti-bar3" opacity="0.8"/>
+    <line x1="28" y1="50" x2="72" y2="50" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+</svg>
+
+/* 6. Sankhya (The Calculator) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes sankhya-twinkle {
+                0%, 100% { opacity: 0.3; }
+                50% { opacity: 1; }
+            }
+            .sankhya-dot { animation: sankhya-twinkle 1.5s ease-in-out infinite; }
+        </style>
+    </defs>
+    <circle cx="50" cy="50" r="32" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+    <circle cx="50" cy="25" r="2.5" fill="#3b82f6" class="sankhya-dot" style="animation-delay: 0s"/>
+    <circle cx="63" cy="32" r="2.5" fill="#8b5cf6" class="sankhya-dot" style="animation-delay: 0.2s"/>
+    <circle cx="70" cy="45" r="2.5" fill="#3b82f6" class="sankhya-dot" style="animation-delay: 0.4s"/>
+    <circle cx="63" cy="58" r="2.5" fill="#f97316" class="sankhya-dot" style="animation-delay: 0.6s"/>
+    <circle cx="50" cy="68" r="2.5" fill="#3b82f6" class="sankhya-dot" style="animation-delay: 0.8s"/>
+    <circle cx="37" cy="58" r="2.5" fill="#8b5cf6" class="sankhya-dot" style="animation-delay: 1s"/>
+    <circle cx="30" cy="45" r="2.5" fill="#3b82f6" class="sankhya-dot" style="animation-delay: 1.2s"/>
+    <circle cx="37" cy="32" r="2.5" fill="#f97316" class="sankhya-dot" style="animation-delay: 1.4s"/>
+    <circle cx="50" cy="50" r="3" fill="#3b82f6" opacity="0.6"/>
+</svg>
+
+/* 7. Shuddhi (The Purifier) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes shuddhi-sweep {
+                0%, 100% { y: 15; opacity: 0.3; }
+                50% { y: 65; opacity: 1; }
+            }
+            .shuddhi-line { animation: shuddhi-sweep 2.5s ease-in-out infinite; filter: drop-shadow(0 0 2px #8b5cf6); }
+        </style>
+        <linearGradient id="shuddhi-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0" />
+            <stop offset="50%" style="stop-color:#8b5cf6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:0" />
+        </linearGradient>
+    </defs>
+    <polygon points="50,18 76,34 76,66 50,82 24,66 24,34" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" opacity="0.7"/>
+    <polygon points="50,28 70,38 70,62 50,72 30,62 30,38" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+    <rect x="30" y="40" width="40" height="2" rx="1" fill="url(#shuddhi-grad)" class="shuddhi-line"/>
+</svg>
+
+/* 8. Guru (The Coach) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes guru-ripple1 {
+                0% { r: 8; opacity: 1; }
+                100% { r: 24; opacity: 0; }
+            }
+            @keyframes guru-ripple2 {
+                0% { r: 8; opacity: 0; }
+                50% { opacity: 1; }
+                100% { r: 28; opacity: 0; }
+            }
+            .guru-ripple1 { animation: guru-ripple1 2s ease-out infinite; }
+            .guru-ripple2 { animation: guru-ripple2 2s ease-out infinite; animation-delay: 0.6s; }
+        </style>
+    </defs>
+    <path d="M 35 30 L 35 70 Q 40 72 50 72 L 50 30 Z" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <path d="M 50 30 Q 60 28 65 30 L 65 70 Q 60 72 50 72 Z" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="50" y1="30" x2="50" y2="72" stroke="#3b82f6" stroke-width="1.5" opacity="0.6"/>
+    <circle cx="50" cy="51" r="8" fill="none" stroke="#8b5cf6" stroke-width="1.5" class="guru-ripple1"/>
+    <circle cx="50" cy="51" r="8" fill="none" stroke="#8b5cf6" stroke-width="1.5" class="guru-ripple2"/>
+</svg>
+
+/* 9. Anveshan (The Explorer) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes anveshan-sweep {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            @keyframes anveshan-blink {
+                0%, 90%, 100% { r: 2; opacity: 0; }
+                95% { r: 2; opacity: 1; }
+            }
+            .anveshan-needle { animation: anveshan-sweep 4s linear infinite; transform-origin: 50px 50px; }
+            .anveshan-blip { animation: anveshan-blink 4s linear infinite; }
+        </style>
+    </defs>
+    <circle cx="50" cy="50" r="35" fill="none" stroke="#3b82f6" stroke-width="1.5" opacity="0.4"/>
+    <circle cx="50" cy="50" r="25" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+    <circle cx="50" cy="50" r="15" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.3"/>
+    <text x="50" y="22" font-size="8" fill="#3b82f6" text-anchor="middle" opacity="0.6">N</text>
+    <text x="78" y="53" font-size="8" fill="#3b82f6" text-anchor="middle" opacity="0.6">E</text>
+    <text x="50" y="80" font-size="8" fill="#3b82f6" text-anchor="middle" opacity="0.6">S</text>
+    <text x="22" y="53" font-size="8" fill="#3b82f6" text-anchor="middle" opacity="0.6">W</text>
+    <g class="anveshan-needle">
+        <line x1="50" y1="50" x2="50" y2="22" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="50" cy="50" r="4" fill="#8b5cf6"/>
+    </g>
+    <circle cx="50" cy="35" r="2" class="anveshan-blip" fill="#f97316"/>
+    <circle cx="65" cy="50" r="2" class="anveshan-blip" fill="#f97316" style="animation-delay: 1s"/>
+    <circle cx="50" cy="65" r="2" class="anveshan-blip" fill="#f97316" style="animation-delay: 2s"/>
+</svg>
+
+/* 10. Shilpakaar (The Architect) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes shilpakaar-draw {
+                0% { stroke-dashoffset: 100; }
+                100% { stroke-dashoffset: 0; }
+            }
+            .shilpakaar-edge {
+                animation: shilpakaar-draw 3s ease-in-out infinite;
+                stroke-dasharray: 100;
+                fill: none;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+        </style>
+    </defs>
+    <rect x="28" y="38" width="30" height="30" fill="none" stroke="#3b82f6" stroke-width="2" class="shilpakaar-edge" style="animation-delay: 0s"/>
+    <rect x="42" y="28" width="30" height="30" fill="none" stroke="#8b5cf6" stroke-width="2" class="shilpakaar-edge" style="animation-delay: 0.5s"/>
+    <line x1="28" y1="38" x2="42" y2="28" stroke="#f97316" stroke-width="2" class="shilpakaar-edge" style="animation-delay: 1s"/>
+    <line x1="58" y1="38" x2="72" y2="28" stroke="#f97316" stroke-width="2" class="shilpakaar-edge" style="animation-delay: 1s"/>
+    <line x1="28" y1="68" x2="42" y2="58" stroke="#f97316" stroke-width="2" class="shilpakaar-edge" style="animation-delay: 1s"/>
+    <line x1="58" y1="68" x2="72" y2="58" stroke="#f97316" stroke-width="2" class="shilpakaar-edge" style="animation-delay: 1s"/>
+</svg>
+
+/* 11. Prerna (The Muse) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes prerna-spark {
+                0%, 100% { opacity: 0.6; r: 3; }
+                50% { opacity: 1; r: 5; }
+            }
+            @keyframes prerna-glow {
+                0%, 100% { filter: drop-shadow(0 0 0px #8b5cf6); }
+                50% { filter: drop-shadow(0 0 4px #8b5cf6); }
+            }
+            .prerna-spark { animation: prerna-spark 1.8s ease-in-out infinite; }
+            .prerna-nib { animation: prerna-glow 2s ease-in-out infinite; }
+        </style>
+    </defs>
+    <path d="M 45 75 Q 45 50 48 25" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="prerna-nib"/>
+    <line x1="45" y1="25" x2="44" y2="35" stroke="#3b82f6" stroke-width="1.5"/>
+    <line x1="51" y1="25" x2="52" y2="35" stroke="#3b82f6" stroke-width="1.5"/>
+    <path d="M 48 30 L 40 28" stroke="#3b82f6" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+    <path d="M 48 35 L 40 32" stroke="#3b82f6" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+    <path d="M 48 40 L 40 38" stroke="#3b82f6" stroke-width="1.5" opacity="0.6" stroke-linecap="round"/>
+    <circle cx="48" cy="20" r="3" fill="#8b5cf6" class="prerna-spark"/>
+    <line x1="48" y1="14" x2="48" y2="10" stroke="#8b5cf6" stroke-width="1.5" opacity="0.7" stroke-linecap="round"/>
+    <line x1="54" y1="20" x2="58" y2="20" stroke="#8b5cf6" stroke-width="1.5" opacity="0.7" stroke-linecap="round"/>
+    <line x1="54" y1="26" x2="57" y2="29" stroke="#8b5cf6" stroke-width="1.5" opacity="0.7" stroke-linecap="round"/>
+</svg>
+
+/* 12. Setu (The Bridge) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes setu-flow {
+                0% { offset-distance: 0%; }
+                100% { offset-distance: 100%; }
+            }
+            .setu-particle {
+                animation: setu-flow 2s linear infinite;
+                offset-path: path('M 25 50 Q 50 35 75 50');
+            }
+        </style>
+        <linearGradient id="setu-curve-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+            <stop offset="50%" style="stop-color:#3b82f6;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:0.3" />
+        </linearGradient>
+    </defs>
+    <circle cx="25" cy="50" r="6" fill="#3b82f6"/>
+    <circle cx="25" cy="50" r="9" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+    <circle cx="75" cy="50" r="6" fill="#8b5cf6"/>
+    <circle cx="75" cy="50" r="9" fill="none" stroke="#8b5cf6" stroke-width="1" opacity="0.4"/>
+    <path d="M 25 50 Q 50 35 75 50" fill="none" stroke="url(#setu-curve-grad)" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="25" cy="50" r="2.5" fill="#f97316" class="setu-particle" style="animation-delay: 0s"/>
+    <circle cx="25" cy="50" r="2.5" fill="#f97316" class="setu-particle" style="animation-delay: 0.4s"/>
+    <circle cx="25" cy="50" r="2.5" fill="#f97316" class="setu-particle" style="animation-delay: 0.8s"/>
+    <circle cx="25" cy="50" r="2.5" fill="#f97316" class="setu-particle" style="animation-delay: 1.2s"/>
+</svg>
+
+/* 13. Vacha (The Voice) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes vacha-wave1 {
+                0%, 100% { d: path('M 30 50 Q 35 45 40 50 T 50 50 T 60 50 T 70 50'); }
+                50% { d: path('M 30 50 Q 35 35 40 50 T 50 50 T 60 50 T 70 50'); }
+            }
+            @keyframes vacha-wave2 {
+                0%, 100% { d: path('M 25 50 Q 30 40 35 50 T 50 50 T 65 50 T 75 50'); }
+                50% { d: path('M 25 50 Q 30 25 35 50 T 50 50 T 65 50 T 75 50'); }
+            }
+            @keyframes vacha-wave3 {
+                0%, 100% { d: path('M 35 50 Q 40 48 45 50 T 55 50 T 65 50'); }
+                50% { d: path('M 35 50 Q 40 42 45 50 T 55 50 T 65 50'); }
+            }
+            .vacha-wave1 { animation: vacha-wave1 1.5s ease-in-out infinite; }
+            .vacha-wave2 { animation: vacha-wave2 1.8s ease-in-out infinite; animation-delay: 0.1s; }
+            .vacha-wave3 { animation: vacha-wave3 1.3s ease-in-out infinite; animation-delay: 0.2s; }
+        </style>
+    </defs>
+    <circle cx="50" cy="50" r="3" fill="#3b82f6"/>
+    <path d="M 30 50 Q 35 45 40 50 T 50 50 T 60 50 T 70 50" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" class="vacha-wave1" opacity="0.8"/>
+    <path d="M 25 50 Q 30 40 35 50 T 50 50 T 65 50 T 75 50" fill="none" stroke="#8b5cf6" stroke-width="1.5" stroke-linecap="round" class="vacha-wave2" opacity="0.6"/>
+    <path d="M 35 50 Q 40 48 45 50 T 55 50 T 65 50" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round" class="vacha-wave3" opacity="0.6"/>
+</svg>
+
+/* 14. Anuvartan (The Pursuer) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes anuvartan-motion {
+                0%, 100% { x: 0; opacity: 1; }
+                50% { opacity: 0.3; }
+            }
+            @keyframes anuvartan-stretch {
+                0%, 100% { x: -8px; }
+                50% { x: 8px; }
+            }
+            .anuvartan-plane { animation: anuvartan-motion 2.5s ease-in-out infinite; transform-origin: 30px 50px; }
+            .anuvartan-trail1 { animation: anuvartan-stretch 2.5s ease-in-out infinite; }
+            .anuvartan-trail2 { animation: anuvartan-stretch 2.5s ease-in-out infinite; animation-delay: 0.1s; }
+            .anuvartan-trail3 { animation: anuvartan-stretch 2.5s ease-in-out infinite; animation-delay: 0.2s; }
+        </style>
+    </defs>
+    <line x1="20" y1="45" x2="28" y2="45" stroke="#3b82f6" stroke-width="1.5" opacity="0.4" class="anuvartan-trail1"/>
+    <line x1="15" y1="50" x2="20" y2="50" stroke="#3b82f6" stroke-width="1.5" opacity="0.4" class="anuvartan-trail2"/>
+    <line x1="20" y1="55" x2="28" y2="55" stroke="#3b82f6" stroke-width="1.5" opacity="0.4" class="anuvartan-trail3"/>
+    <g class="anuvartan-plane">
+        <polygon points="30,50 50,40 50,60" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <line x1="50" y1="40" x2="40" y2="48" stroke="#3b82f6" stroke-width="1.5" opacity="0.7"/>
+        <line x1="50" y1="60" x2="40" y2="52" stroke="#3b82f6" stroke-width="1.5" opacity="0.7"/>
+        <line x1="30" y1="50" x2="50" y2="50" stroke="#3b82f6" stroke-width="1" opacity="0.5"/>
+    </g>
+</svg>
+
+/* 15. Samanvay (The Calibrator) */
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <style>
+            @keyframes samanvay-rotate1 {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            @keyframes samanvay-rotate2 {
+                from { transform: rotate(360deg); }
+                to { transform: rotate(0deg); }
+            }
+            @keyframes samanvay-rotate3 {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .samanvay-gear1 { animation: samanvay-rotate1 6s linear infinite; transform-origin: 50px 50px; }
+            .samanvay-gear2 { animation: samanvay-rotate2 4s linear infinite; transform-origin: 50px 50px; }
+            .samanvay-gear3 { animation: samanvay-rotate3 8s linear infinite; transform-origin: 50px 50px; }
+        </style>
+    </defs>
+    <g class="samanvay-gear1">
+        <circle cx="50" cy="50" r="36" fill="none" stroke="#3b82f6" stroke-width="2"/>
+        <circle cx="50" cy="16" r="2.5" fill="#3b82f6"/>
+        <circle cx="80" cy="50" r="2.5" fill="#3b82f6"/>
+        <circle cx="50" cy="84" r="2.5" fill="#3b82f6"/>
+        <circle cx="20" cy="50" r="2.5" fill="#3b82f6"/>
+        <circle cx="74" cy="26" r="2.5" fill="#3b82f6"/>
+        <circle cx="74" cy="74" r="2.5" fill="#3b82f6"/>
+        <circle cx="26" cy="74" r="2.5" fill="#3b82f6"/>
+        <circle cx="26" cy="26" r="2.5" fill="#3b82f6"/>
+    </g>
+    <g class="samanvay-gear2">
+        <circle cx="50" cy="50" r="24" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+        <circle cx="50" cy="27" r="2" fill="#8b5cf6"/>
+        <circle cx="73" cy="50" r="2" fill="#8b5cf6"/>
+        <circle cx="50" cy="73" r="2" fill="#8b5cf6"/>
+        <circle cx="27" cy="50" r="2" fill="#8b5cf6"/>
+    </g>
+    <g class="samanvay-gear3">
+        <circle cx="50" cy="50" r="12" fill="none" stroke="#f97316" stroke-width="2"/>
+        <circle cx="50" cy="39" r="1.5" fill="#f97316"/>
+        <circle cx="61" cy="50" r="1.5" fill="#f97316"/>
+        <circle cx="50" cy="61" r="1.5" fill="#f97316"/>
+        <circle cx="39" cy="50" r="1.5" fill="#f97316"/>
+    </g>
+    <circle cx="50" cy="50" r="3.5" fill="#3b82f6"/>
+</svg>

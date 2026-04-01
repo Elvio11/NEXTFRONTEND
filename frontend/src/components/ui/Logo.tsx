@@ -109,13 +109,13 @@ export function Logo({
             TALVIX
           </span>
           <div className={cn(
-            "h-px mt-1.5 mb-1",
+            "hidden md:block h-px mt-1.5 mb-1",
             variant === 'light' 
               ? "bg-gradient-to-r from-[#7B6FD8] to-transparent" 
               : "bg-gradient-to-r from-[#9B8FFF] to-transparent"
           )} style={{ width: '100%' }} />
           <span className={cn(
-            "text-[7px] font-mono font-medium tracking-[0.3em] uppercase leading-none",
+            "hidden md:block text-[7px] font-mono font-medium tracking-[0.3em] uppercase leading-none",
             variant === 'light' ? "text-[#534AB7]/60" : "text-[#9B8FFF]/60"
           )}>
             Career Intelligence

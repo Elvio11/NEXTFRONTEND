@@ -73,7 +73,7 @@ export const VisualPOC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Left: Workflow Stage Display */}
-          <div className="space-y-8 bg-white/40 backdrop-blur-xl p-8 lg:p-12 rounded-[3.5rem] border border-white/50 shadow-sm relative overflow-hidden">
+          <div className="space-y-8 bg-white/40 backdrop-blur-xl p-5 sm:p-8 lg:p-12 rounded-[2rem] sm:rounded-[3.5rem] border border-white/50 shadow-sm relative overflow-hidden">
              {/* Stage Progress Bar */}
              <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100">
                <motion.div 
@@ -117,7 +117,7 @@ export const VisualPOC = () => {
                       )}
                    </AnimatePresence>
 
-                   <div className="absolute top-0 left-0 w-full h-full p-8 space-y-6">
+                   <div className="absolute top-0 left-0 w-full h-full p-5 sm:p-8 space-y-4 sm:space-y-6">
                       <div className="flex items-start justify-between">
                          <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100/50">
@@ -236,7 +236,7 @@ export const VisualPOC = () => {
           </div>
 
           {/* Right: Immersive Hub Visualization */}
-          <div className="relative aspect-square w-full max-w-[550px] mx-auto">
+          <div className="relative aspect-square w-full max-w-[550px] mx-auto scale-[0.75] sm:scale-100 origin-center">
              {/* Concentric Paths */}
              <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
                 <div className="w-[30%] aspect-square rounded-full border border-blue-500/20 border-dashed animate-spin-slow" />
@@ -324,7 +324,7 @@ export const VisualPOC = () => {
         </div>
 
         {/* Workflow Summary Pills */}
-        <div className="flex flex-wrap items-center justify-center gap-4">
+        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4">
            {STAGES.map((s, i) => (
               <div 
                 key={i}

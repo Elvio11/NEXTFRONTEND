@@ -14,7 +14,7 @@ const STEPS = [
     color: 'blue',
     visual: (
       <div className="relative w-full h-full flex items-center justify-center p-4">
-        <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5]">
+        <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-[4/5] scale-[0.85] sm:scale-100 origin-center">
           <div className="absolute inset-0 bg-white rounded-[32px] border border-slate-200/50 shadow-2xl shadow-slate-900/10 p-6 sm:p-8 space-y-6 overflow-hidden">
             <div className="flex items-center justify-between">
               <motion.div 
@@ -61,7 +61,7 @@ const STEPS = [
     color: 'violet',
     visual: (
       <div className="relative w-full h-full flex items-center justify-center p-4">
-        <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square rounded-[48px] bg-[#0f172a] border border-white/10 shadow-2xl shadow-black/40 overflow-hidden group/swarm">
+        <div className="relative w-full max-w-[280px] sm:max-w-[320px] aspect-square rounded-[48px] bg-[#0f172a] border border-white/10 shadow-2xl shadow-black/40 overflow-hidden group/swarm scale-[0.85] sm:scale-100 origin-center">
           {/* Animated Background Mesh */}
           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:24px_24px]" />
           
@@ -196,7 +196,7 @@ const STEPS = [
     color: 'emerald',
     visual: (
       <div className="relative w-full h-full flex items-center justify-center p-4 lg:p-10 overflow-visible">
-        <div className="h-full max-h-[440px] aspect-[9/19] bg-[#17212b] rounded-[48px] border-[10px] border-slate-900 shadow-2xl shadow-black/20 relative overflow-hidden ring-1 ring-white/10 flex flex-col shrink-0">
+        <div className="h-full max-h-[440px] aspect-[9/19] bg-[#17212b] rounded-[48px] border-[10px] border-slate-900 shadow-2xl shadow-black/20 relative overflow-hidden ring-1 ring-white/10 flex flex-col shrink-0 scale-[0.85] sm:scale-100 origin-center">
           {/* Phone Top Notch */}
           <div className="absolute top-0 w-full h-7 bg-slate-950 flex justify-center items-end pb-1.5 z-40">
             <div className="w-10 h-1 bg-slate-800 rounded-full" />

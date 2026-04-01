@@ -87,7 +87,7 @@ export const SuccessWall = () => {
                initial={{ opacity: 0, y: 20 }}
                whileInView={{ opacity: 1, y: 0 }}
                transition={{ delay: i * 0.05 }}
-               className="p-6 rounded-[2rem] border border-rose-200/50 bg-rose-50/40 backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 shadow-sm flex flex-col justify-between h-full min-h-[260px]"
+               className="p-6 rounded-[2rem] border border-rose-200/50 bg-rose-50/40 backdrop-blur-xl relative overflow-hidden group hover:shadow-xl transition-all duration-500 shadow-sm flex flex-col justify-between h-full min-h-[260px] w-full min-w-0"
              >
                {/* Decorative Swarm Pip */}
                <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20">

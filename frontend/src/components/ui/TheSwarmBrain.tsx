@@ -43,8 +43,8 @@ export const TheSwarmBrain = () => {
   if (!mounted) return null
 
   return (
-    <div className="relative w-full aspect-square max-w-[800px] mx-auto overflow-visible select-none flex items-center justify-center">
-      
+    <div className="relative w-full h-[400px] md:h-[650px] mx-auto flex items-center justify-center overflow-hidden select-none">
+      <div className="relative w-[620px] h-[620px] shrink-0 scale-[0.6] sm:scale-75 md:scale-100 flex items-center justify-center">
       {/* Central Core */}
       <div className="absolute z-50">
         <motion.div
@@ -141,6 +141,7 @@ export const TheSwarmBrain = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05)_0%,transparent_70%)]" />
       </div>
 
+      </div>
     </div>
   )
 }

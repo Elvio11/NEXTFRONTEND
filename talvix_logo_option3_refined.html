@@ -1,0 +1,298 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Mono:wght@300;400&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .page {
+    background: #060409;
+    padding: 48px 32px 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .hero-logo {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+  }
+
+  .wordmark-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wordmark {
+    font-family: 'Syne', sans-serif;
+    font-weight: 400;
+    font-size: 52px;
+    letter-spacing: 0.26em;
+    color: #F0ECFF;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .rule {
+    height: 1px;
+    background: linear-gradient(90deg, #9B8FFF 0%, rgba(155,143,255,0.08) 100%);
+    margin: 8px 0 6px;
+  }
+
+  .tagline {
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: 0.38em;
+    color: rgba(155,143,255,0.5);
+    text-transform: uppercase;
+  }
+
+  /* ── VARIANTS GRID ── */
+  .variants-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.2);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: -48px;
+  }
+
+  .variants {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+
+  .variant {
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    gap: 16px;
+  }
+
+  .v-dark  { background: #0B0810; border: 1px solid rgba(155,143,255,0.1); }
+  .v-light { background: #F5F2FF; border: 1px solid rgba(100,80,200,0.12); }
+  .v-mono  { background: #0A090C; border: 1px solid rgba(255,255,255,0.06); }
+  .v-icon  { background: #0D0A14; border: 1px solid rgba(155,143,255,0.1); }
+
+  .v-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.2);
+  }
+  .v-label-dark { color: rgba(100,80,180,0.4); }
+
+  /* Wordmark sizes for variants */
+  .wm-sm { font-family: 'Syne', sans-serif; font-weight: 400; letter-spacing: 0.22em; text-transform: uppercase; line-height: 1; }
+  .wm-dark  { font-size: 28px; color: #F0ECFF; }
+  .wm-light { font-size: 28px; color: #1A1035; }
+  .wm-mono  { font-size: 28px; color: #FFFFFF; }
+
+  /* Light mode rule */
+  .rule-light { background: linear-gradient(90deg, #7B6FD8 0%, rgba(123,111,216,0.08) 100%); }
+  .rule-mono  { background: linear-gradient(90deg, rgba(255,255,255,0.5) 0%, transparent 100%); }
+
+  .tagline-light { color: rgba(100,80,180,0.45); }
+  .tagline-mono  { color: rgba(255,255,255,0.25); }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(155,143,255,0.15), transparent);
+    margin: 0 -32px;
+  }
+</style>
+
+<div class="page">
+
+  <!-- HERO: Full-size primary logo -->
+  <div class="hero">
+    <div class="hero-logo">
+      <!-- THE CRYSTAL MARK — refined & enlarged -->
+      <svg width="62" height="76" viewBox="0 0 62 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="fa" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#E0D8FF"/>
+            <stop offset="100%" stop-color="#7B6FD8"/>
+          </linearGradient>
+          <linearGradient id="fb" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#C4BCFF"/>
+            <stop offset="100%" stop-color="#3C3489"/>
+          </linearGradient>
+          <linearGradient id="fc" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#9B8FFF"/>
+            <stop offset="100%" stop-color="#26215C"/>
+          </linearGradient>
+        </defs>
+
+        <!-- Left top face -->
+        <polygon points="31,3 4,28 31,41" fill="rgba(155,143,255,0.04)" stroke="url(#fa)" stroke-width="1.5" stroke-linejoin="miter"/>
+        <!-- Right top face -->
+        <polygon points="31,3 58,28 31,41" fill="rgba(100,80,200,0.06)" stroke="url(#fb)" stroke-width="1.5" stroke-linejoin="miter"/>
+        <!-- Left bottom face -->
+        <polygon points="4,28 31,41 31,73" fill="rgba(60,52,137,0.08)" stroke="url(#fb)" stroke-width="1.5" stroke-linejoin="miter"/>
+        <!-- Right bottom face -->
+        <polygon points="58,28 31,73 31,41" fill="rgba(155,143,255,0.04)" stroke="url(#fa)" stroke-width="1.5" stroke-linejoin="miter"/>
+
+        <!-- Equator line -->
+        <line x1="4" y1="28" x2="58" y2="28" stroke="#9B8FFF" stroke-width="1" opacity="0.4"/>
+
+        <!-- Internal facet lines for depth -->
+        <line x1="31" y1="3"  x2="31" y2="73" stroke="#C4BCFF" stroke-width="0.75" opacity="0.2"/>
+        <line x1="4"  y1="28" x2="31" y2="73" stroke="#AFA9EC" stroke-width="0.75" opacity="0.15"/>
+        <line x1="58" y1="28" x2="31" y2="73" stroke="#AFA9EC" stroke-width="0.75" opacity="0.15"/>
+
+        <!-- Apex node — brightest -->
+        <circle cx="31" cy="3"  r="3"   fill="#E0D8FF"/>
+        <circle cx="31" cy="3"  r="5.5" fill="none" stroke="#C4BCFF" stroke-width="0.75" opacity="0.3"/>
+
+        <!-- Nadir node -->
+        <circle cx="31" cy="73" r="2.8" fill="#7B6FD8"/>
+
+        <!-- Equator side nodes -->
+        <circle cx="4"  cy="28" r="2"   fill="#AFA9EC" opacity="0.7"/>
+        <circle cx="58" cy="28" r="2"   fill="#AFA9EC" opacity="0.7"/>
+
+        <!-- Waist node — the "core" -->
+        <circle cx="31" cy="41" r="2.5" fill="none" stroke="#C4BCFF" stroke-width="1.5"/>
+        <circle cx="31" cy="41" r="1.1" fill="#DDD8FF"/>
+      </svg>
+
+      <div class="wordmark-group">
+        <div class="wordmark">TALVIX</div>
+        <div class="rule" style="width:100%"></div>
+        <div class="tagline">Premium AI · Career Intelligence</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- VARIANTS GRID -->
+  <div class="variants-label">Usage variants</div>
+  <div class="variants">
+
+    <!-- Dark (primary) -->
+    <div class="variant v-dark">
+      <div style="display:flex;align-items:center;gap:13px">
+        <svg width="28" height="34" viewBox="0 0 62 76" fill="none">
+          <defs>
+            <linearGradient id="va" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E0D8FF"/><stop offset="100%" stop-color="#7B6FD8"/></linearGradient>
+            <linearGradient id="vb" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C4BCFF"/><stop offset="100%" stop-color="#3C3489"/></linearGradient>
+          </defs>
+          <polygon points="31,3 4,28 31,41"  fill="none" stroke="url(#va)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="31,3 58,28 31,41" fill="none" stroke="url(#vb)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="4,28 31,41 31,73" fill="none" stroke="url(#vb)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="58,28 31,73 31,41" fill="none" stroke="url(#va)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <line x1="4" y1="28" x2="58" y2="28" stroke="#9B8FFF" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="31" cy="3"  r="4"   fill="#E0D8FF"/>
+          <circle cx="31" cy="73" r="3.5" fill="#7B6FD8"/>
+          <circle cx="4"  cy="28" r="2.5" fill="#AFA9EC" opacity="0.7"/>
+          <circle cx="58" cy="28" r="2.5" fill="#AFA9EC" opacity="0.7"/>
+          <circle cx="31" cy="41" r="3"   fill="none" stroke="#C4BCFF" stroke-width="2"/>
+          <circle cx="31" cy="41" r="1.3" fill="#DDD8FF"/>
+        </svg>
+        <div>
+          <div class="wm-sm wm-dark">TALVIX</div>
+          <div class="rule" style="margin:5px 0 4px"></div>
+          <div class="tagline">Career Intelligence</div>
+        </div>
+      </div>
+      <div class="v-label">Dark — primary</div>
+    </div>
+
+    <!-- Light -->
+    <div class="variant v-light">
+      <div style="display:flex;align-items:center;gap:13px">
+        <svg width="28" height="34" viewBox="0 0 62 76" fill="none">
+          <defs>
+            <linearGradient id="lca" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#5B50B0"/><stop offset="100%" stop-color="#26215C"/></linearGradient>
+            <linearGradient id="lcb" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7B6FD8"/><stop offset="100%" stop-color="#3C3489"/></linearGradient>
+          </defs>
+          <polygon points="31,3 4,28 31,41"  fill="none" stroke="url(#lca)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="31,3 58,28 31,41" fill="none" stroke="url(#lcb)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="4,28 31,41 31,73" fill="none" stroke="url(#lcb)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="58,28 31,73 31,41" fill="none" stroke="url(#lca)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <line x1="4" y1="28" x2="58" y2="28" stroke="#534AB7" stroke-width="1.5" opacity="0.4"/>
+          <circle cx="31" cy="3"  r="4"   fill="#534AB7"/>
+          <circle cx="31" cy="73" r="3.5" fill="#26215C"/>
+          <circle cx="4"  cy="28" r="2.5" fill="#7B6FD8" opacity="0.7"/>
+          <circle cx="58" cy="28" r="2.5" fill="#7B6FD8" opacity="0.7"/>
+          <circle cx="31" cy="41" r="3"   fill="none" stroke="#534AB7" stroke-width="2"/>
+          <circle cx="31" cy="41" r="1.3" fill="#3C3489"/>
+        </svg>
+        <div>
+          <div class="wm-sm wm-light">TALVIX</div>
+          <div class="rule rule-light" style="margin:5px 0 4px"></div>
+          <div class="tagline tagline-light">Career Intelligence</div>
+        </div>
+      </div>
+      <div class="v-label v-label-dark">Light — reversed</div>
+    </div>
+
+    <!-- Mono -->
+    <div class="variant v-mono">
+      <div style="display:flex;align-items:center;gap:13px">
+        <svg width="28" height="34" viewBox="0 0 62 76" fill="none">
+          <polygon points="31,3 4,28 31,41"  fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="31,3 58,28 31,41" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="4,28 31,41 31,73" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <polygon points="58,28 31,73 31,41" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linejoin="miter"/>
+          <line x1="4" y1="28" x2="58" y2="28" stroke="white" stroke-width="1.5" opacity="0.25"/>
+          <circle cx="31" cy="3"  r="4"   fill="white"/>
+          <circle cx="31" cy="73" r="3.5" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="4"  cy="28" r="2.5" fill="rgba(255,255,255,0.4)"/>
+          <circle cx="58" cy="28" r="2.5" fill="rgba(255,255,255,0.4)"/>
+          <circle cx="31" cy="41" r="3"   fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+          <circle cx="31" cy="41" r="1.3" fill="white"/>
+        </svg>
+        <div>
+          <div class="wm-sm wm-mono">TALVIX</div>
+          <div class="rule rule-mono" style="margin:5px 0 4px"></div>
+          <div class="tagline tagline-mono">Career Intelligence</div>
+        </div>
+      </div>
+      <div class="v-label">Monochrome — white</div>
+    </div>
+
+    <!-- Icon only -->
+    <div class="variant v-icon">
+      <svg width="48" height="58" viewBox="0 0 62 76" fill="none">
+        <defs>
+          <linearGradient id="ia" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E0D8FF"/><stop offset="100%" stop-color="#7B6FD8"/></linearGradient>
+          <linearGradient id="ib" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#C4BCFF"/><stop offset="100%" stop-color="#3C3489"/></linearGradient>
+        </defs>
+        <polygon points="31,3 4,28 31,41"  fill="rgba(155,143,255,0.06)" stroke="url(#ia)" stroke-width="2" stroke-linejoin="miter"/>
+        <polygon points="31,3 58,28 31,41" fill="rgba(100,80,200,0.08)"  stroke="url(#ib)" stroke-width="2" stroke-linejoin="miter"/>
+        <polygon points="4,28 31,41 31,73" fill="rgba(60,52,137,0.1)"   stroke="url(#ib)" stroke-width="2" stroke-linejoin="miter"/>
+        <polygon points="58,28 31,73 31,41" fill="rgba(155,143,255,0.06)" stroke="url(#ia)" stroke-width="2" stroke-linejoin="miter"/>
+        <line x1="4" y1="28" x2="58" y2="28" stroke="#9B8FFF" stroke-width="1.2" opacity="0.4"/>
+        <line x1="31" y1="3" x2="31" y2="73" stroke="#C4BCFF" stroke-width="0.75" opacity="0.18"/>
+        <circle cx="31" cy="3"  r="4"   fill="#E0D8FF"/>
+        <circle cx="31" cy="3"  r="7"   fill="none" stroke="#C4BCFF" stroke-width="0.75" opacity="0.25"/>
+        <circle cx="31" cy="73" r="3.5" fill="#7B6FD8"/>
+        <circle cx="4"  cy="28" r="2.5" fill="#AFA9EC" opacity="0.7"/>
+        <circle cx="58" cy="28" r="2.5" fill="#AFA9EC" opacity="0.7"/>
+        <circle cx="31" cy="41" r="3.5" fill="none" stroke="#C4BCFF" stroke-width="1.5"/>
+        <circle cx="31" cy="41" r="1.5" fill="#DDD8FF"/>
+      </svg>
+      <div class="v-label">Icon only — app / favicon</div>
+    </div>
+
+  </div>
+
+</div>

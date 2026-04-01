@@ -16,7 +16,7 @@ import { SuccessWall } from '@/components/ui/SuccessWall'
 
 export default function LandingPage() {
   return (
-    <main className="bg-bg-base min-h-screen text-content-primary font-sans w-full overflow-clip relative">
+    <main className="bg-bg-base min-h-screen text-content-primary font-sans w-full max-w-[100vw] overflow-x-hidden relative">
       
       {/* Global Atmospheric Glows */}
       <div className="fixed inset-0 pointer-events-none z-0">
@@ -43,7 +43,7 @@ export default function LandingPage() {
               Swarm-Native Job Intelligence
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight text-content-primary">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold leading-[1.1] tracking-tight text-content-primary">
               Hire the <span className="text-blue-600">Swarm</span>.
               <br />
               Secure your <span className="text-violet-600">Future</span>.
