@@ -24,12 +24,23 @@ export function TopBar() {
     const { studentMode } = useDashboardStore()
     const router = useRouter()
     const title = pageTitles[pathname] ?? 'Talvix OS'
-    const isPaid = profile?.subscription_tier === 'paid'
+    const isPaid = profile?.tier === 'professional' || profile?.tier === 'student' || profile?.tier === 'executive'
+    const isExecutive = profile?.tier === 'executive'
 
     const handleSignOut = async () => {
-        const supabase = getSupabaseClient()
-        await supabase.auth.signOut()
-        router.push('/login')
+        try {
+            const { api } = await import('@/lib/axios')
+            await api.post('/api/auth/logout')
+        } catch (err) {
+            console.error('[TopBar] Backend logout failed:', err)
+        } finally {
+            const supabase = getSupabaseClient()
+            await supabase.auth.signOut()
+            useAuthStore.getState().setUser(null)
+            useAuthStore.getState().setSession(null)
+            useAuthStore.getState().setProfile(null)
+            router.push('/login')
+        }
     }
 
     return (
@@ -37,19 +48,25 @@ export function TopBar() {
             {/* Left: Page Title & Mode Signal */}
             <div className="flex items-center gap-4">
               <div className="md:hidden">
-                <Command className="w-6 h-6 text-blue-500" />
+                <Command className={cn("w-6 h-6", isExecutive ? "text-amber-500" : "text-blue-500")} />
               </div>
               <div className="hidden md:block">
-                <h1 className="text-lg font-mono font-black italic tracking-tighter text-white uppercase">
+                <h1 className={cn(
+                  "text-lg font-mono font-black italic tracking-tighter uppercase",
+                  isExecutive ? "text-amber-400" : "text-white"
+                )}>
                   {title}
                 </h1>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={cn(
                     "h-1.5 w-1.5 rounded-full animate-pulse",
-                    studentMode ? "bg-accent-violet" : "bg-accent-blue"
+                    isExecutive ? "bg-amber-500" : studentMode ? "bg-accent-violet" : "bg-accent-blue"
                   )} />
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-content-subtle">
-                    {studentMode ? 'Student Protocol' : 'Pro Swarm Active'}
+                  <span className={cn(
+                    "text-[9px] font-bold uppercase tracking-[0.2em]",
+                    isExecutive ? "text-amber-500/80" : "text-content-subtle"
+                  )}>
+                    {isExecutive ? 'Elite Executive Node' : studentMode ? 'Student Protocol' : 'Pro Swarm Active'}
                   </span>
                 </div>
               </div>
@@ -66,12 +83,14 @@ export function TopBar() {
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "flex items-center gap-1.5 px-3 py-1 rounded-lg border text-[10px] font-bold uppercase tracking-wider",
-                    isPaid 
-                      ? "bg-blue-500/10 border-blue-500/20 text-blue-400" 
-                      : "bg-white/5 border-white/10 text-content-subtle"
+                    isExecutive 
+                      ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                      : isPaid 
+                        ? "bg-blue-500/10 border-blue-500/20 text-blue-400" 
+                        : "bg-white/5 border-white/10 text-content-subtle"
                   )}>
-                    {isPaid ? <ShieldCheck className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
-                    {isPaid ? 'Tier: Pro' : 'Tier: Free'}
+                    {isExecutive ? <ShieldCheck className="w-3.5 h-3.5" /> : isPaid ? <ShieldCheck className="w-3.5 h-3.5" /> : <Zap className="w-3.5 h-3.5" />}
+                    {isExecutive ? 'Tier: VIP' : isPaid ? 'Tier: Pro' : 'Tier: Free'}
                   </div>
 
                   {!isPaid && (

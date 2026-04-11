@@ -31,8 +31,8 @@ export const useAuthStore = create<AuthState>((set) => ({
             profile,
             permissionState: profile
                 ? computePermissionState(
-                    profile.subscription_tier,
-                    profile.wa_connected
+                    profile.tier,
+                    profile.wa_opted_in
                 )
                 : null,
         }),

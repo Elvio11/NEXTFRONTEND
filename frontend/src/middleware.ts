@@ -68,16 +68,18 @@ export async function middleware(request: NextRequest) {
 
     // Onboarding check — only for protected non-onboarding routes
     if (user && isProtected && path !== '/onboarding') {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileErr } = await supabase
             .from('users')
-            .select('onboarding_complete')
+            .select('onboarding_completed')
             .eq('id', user.id)
             .single()
 
+        console.log(`[Middleware] Path: ${path} | User: ${user.email} | Profile:`, profile, `| Err:`, profileErr)
+
         // Redirect to onboarding if:
         // 1. No users row yet (new Google OAuth user — profile is null)
-        // 2. Row exists but onboarding_complete is false
-        if (!profile || !profile.onboarding_complete) {
+        // 2. Row exists but onboarding_completed is false
+        if (!profile || !profile.onboarding_completed) {
             const url = request.nextUrl.clone()
             url.pathname = '/onboarding'
             return withCookies(NextResponse.redirect(url))

@@ -8,9 +8,10 @@ interface ScoreMeterProps {
   size?: number
   strokeWidth?: number
   label?: string
+  primaryColor?: string
 }
 
-export function ScoreMeter({ score, size = 120, strokeWidth = 10, label = 'Fit' }: ScoreMeterProps) {
+export function ScoreMeter({ score, size = 120, strokeWidth = 10, label = 'Fit', primaryColor }: ScoreMeterProps) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
@@ -34,7 +35,7 @@ export function ScoreMeter({ score, size = 120, strokeWidth = 10, label = 'Fit' 
           cy={size / 2}
           r={radius}
           fill="transparent"
-          stroke="currentColor"
+          stroke={primaryColor || "currentColor"}
           strokeWidth={strokeWidth}
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
@@ -42,8 +43,13 @@ export function ScoreMeter({ score, size = 120, strokeWidth = 10, label = 'Fit' 
           transition={{ duration: 1.5, ease: 'easeOut' }}
           className={cn(
             "transition-all duration-300 drop-shadow-glow",
-            score >= 80 ? "text-blue-500 shadow-glow-blue" : score >= 60 ? "text-orange-500 shadow-glow-orange" : "text-red-500 shadow-glow-red"
+            !primaryColor && (
+              score >= 80 ? "text-blue-500 shadow-glow-blue" : score >= 60 ? "text-orange-500 shadow-glow-orange" : "text-red-500 shadow-glow-red"
+            )
           )}
+          style={{
+            filter: primaryColor ? `drop-shadow(0 0 8px ${primaryColor}44)` : undefined
+          }}
           strokeLinecap="round"
         />
       </svg>

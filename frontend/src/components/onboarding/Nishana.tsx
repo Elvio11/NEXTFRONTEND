@@ -67,6 +67,14 @@ export function Nishana({ onComplete }: NishanaProps) {
             placeholder="Search roles (e.g., Frontend, Product...)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && query.trim() !== '') {
+                e.preventDefault();
+                const match = filteredRoles.find(r => r.toLowerCase() === query.trim().toLowerCase());
+                toggleRole(match || query.trim());
+                setQuery('');
+              }
+            }}
             className="w-full pl-12 pr-4 py-4 bg-white/[0.02] border border-white/10 rounded-2xl text-sm font-mono text-white placeholder:text-content-subtle focus:outline-none focus:border-orange-500/50 transition-all shadow-glow-orange/0 focus:shadow-glow-orange/5"
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2">

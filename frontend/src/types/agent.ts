@@ -17,7 +17,7 @@ export interface CareerScores {
 }
 
 export interface CareerIntelligence {
-    scores: CareerScores
+    score_components: CareerScores
     updated_at: string
 }
 

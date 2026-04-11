@@ -13,6 +13,7 @@ const badgeVariants = cva(
         warning: "border-orange-500/20 bg-orange-500/10 text-orange-400 shadow-glow-orange/5",
         destructive: "border-red-500/20 bg-red-500/10 text-red-400 shadow-glow-red/5",
         glass: "border-white/10 bg-white/[0.02] backdrop-blur-sm text-white",
+        premium: "border-amber-500/30 bg-amber-500/10 text-amber-500 shadow-[0_0_15px_rgba(251,191,36,0.2)]",
       },
     },
     defaultVariants: {

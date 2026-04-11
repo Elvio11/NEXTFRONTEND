@@ -46,10 +46,10 @@ export function WhatsAppConnect({ onComplete, onSkip }: WhatsAppConnectProps) {
             }
             const { data } = await supabase
                 .from('users')
-                .select('wa_connected')
+                .select('wa_opted_in')
                 .eq('id', user!.id)
                 .single()
-            if (data?.wa_connected) {
+            if (data?.wa_opted_in) {
                 stopPolling()
                 onComplete()
             }

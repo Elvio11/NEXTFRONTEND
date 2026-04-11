@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { getSupabaseClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/authStore'
+import { ThemeProvider } from './ThemeProvider'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +56,8 @@ export function Providers({ children }: { children: ReactNode }) {
     }, []) // Run once on mount — setters are stable Zustand references
 
     return (
-        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+            <ThemeProvider>{children}</ThemeProvider>
+        </QueryClientProvider>
     )
 }

@@ -17,21 +17,24 @@ const IDENTITY_OPTIONS = [
     label: 'The Architect', 
     icon: Brain, 
     desc: 'Focus on System Design, Backend Reliability, and Leadership.',
-    color: 'blue'
+    color: 'blue',
+    insight: 'architectural depth and backend structural integrity'
   },
   { 
     id: 'builder', 
     label: 'The Craftsperson', 
     icon: Terminal, 
     desc: 'Rapid Prototyping, Frontend Excellence, and Product Velocity.',
-    color: 'violet'
+    color: 'violet',
+    insight: 'pixel-perfect precision, product velocity, and frontend excellence'
   },
   { 
     id: 'generalist', 
     label: 'The Swiss Knife', 
     icon: Code, 
     desc: 'Full-stack Versatility, Data Engineering, and Adaptability.',
-    color: 'orange'
+    color: 'orange',
+    insight: 'agile full-stack versatility and rapid cross-domain adaptability'
   }
 ]
 
@@ -101,7 +104,7 @@ export function Identity({ detectedPersona, onComplete }: IdentityProps) {
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-white">Swarm Insight</p>
               <p className="text-[10px] font-bold text-content-muted uppercase tracking-tighter mt-1 leading-relaxed">
-                Selecting "{IDENTITY_OPTIONS.find(o => o.id === selectedId)?.label}" will calibrate Shilpakaar (Resume Tailor) to prioritize architectural depth and backend structural integrity in every application.
+                Selecting "{IDENTITY_OPTIONS.find(o => o.id === selectedId)?.label}" will calibrate Shilpakaar (Resume Tailor) to prioritize {IDENTITY_OPTIONS.find(o => o.id === selectedId)?.insight} in every application.
               </p>
             </div>
           </div>
@@ -116,7 +119,9 @@ export function Identity({ detectedPersona, onComplete }: IdentityProps) {
           </button>
           <div className="flex items-center justify-center gap-2 mt-4 opacity-50">
             <UserCircle className="w-3 h-3 text-content-subtle" />
-            <span className="text-[8px] font-bold text-content-subtle uppercase tracking-widest">Aero-V3 Talent ID: {detectedPersona}</span>
+            <span className="text-[8px] font-bold text-content-subtle uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis max-w-xs">
+              Aero-V3 Talent ID: {detectedPersona?.slice(0, 30)}...
+            </span>
           </div>
         </div>
       </div>

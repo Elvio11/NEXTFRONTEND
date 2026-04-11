@@ -7,21 +7,22 @@ export type PersonaType =
 
 export interface TalvixUser {
     id: string
-    subscription_tier: 'free' | 'paid'
-    wa_connected: boolean
-    onboarding_complete: boolean
+    tier: 'free' | 'student' | 'professional' | 'executive'
+    wa_opted_in: boolean
+    onboarding_completed: boolean
     persona: PersonaType | null
     dashboard_ready: boolean
 }
 
-export type PermissionState = 1 | 2 | 3 | 4
+export type PermissionState = 1 | 2 | 3 | 4 | 5
 
 export function computePermissionState(
-    tier: TalvixUser['subscription_tier'],
+    tier: TalvixUser['tier'],
     wa: boolean
 ): PermissionState {
-    if (tier === 'paid' && wa) return 4
-    if (tier === 'paid' && !wa) return 3
-    if (tier === 'free' && wa) return 2
+    if (tier === 'executive') return 5
+    if (tier === 'professional' && wa) return 4
+    if (tier === 'professional' && !wa) return 3
+    if (tier === 'student' || (tier === 'free' && wa)) return 2
     return 1
 }

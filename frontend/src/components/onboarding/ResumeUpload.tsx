@@ -98,13 +98,19 @@ export function ResumeUpload({ onComplete }: ResumeUploadProps) {
             formData.append('resume', data.file)
             const res = await api.post('/api/resume/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
+                timeout: 120000, // Override 30s default; Agent 3 LLM parsing takes up to 60s
             })
             const { data: { user } } = await supabase.auth.getUser()
             if (user) {
                 pollParseStatus(user.id, res.data.persona_options ?? [])
             }
-        } catch (_err) {
-            setUploadError('Security gate rejected the file. Ensure it is a valid PDF/DOCX.')
+        } catch (_err: any) {
+            console.error('[ResumeUpload] Exception in onSubmit:', _err);
+            let msg = 'Security gate rejected the file. Ensure it is a valid PDF/DOCX.';
+            if (_err instanceof Error) msg = _err.message;
+            if (_err?.response?.data?.error) msg = `Server: ${_err.response.data.error}`;
+            if (typeof _err === 'string') msg = _err;
+            setUploadError(`DEBUG: ${msg}`);
         } finally {
             setUploading(false)
         }

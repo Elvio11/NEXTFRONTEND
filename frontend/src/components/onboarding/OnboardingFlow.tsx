@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+
 import { motion, AnimatePresence } from 'framer-motion'
 import { GridBackground } from '@/components/ui/GridBackground'
 import { RadialGlow } from '@/components/ui/RadialGlow'
@@ -15,13 +15,11 @@ import {
   Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getSupabaseClient } from '@/lib/supabase/client'
 
 // Swarm-Native Step Components
 import { PersonaDisplay } from './PersonaDisplay' // Step 1: Saarthi
 import { ResumeUpload } from './ResumeUpload'     // Step 2: Pravesh
 import { Nishana } from './Nishana'               // Step 3: Nishana
-import { Identity } from './Identity'             // Step 4: Identity
 import { Prerna } from './Prerna'                 // Step 5: Prerna
 import { Sankhya } from './Sankhya'               // Step 6: Sankhya
 import { TheVault } from './TheVault'             // Step 7: The Vault
@@ -31,7 +29,6 @@ type StepId =
   | 'persona'   
   | 'resume'    
   | 'roles'     
-  | 'identity'  
   | 'prefs'     
   | 'verify'    
   | 'vault'     
@@ -42,7 +39,6 @@ const STEPS: StepId[] = [
   'persona', 
   'resume', 
   'roles', 
-  'identity', 
   'prefs', 
   'verify', 
   'vault', 
@@ -60,8 +56,7 @@ export function OnboardingFlow() {
     })
     
     const [detectedPersona, setDetectedPersona] = useState<string | null>(null)
-    const router = useRouter()
-
+    const [completionError, setCompletionError] = useState<string | null>(null)
     const stepIndex = STEPS.indexOf(currentStep)
     const progress = ((stepIndex) / (STEPS.length - 2)) * 100 
 
@@ -81,28 +76,21 @@ export function OnboardingFlow() {
     }
 
     // Called when Sankhya (verification step) is confirmed
-    // Upserts the users table so middleware sees onboarding_complete=true
+    // Hits the API Gateway to mark onboarding_completed=true
     const completeOnboarding = async () => {
+      setCompletionError(null)
       try {
-        const supabase = getSupabaseClient()
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          await supabase.from('users').upsert({
-            id: user.id,
-            email: user.email,
-            persona: formData.persona,
-            onboarding_complete: true,
-          }, { onConflict: 'id' })
-        }
-      } catch (err) {
-        console.error('[OnboardingFlow] Failed to write onboarding_complete:', err)
-      } finally {
-        next() // advance to 'complete' screen regardless
+        const { api } = await import('@/lib/axios')
+        await api.post('/api/onboarding/complete')
+        next() // Only advance if DB write succeeded
+      } catch (err: any) {
+        console.error('[OnboardingFlow] Failed to write onboarding_completed:', err)
+        setCompletionError('Failed to sync profile across the swarm. Please try again.')
       }
     }
 
     return (
-        <div className="min-h-screen bg-bg-base flex flex-col items-center justify-center px-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center px-4 relative overflow-hidden">
             <GridBackground />
             <RadialGlow color="blue" position="top" />
             
@@ -224,14 +212,6 @@ export function OnboardingFlow() {
                       </motion.div>
                     )}
 
-                    {currentStep === 'identity' && (
-                      <motion.div key="identity" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                        <Identity 
-                          detectedPersona={detectedPersona} 
-                          onComplete={(id) => updateData('identity', id)} 
-                        />
-                      </motion.div>
-                    )}
 
                     {currentStep === 'prefs' && (
                       <motion.div key="prefs" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
@@ -242,6 +222,11 @@ export function OnboardingFlow() {
                     {currentStep === 'verify' && (
                       <motion.div key="verify" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                         <Sankhya data={formData} onComplete={completeOnboarding} />
+                        {completionError && (
+                          <div className="mt-4 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest text-center animate-in shake duration-300">
+                            {completionError}
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
@@ -266,7 +251,7 @@ export function OnboardingFlow() {
                                 Your profile is now synced with the 15-agent swarm. Anveshan has begun scanning 150K+ daily jobs for your {formData.persona} persona.
                             </p>
                             <button
-                                onClick={() => router.push('/dashboard')}
+                                onClick={() => window.location.href = '/dashboard'}
                                 className="px-12 py-4 rounded-2xl bg-content-primary text-bg-base font-black uppercase tracking-[0.3em] text-xs hover:bg-content-subtle transition-all shadow-xl"
                             >
                                 Enter Command Center

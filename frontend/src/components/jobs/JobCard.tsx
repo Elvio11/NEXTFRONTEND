@@ -65,7 +65,7 @@ export function JobCard({ job }: JobCardProps) {
           <div className="flex flex-col items-center gap-1 flex-shrink-0">
              <FitScoreMeter score={fit_score} size="md" />
              <span className="text-[9px] font-black uppercase tracking-tighter text-content-subtle italic">
-               Sankhya Score
+               {fit_score === null ? 'Analysing...' : 'Sankhya Score'}
              </span>
           </div>
         </div>

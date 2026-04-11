@@ -60,11 +60,23 @@ export function Navbar() {
                     )}
 
                     {profile ? (
-                      <Link href="/dashboard" className="p-1 rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all bg-white/[0.02]">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center font-black text-white text-[10px]">
-                           {profile.id?.charAt(0).toUpperCase() || 'U'}
-                        </div>
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link href="/dashboard" className="p-1 rounded-2xl border border-white/10 hover:border-blue-500/30 transition-all bg-white/[0.02]">
+                          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center font-black text-white text-[10px]">
+                             {profile.id?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                        </Link>
+                        <button 
+                          onClick={async () => {
+                            const { getSupabaseClient } = await import('@/lib/supabase/client')
+                            await getSupabaseClient().auth.signOut()
+                            window.location.href = '/'
+                          }}
+                          className="px-3 py-1.5 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 text-[10px] font-black uppercase tracking-widest transition-all"
+                        >
+                          Logout
+                        </button>
+                      </div>
                     ) : (
                       <Link 
                         href="/login" 
@@ -74,7 +86,10 @@ export function Navbar() {
                       </Link>
                     )}
 
-                    <button className="md:hidden p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-white">
+                    <button 
+                        onClick={() => window.dispatchEvent(new CustomEvent('toggle-mobile-sidebar'))}
+                        className="lg:hidden p-2.5 rounded-xl bg-white/[0.03] border border-white/5 text-white"
+                    >
                         <Menu className="w-4 h-4" />
                     </button>
                 </div>

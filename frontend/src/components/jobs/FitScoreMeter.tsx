@@ -23,9 +23,10 @@ export const FitScoreMeter = ({
   const { radius, stroke, fontSize } = sizes[size]
   const normalizedRadius = radius - stroke * 2
   const circumference = normalizedRadius * 2 * Math.PI
-  const strokeDashoffset = circumference - (score / 100) * circumference
+  const isNull = score === null || score === undefined
+  const strokeDashoffset = isNull ? circumference : circumference - (score / 100) * circumference
 
-  const color = 
+  const color = isNull ? 'text-white/20' :
     score >= 80 ? 'text-green-500' : 
     score >= 60 ? 'text-accent-blue' : 
     'text-red-500'
@@ -68,7 +69,7 @@ export const FitScoreMeter = ({
       </svg>
       {/* Percentage Center */}
       <div className={cn("absolute inset-0 flex items-center justify-center font-mono font-black italic tracking-tighter", fontSize, color)}>
-        {score}
+        {isNull ? '--' : score}
       </div>
       
       {/* Outer Glow */}

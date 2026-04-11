@@ -17,7 +17,7 @@ export function useAuth() {
             const { data, error } = await supabase
                 .from('users')
                 .select(
-                    'id, subscription_tier, wa_connected, onboarding_complete, persona, dashboard_ready'
+                    'id, tier, wa_opted_in, onboarding_completed, persona, dashboard_ready'
                 )
                 .eq('id', user!.id)
                 .single()

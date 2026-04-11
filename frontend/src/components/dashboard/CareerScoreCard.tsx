@@ -22,7 +22,7 @@ export function CareerScoreCard() {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('career_intelligence')
-                .select('scores, updated_at')
+                .select('score_components, updated_at')
                 .eq('user_id', user!.id)
                 .single()
             if (error) return null
@@ -30,12 +30,12 @@ export function CareerScoreCard() {
         },
     })
 
-    const radarData = data?.scores
+    const radarData = data?.score_components
         ? [
-            { subject: 'Skills', value: data.scores.skills * 30 },
-            { subject: 'Exp', value: data.scores.experience * 25 },
-            { subject: 'Demand', value: data.scores.demand * 25 },
-            { subject: 'Salary', value: data.scores.salary * 20 },
+            { subject: 'Skills', value: data.score_components.skills },
+            { subject: 'Exp', value: data.score_components.experience },
+            { subject: 'Demand', value: data.score_components.demand },
+            { subject: 'Salary', value: data.score_components.salary },
         ]
         : [
             { subject: 'Skills', value: 60 },
@@ -44,12 +44,12 @@ export function CareerScoreCard() {
             { subject: 'Salary', value: 65 },
         ]
 
-    const totalScore = data?.scores
+    const totalScore = data?.score_components
         ? Math.round(
-            data.scores.skills * 30 +
-            data.scores.experience * 25 +
-            data.scores.demand * 25 +
-            data.scores.salary * 20
+            (data.score_components.skills * 0.3 +
+                data.score_components.experience * 0.25 +
+                data.score_components.demand * 0.25 +
+                data.score_components.salary * 0.2)
         )
         : null
 

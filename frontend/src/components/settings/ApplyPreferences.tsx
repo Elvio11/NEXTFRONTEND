@@ -29,7 +29,7 @@ export function ApplyPreferences() {
         queryFn: async () => {
             const { data } = await supabase
                 .from('users')
-                .select('id, subscription_tier, wa_connected, auto_apply_paused')
+                .select('id, tier, wa_opted_in, auto_apply_paused')
                 .eq('id', user!.id)
                 .single()
             return data as any
@@ -136,12 +136,12 @@ export function ApplyPreferences() {
                           <p className="text-[10px] font-black uppercase tracking-widest text-white">WhatsApp Hub</p>
                           <p className={cn(
                             "text-[10px] font-bold uppercase tracking-widest mt-1",
-                            profile?.wa_connected ? "text-green-500" : "text-content-subtle"
-                          )}>
-                              {profile?.wa_connected ? 'Encrypted Connection Active' : 'Gateway Offline'}
-                          </p>
-                      </div>
-                      {!profile?.wa_connected && (
+                             profile?.wa_opted_in ? 'text-green-500' : 'text-content-subtle'
+                           )}>
+                               {profile?.wa_opted_in ? 'Encrypted Connection Active' : 'Gateway Offline'}
+                           </p>
+                       </div>
+                       {!profile?.wa_opted_in && (
                           <GlowButton variant="ghost" size="sm" href="/onboarding" className="h-8 text-[9px]">
                               Secure
                           </GlowButton>

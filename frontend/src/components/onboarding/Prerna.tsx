@@ -14,6 +14,16 @@ export function Prerna({ onComplete }: PrernaProps) {
   const [workMode, setWorkMode] = useState<'remote' | 'hybrid' | 'onsite'>('remote')
   const [salary, setSalary] = useState(12) // In LPA
   const [locations, setLocations] = useState<string[]>(['Bengaluru', 'Remote'])
+  const [isAddingLoc, setIsAddingLoc] = useState(false)
+  const [newLoc, setNewLoc] = useState('')
+
+  const handleAddLoc = () => {
+    if (newLoc.trim() && !locations.includes(newLoc.trim())) {
+      setLocations(prev => [...prev, newLoc.trim()])
+    }
+    setNewLoc('')
+    setIsAddingLoc(false)
+  }
 
   const handleComplete = () => {
     onComplete({ workMode, salary, locations })
@@ -109,9 +119,28 @@ export function Prerna({ onComplete }: PrernaProps) {
                 </button>
               </div>
             ))}
-            <button className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashed border-white/10 text-[10px] font-bold uppercase tracking-widest text-content-subtle hover:border-blue-500/50 hover:text-blue-400 transition-all">
-              Add City
-            </button>
+            {isAddingLoc ? (
+              <input
+                type="text"
+                autoFocus
+                value={newLoc}
+                onChange={e => setNewLoc(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleAddLoc()
+                  if (e.key === 'Escape') setIsAddingLoc(false)
+                }}
+                onBlur={handleAddLoc}
+                className="px-3 py-1.5 rounded-xl border border-blue-500/50 bg-white/[0.04] text-[10px] font-bold uppercase tracking-widest text-white outline-none w-32"
+                placeholder="CITY..."
+              />
+            ) : (
+              <button 
+                onClick={() => setIsAddingLoc(true)}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-dashed border-white/10 text-[10px] font-bold uppercase tracking-widest text-content-subtle hover:border-blue-500/50 hover:text-blue-400 transition-all"
+              >
+                Add City
+              </button>
+            )}
           </div>
         </div>
 

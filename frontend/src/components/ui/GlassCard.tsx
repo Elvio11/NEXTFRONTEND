@@ -2,7 +2,7 @@
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 
-interface GlassCardProps {
+interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
     children: ReactNode
     className?: string
     glow?: 'blue' | 'violet' | 'green' | 'none'
@@ -16,10 +16,12 @@ export function GlassCard({
     glow = 'none',
     hover = false,
     as: Tag = 'div',
+    ...props
 }: GlassCardProps) {
     const TagComp = Tag as any
     return (
         <TagComp
+            {...props}
             className={cn(
                 'relative rounded-2xl overflow-hidden',
                 'bg-glass border border-glass-border',

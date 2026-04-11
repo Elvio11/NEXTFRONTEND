@@ -4,10 +4,35 @@
 
 :root {
   --bg-base: #050505;
-  --accent: #3b82f6;
-  --accent-glow: rgba(59, 130, 246, 0.15);
   --font-fira-sans: 'Fira Sans', sans-serif;
   --font-fira-code: 'Fira Code', monospace;
+  
+  /* Default Theme (Master) */
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.15);
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='swarm'] {
+  --accent: #8b5cf6;
+  --accent-glow: rgba(139, 92, 246, 0.15);
+  --card-bg: rgba(139, 92, 246, 0.03);
+  --card-border: rgba(139, 92, 246, 0.1);
+}
+
+[data-theme='cyber'] {
+  --accent: #ca8a04;
+  --accent-glow: rgba(202, 138, 4, 0.15);
+  --card-bg: rgba(202, 138, 4, 0.02);
+  --card-border: rgba(202, 138, 4, 0.12);
+}
+
+[data-theme='onyx'] {
+  --accent: #64748b;
+  --accent-glow: rgba(100, 116, 139, 0.1);
+  --card-bg: rgba(15, 23, 42, 0.4);
+  --card-border: rgba(255, 255, 255, 0.05);
 }
 
 html {
